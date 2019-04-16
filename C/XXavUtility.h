@@ -21,7 +21,7 @@ typedef enum XXavFrameType{
 
 // 帧结构定义
 typedef struct XXavFrame{
-    char *data;         // 帧数据
+    int8_t *data;         // 帧数据
     uint64_t length;    // 帧数据长度
     uint64_t dts;       // 帧解码时间戳
     uint64_t pts;       // 帧播放时间戳
@@ -29,5 +29,7 @@ typedef struct XXavFrame{
     bool isKey;         // 是否为关键帧
     XXavFrameType type; // 帧类型
 }XXavFrame;
+
+typedef void (*XXavFrameCallBack)(void *opaque, XXavFrame *frame);
 
 #endif // __XXavUtility_h

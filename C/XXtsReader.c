@@ -22,29 +22,29 @@ typedef struct XXtsData
     //
     XXavFrameType videoType;        // 视频类型
     uint32_t videoBufferLength;     // buffer中的数据长度
-    char *videoBuffer;              // 帧buffer
+    int8_t *videoBuffer;              // 帧buffer
     uint64_t videoBufferPts;        // buffer中的数据对应的pts
     //
     XXavFrameType audioType;        // 音频类型
     uint32_t audioBufferLength;
-    char *audioBuffer;
+    int8_t *audioBuffer;
     uint64_t audioBufferPts;
     //
     XXtsPATItem* patItem[TS_MAP_ITEM_MAX];  // PAT条目
     XXtsPMTItem* pmtItem[TS_MAP_ITEM_MAX];  // PMT条目
     //
-    XXtsReaderFrameCallBack frameCallBack;  // 帧数据获取回调
+    XXavFrameCallBack frameCallBack;        // 帧数据获取回调
     XXtsReaderLogCallBack logCallBack;      // 信息输出回调
     void *opaque;                           // 自定义数据,作为帧数据获取回调的参数
 }XXtsData, *XXtsDataPtr;
 
 // *私有函数声明
-static void addVideoData(XXtsDataPtr tsData, const char *data, uint8_t length);
-static void addAudioData(XXtsDataPtr tsData, const char *data, uint8_t length);
-static int headerFromData(XXtsHeader *header, const char *data);
-static bool patFromData(XXtsPAT *pat, const char *data, uint8_t length, XXtsPATItem **item);
-static bool pmtFromData(XXtsPMT *pmt, const char *data, uint8_t length, XXtsPMTItem **item);
-static bool pesHeaderFromData(XXtsPESHeader *pesHeader, const char *data, uint8_t length);
+static void addVideoData(XXtsDataPtr tsData, const int8_t *data, uint8_t length);
+static void addAudioData(XXtsDataPtr tsData, const int8_t *data, uint8_t length);
+static int headerFromData(XXtsHeader *header, const int8_t *data);
+static bool patFromData(XXtsPAT *pat, const int8_t *data, uint8_t length, XXtsPATItem **item);
+static bool pmtFromData(XXtsPMT *pmt, const int8_t *data, uint8_t length, XXtsPMTItem **item);
+static bool pesHeaderFromData(XXtsPESHeader *pesHeader, const int8_t *data, uint8_t length);
 static void makeLog(XXtsDataPtr dataPtr, char *format, ...);
 static void freeItem(XXtsDataPtr dataPtr);
 static void resetHandleData(XXtsDataPtr dataPtr);
@@ -52,7 +52,7 @@ static uint8_t adjustOffsetForPSI(XXtsHeader *header);
 // 私有函数声明*
 
 // 公开函数 - 创建句柄
-XXtsHandle xxts_reader_create(void *opaque, XXtsReaderFrameCallBack frameCallBack, XXtsReaderLogCallBack logCallBack)
+XXtsHandle xxts_reader_create(void *opaque, XXavFrameCallBack frameCallBack, XXtsReaderLogCallBack logCallBack)
 {
     if(NULL == frameCallBack)
         return NULL;
@@ -62,10 +62,10 @@ XXtsHandle xxts_reader_create(void *opaque, XXtsReaderFrameCallBack frameCallBac
         return NULL;
     memset(handle, 0, sizeof(XXtsData));
     
-    handle->videoBuffer     = (char*)malloc(TS_DATA_VIDEO_BUFFER_MAX);
+    handle->videoBuffer     = (int8_t*)malloc(TS_DATA_VIDEO_BUFFER_MAX);
     memset(handle->videoBuffer, 0, TS_DATA_VIDEO_BUFFER_MAX);
     
-    handle->audioBuffer = (char*)malloc(TS_DATA_AUDIO_BUFFER_MAX);
+    handle->audioBuffer = (int8_t*)malloc(TS_DATA_AUDIO_BUFFER_MAX);
     memset(handle->audioBuffer, 0, TS_DATA_AUDIO_BUFFER_MAX);
     
     handle->frameCallBack   = frameCallBack;
@@ -74,12 +74,12 @@ XXtsHandle xxts_reader_create(void *opaque, XXtsReaderFrameCallBack frameCallBac
     return handle;
 }
 // 公开函数 - 添加数据
-void xxts_reader_push(XXtsHandle handle, const char *data, int length)
+void xxts_reader_push(XXtsHandle handle, const int8_t *data, int length)
 {
     if (NULL == handle || NULL == data || length < TS_PACKET_LENGTH)
         return;
     
-    const char *dataOffset = data;
+    const int8_t *dataOffset = data;
     XXtsHeader header;
     uint8_t headerOffset;
     XXtsDataPtr tsData = (XXtsDataPtr)handle;
@@ -122,15 +122,15 @@ void xxts_reader_push(XXtsHandle handle, const char *data, int length)
                 switch (tsData->pmtItem[index]->streamType) {
                     case 0x0f:
                         tsData->audioPid = tsData->pmtItem[index]->elementaryPid;
-                        tsData->audioType = XXavFrameTypeAAC;
+                        tsData->audioType = XXavFrameType_AAC;
                         break;
                     case 0x1b:
                         tsData->videoPid = tsData->pmtItem[index]->elementaryPid;
-                        tsData->videoType = XXavFrameTypeH264;
+                        tsData->videoType = XXavFrameType_H264;
                         break;
                     case 0x24:
                         tsData->videoPid = tsData->pmtItem[index]->elementaryPid;
-                        tsData->videoType = XXavFrameTypeH265;
+                        tsData->videoType = XXavFrameType_H265;
                         break;
                     default:
                         makeLog(tsData, "unknown stream type.");
@@ -151,7 +151,7 @@ void xxts_reader_push(XXtsHandle handle, const char *data, int length)
             {
                 if (NULL != tsData->frameCallBack)
                 {
-                    XXtsReaderFrame frame = {
+                    XXavFrame frame = {
                         .data       = header.pid == tsData->videoPid ? tsData->videoBuffer : tsData->audioBuffer,
                         .length     = header.pid == tsData->videoPid ? tsData->videoBufferLength : tsData->audioBufferLength,
                         .pts        = header.pid == tsData->videoPid ? tsData->videoBufferPts : tsData->audioBufferPts,
@@ -160,7 +160,7 @@ void xxts_reader_push(XXtsHandle handle, const char *data, int length)
                         .type       = header.pid == tsData->videoPid ? tsData->videoType : tsData->audioType,
                     };
                     if (frame.length > 0)
-                        tsData->frameCallBack(tsData->userData, frame);
+                        tsData->frameCallBack(tsData->opaque, &frame);
                 }
                 
                 XXtsPESHeader pesHeader;
@@ -213,7 +213,7 @@ void xxts_reader_free(XXtsHandle *handle)
 }
 
 // 私有函数 - 向handle中添加视频帧数据
-static void addVideoData(XXtsDataPtr tsData, const char *data, uint8_t length)
+static void addVideoData(XXtsDataPtr tsData, const int8_t *data, uint8_t length)
 {
     if (NULL == data)
     {
@@ -232,7 +232,7 @@ static void addVideoData(XXtsDataPtr tsData, const char *data, uint8_t length)
     }
 }
 // 私有函数 - 向handle中添加视频帧数据
-static void addAudioData(XXtsDataPtr tsData, const char *data, uint8_t length)
+static void addAudioData(XXtsDataPtr tsData, const int8_t *data, uint8_t length)
 {
     if (NULL == data)
     {
@@ -251,10 +251,10 @@ static void addAudioData(XXtsDataPtr tsData, const char *data, uint8_t length)
     }
 }
 // 私有函数 - 解析ts头
-static int headerFromData(XXtsHeader *header, const char *data)
+static int headerFromData(XXtsHeader *header, const int8_t *data)
 {
-    const char *offset = data;
-    const char *adapationOffset = NULL;
+    const int8_t *offset = data;
+    const int8_t *adapationOffset = NULL;
     
     header->syncByte = *offset;
     offset += 1;
@@ -388,9 +388,9 @@ static int headerFromData(XXtsHeader *header, const char *data)
     return (int)(offset - data);
 }
 // 私有函数 - 解析pat表
-static bool patFromData(XXtsPAT *pat, const char *data, uint8_t length, XXtsPATItem **item)
+static bool patFromData(XXtsPAT *pat, const int8_t *data, uint8_t length, XXtsPATItem **item)
 {
-    const char *offset = data;
+    const int8_t *offset = data;
     
     pat->tableId = *offset;
     offset += 1;
@@ -451,9 +451,9 @@ static bool patFromData(XXtsPAT *pat, const char *data, uint8_t length, XXtsPATI
     return true;
 }
 // 私有函数 - 解析pmt表
-static bool pmtFromData(XXtsPMT *pmt, const char *data, uint8_t length, XXtsPMTItem **item)
+static bool pmtFromData(XXtsPMT *pmt, const int8_t *data, uint8_t length, XXtsPMTItem **item)
 {
-    const char *offset = data;
+    const int8_t *offset = data;
     
     pmt->tableId = *offset;
     offset += 1;
@@ -466,7 +466,7 @@ static bool pmtFromData(XXtsPMT *pmt, const char *data, uint8_t length, XXtsPMTI
     offset += 2;
     pmt->sectionLength &= 0x0fff;
     
-    const char *start = offset;
+    const int8_t *start = offset;
     
     pmt->programNumber = beToU16(offset);
     offset += 2;
@@ -527,9 +527,9 @@ static bool pmtFromData(XXtsPMT *pmt, const char *data, uint8_t length, XXtsPMTI
     return true;
 }
 // 私有函数 - 解析pes头数据
-static bool pesHeaderFromData(XXtsPESHeader *pesHeader, const char *data, uint8_t length)
+static bool pesHeaderFromData(XXtsPESHeader *pesHeader, const int8_t *data, uint8_t length)
 {
-    const char *offset = data;
+    const int8_t *offset = data;
     pesHeader->startCode = beToU32(offset) >> 8;
     offset += 3;
     pesHeader->streamId = *offset;
@@ -853,12 +853,12 @@ static void resetHandleData(XXtsDataPtr dataPtr){
     dataPtr->pmtPid     = 0;
     
     dataPtr->audioPid   = 0;
-    dataPtr->audioType  = XXtsUnknown;
+    dataPtr->audioType  = XXavFrameType_Unknown;
     dataPtr->audioBufferLength = 0;
     memset(dataPtr->audioBuffer, 0, TS_DATA_AUDIO_BUFFER_MAX);
     
     dataPtr->videoPid   = 0;
-    dataPtr->videoType  = XXtsUnknown;
+    dataPtr->videoType  = XXavFrameType_Unknown;
     dataPtr->videoBufferLength = 0;
     memset(dataPtr->videoBuffer, 0, TS_DATA_VIDEO_BUFFER_MAX);
     freeItem(dataPtr);

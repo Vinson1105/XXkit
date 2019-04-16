@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "../XXavDefine.h"
+#include "../XXavUtility.h"
 
 // 视频参数
 typedef struct XXfmMp4WriterVideoParam{

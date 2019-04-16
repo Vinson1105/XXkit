@@ -310,11 +310,11 @@ typedef struct XXtsPESHeader
         bool pesExtensionFlag2;
 
             // PES_private_data_flag == 1
-            char pesPrivateData[16];
+            int8_t pesPrivateData[16];
 
             // pack_header_field_flag
             uint8_t packFieldLength;
-            char packHeader[188];
+            int8_t packHeader[188];
 
             // program_packet_sequence_counter_flag
             uint8_t programPacketSequenceCounter;
@@ -328,7 +328,7 @@ typedef struct XXtsPESHeader
             // PES_entension_flag_2
             uint8_t pesExtensionFieldLength;
 
-        char stuffingByte[188];
+        int8_t stuffingByte[188];
     /*
     stream_id == program_stream_map
     || stream_id == private_stream_2
@@ -338,10 +338,10 @@ typedef struct XXtsPESHeader
     || stream_id == DSMCC_stream
     || stream_id == ITU-T Rec. H.222.1 type E stream
     */
-        char pesPacketDataByte[188];
+        int8_t pesPacketDataByte[188];
         uint8_t pesPacketDataByteLength;
 
      /* stream_id == padding_stream */
-        char paddingByte[188];
+        int8_t paddingByte[188];
 }XXtsPESHeader;
 #endif

@@ -55,7 +55,7 @@
         
         // [4] 初始化tableView的列表组件
         self.listViewShell = [[XXlistViewShell alloc] initWithContext:self.tableView];
-        [self.listViewShell setRowTouchHandleBlock:^(NSInteger row, id cellData) {
+        [self.listViewShell setRowTouchBlock:^(NSInteger row, id cellData) {
             //[weakSelf.textField setText:weakSelf.itemKeyArray[row]];
             weakSelf.currentKey = weakSelf.itemKeyArray[row];
             [weakSelf.maskView hide];
@@ -116,7 +116,7 @@
     self.itemKeyArray = [key mutableCopy];
     self.itemTextArray = [text mutableCopy];
     
-    [self.listViewShell setXXData:self.itemTextArray];
+    [self.listViewShell setXxdata:self.itemTextArray];
 }
 // 设置不同状态下的右侧图标
 - (void) setIndicatorImage:(UIImage*)image WithState:(XXComboBoxState)state{

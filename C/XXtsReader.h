@@ -10,11 +10,10 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "XXavDefine.h"
+#include "XXavUtility.h"
 
 typedef void* XXtsHandle;
 typedef void(*XXtsReaderLogCallBack)(const char *log, int length);
-typedef void(*XXtsReaderFrameCallBack)(void *opaque, XXavFrame *frame);
 
 #ifdef __cplusplus
 extern "C"{
@@ -27,7 +26,7 @@ extern "C"{
      * @param   logCallBack 日志输出回调,可以为NULL
      * @return  NULL:失败,否则成功
      */
-    XXtsHandle xxtsReader_create(void *opaque, XXtsReaderFrameCallBack frameCallBack, XXtsReaderLogCallBack logCallBack);
+    XXtsHandle xxtsReader_create(void *opaque, XXavFrameCallBack frameCallBack, XXtsReaderLogCallBack logCallBack);
     
     /*
      * @brief   添加待解析数据,注意如果待解析的数据包含多帧数据,此函数可能会重复调用'frameCallBack'
@@ -35,7 +34,7 @@ extern "C"{
      * @param   data 待解析数据
      * @param   length 待解析数据长度
      */
-    void xxtsReader_push(XXtsHandle handle, const char *data, int length);
+    void xxtsReader_push(XXtsHandle handle, const int8_t *data, int length);
     
     /*
      * @brief   释放句柄对应的数据,并把句柄置为NULL
