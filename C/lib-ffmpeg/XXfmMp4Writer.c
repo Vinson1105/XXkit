@@ -1,6 +1,6 @@
 #include "XXfmMp4Writer.h"
-#include <lib/ffmpeg/include/libavcodec/avcodec.h>
-#include <lib/ffmpeg/include/libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 #include <pthread.h>
 #include <unistd.h>
 
