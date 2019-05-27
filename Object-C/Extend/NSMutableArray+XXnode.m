@@ -1,12 +1,12 @@
-#import "NSMutableDictionary+XXnode.h"
+#import "NSMutableArray+XXnode.h"
 #import <objc/runtime.h>
 
 static const void *NodeKey = @"xxnode";
 
-@implementation NSMutableDictionary(XXnode)
-- (DictNodeBlock)dict{
+@implementation NSMutableArray(XXnode)
+- (ArrayNodeBlock)array{
     XXnode *root = [[XXnode alloc] initWithData:self];
     objc_setAssociatedObject (self , NodeKey, root, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    return root.dict;
+    return root.array;
 }
 @end

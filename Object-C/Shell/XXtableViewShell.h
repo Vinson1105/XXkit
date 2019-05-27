@@ -47,29 +47,21 @@
 
 #import <UIKit/UIKit.h>
 #import "XXshellCellBase.h"
+#import "XXshellCellBase.h"
 
 NS_ASSUME_NONNULL_BEGIN
-@interface XXtableViewShell : NSObject<UITableViewDataSource, UITableViewDelegate>
+@interface XXtableViewShell : XXshell<UITableViewDataSource, UITableViewDelegate>
+@property (nonatomic,assign) CGFloat headerHeight;
+@property (nonatomic,assign) CGFloat footerHeight;
+@property (nonatomic,assign) CGFloat rowHeight;
 
-// [1] 目标tableView设置
-- (instancetype) initWithTableView:(UITableView*)tableView;
-- (void) shell:(UITableView*)tabelView;
+@property (nonatomic,strong) UIColor *headerTextColor;
+@property (nonatomic,strong) UIFont *headerTextFont;
 
-// [2] section/row相关配置
-- (void) setRowType:(NSString*)type;        // 如果是自定义的话,使用自定义cell的类名,使用默认类型可以不调用此函数
-- (void) setHeaderHeight:(CGFloat)height;   // 统一设置header的高度
-- (void) setfooterHeight:(CGFloat)height;   // 统一设置footer的高度
-- (void) setRowHeight:(CGFloat)height;      // 统一设置row的高度(如果后续需要个性化,可以在自定义cell中新增一个 [-(NSInteger) height:(NSIndexPath)] 的接口)
-- (void) setHeaderHeight:(CGFloat)headerHeight RowHeight:(CGFloat)rowHeight FooterHeight:(CGFloat)footerHeight;
+@property (nonatomic,copy,nullable) void(^onTouchEvent)(NSIndexPath *indexPath, id _Nullable param);
 
-// [3] 使用默认section/row样式设置
-- (void) setHeaderTextColor:(UIColor*)textColor Font:(UIFont*)font;
-
-// [3] 设置cell事件回调
-- (void) setCellEventHandle:(void(^)(NSString *event, NSDictionary *params))block;  // 供cell使用的事件回调,event:触发的事件,params:事件携带参数
-
-// [4] 数据设置
-- (void) setTableData:(NSArray*)data;       // 设置tableView数据
+- (void) setClassHeaderType:(NSString*)headerType;
+- (void) setNIbHeaderType:(NSString*)headerType;
 @end
 
 NS_ASSUME_NONNULL_END

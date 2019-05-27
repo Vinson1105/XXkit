@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface XXlistViewShell : XXshell<UITableViewDelegate,UITableViewDataSource>
 /** 行点击block */
-@property (nonatomic,copy,nullable) void(^rowTouchBlock)(NSInteger row, id cellData);
+@property (nonatomic,copy,nullable) void(^onRowTouchEvent)(NSInteger row, id param);
 
 /**
  * @brief    设置固定行高,默认是自适应

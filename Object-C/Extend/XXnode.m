@@ -71,7 +71,7 @@ typedef NS_ENUM(NSUInteger,XXnodeParentType){
     };
 }
 
-- (NodeBlock)dict{
+- (DictNodeBlock)dict{
     XXOC_WS;
     
     return ^XXnode*(id key){
@@ -94,10 +94,10 @@ typedef NS_ENUM(NSUInteger,XXnodeParentType){
         }
     };
 }
-- (NodeBlock)array{
+- (ArrayNodeBlock)array{
     XXOC_WS;
     
-    return ^XXnode*(id key){
+    return ^XXnode*(uint index){
         id nodeData = nil != ws.rootData ? ws.rootData : ws.data;
         if(nil == nodeData){
             ws.data = [NSMutableArray array];
@@ -106,11 +106,10 @@ typedef NS_ENUM(NSUInteger,XXnodeParentType){
         
         if([nodeData isKindOfClass: NSClassFromString(@"NSMutableArray")]){
             NSMutableArray *nodeArrayData   = nodeData;
-            NSUInteger index                = [key unsignedIntegerValue];
             id value                        = [nodeArrayData count] > index ? [nodeArrayData objectAtIndex:index] : nil;
             return [[XXnode alloc] initWithParent:ws
                                        ParentType:XXnodeParentType_Array
-                                              Key:key
+                                              Key:@(index)
                                             Value:value];
         }
         else {

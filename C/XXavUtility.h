@@ -17,6 +17,9 @@ typedef enum XXavFrameType{
     XXavFrameType_H264,
     XXavFrameType_H265,
     XXavFrameType_AAC,
+    
+    XXavFrameType_YUV420,
+    XXavFrameType_PCM,
 }XXavFrameType;
 
 // 帧结构定义
@@ -31,5 +34,15 @@ typedef struct XXavFrame{
 }XXavFrame;
 
 typedef void (*XXavFrameCallBack)(void *opaque, XXavFrame *frame);
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    XXavFrame* xxavFrame_alloc(void);
+    void xxavFrame_free(XXavFrame **frame);    
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __XXavUtility_h

@@ -57,8 +57,8 @@
 }
 // 行选择
 - (NSIndexPath *)tableView:(UITableView *)tableView willSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (nil != self.rowTouchBlock) {
-        self.rowTouchBlock(indexPath.row, [self.xxdata objectAtIndex:indexPath.row]);
+    if (nil != self.onRowTouchEvent) {
+        self.onRowTouchEvent(indexPath.row, [self.data objectAtIndex:indexPath.row]);
     }
     return nil;
 }
@@ -87,61 +87,50 @@
             // 创建自定义cell
             Class rowClass  = NSClassFromString(cellType);
             cell            = [[rowClass alloc] initWithReuseIdentifier:cellType];
-            if (nil == cell) {
-                XXNSLog(@"CellType=%@, 没有找对应的自定义cell类型", cellType);
-            }
         }
     }
+    if (nil == cell) {
+        XXNSLog(@"CellType=%@, 没有找对应的自定义cell类型", cellType);
+        return nil;
+    }
     
-    if (nil != cell) {
-        // [3] 取出row对应的数据
-        id data = [self.xxdata objectAtIndex:indexPath.row];
-
-        if (XXcellLoadType_Default == self.cellLoadType) {
-            // [4] 使用默认cell时,需要判断数据是字典还是字符串,如果是字符串,直接视为text,否则需要按约定的键值设置
-            if ([data isKindOfClass:NSClassFromString(@"NSString")]) {
-                cell.textLabel.text = data;
-            }
-            else{
-                NSEnumerator *keyEnumerator = [data keyEnumerator];
-                NSString *key;
-                while (key = [keyEnumerator nextObject]) {
-                    if ([key isEqualToString:ROW_TITLE]) {
-                        cell.textLabel.text = [data objectForKey:ROW_TITLE];
-                    }
-                    else{
-                        
-                    }
-                }
-            }
+    // [3] 取出row对应的数据
+    id data = [self.data objectAtIndex:indexPath.row];
+    if (XXcellLoadType_Default == self.cellLoadType) {
+        // [4] 使用默认cell时,需要判断数据是字典还是字符串,如果是字符串,直接视为text,否则需要按约定的键值设置
+        if ([data isKindOfClass:NSClassFromString(@"NSString")]) {
+            cell.textLabel.text = data;
         }
         else{
-            // [5] 使用自定义cell,需要判断是否遵循了协议,并进行对应设置
-            if(![cell conformsToProtocol:@protocol(XXcellProtocol)]){
-                XXNSLog(@"CellType=%@, 没有遵循XXcellProtocol", cellType);
-            }
-            else{
-                UITableViewCell<XXcellProtocol> *xcell = (UITableViewCell<XXcellProtocol>*)cell;
-                
-                // cell的数据设置
-                if (nil == data) {
-                    XXNSLog(@"Row=%ld, 没有找到对应的Cell数据", indexPath.row);
+            NSEnumerator *keyEnumerator = [data keyEnumerator];
+            NSString *key;
+            while (key = [keyEnumerator nextObject]) {
+                if ([key isEqualToString:ROW_TITLE]) {
+                    cell.textLabel.text = [data objectForKey:ROW_TITLE];
                 }
                 else{
-                    xcell.xxdata = data;
-                }
-                
-                // cell的位置设置
-                xcell.indexPath = indexPath;
-                
-                // cell的事件处理block设置
-                if (nil != self.cellEventBlock) {
-                    xcell.eventBlock = self.cellEventBlock;
+                    
                 }
             }
         }
     }
-    
+    else{
+        // [5] 使用自定义cell,需要判断是否遵循了协议,并进行对应设置
+        if(![cell conformsToProtocol:@protocol(XXcellProtocol)]){
+            XXNSLog(@"CellType=%@, 没有遵循XXcellProtocol", cellType);
+        }
+        else{
+            UITableViewCell<XXcellProtocol> *xcell = (UITableViewCell<XXcellProtocol>*)cell;
+            
+            // cell的位置/数据设置
+            [xcell setIndexPath:indexPath Data:data];
+            
+            // cell的事件处理block设置
+            if (nil != self.onCellEvent) {
+                xcell.onEvent = self.onCellEvent;
+            }
+        }
+    }
     return cell;
 }
 // 节点数量
@@ -150,6 +139,6 @@
 }
 // 节点中行数量
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return nil == self.xxdata ? 0 : self.xxdata.count;
+    return nil == self.data ? 0 : self.data.count;
 }
 @end

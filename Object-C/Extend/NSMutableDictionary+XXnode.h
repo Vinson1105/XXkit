@@ -2,5 +2,5 @@
 #import "XXnode.h"
 
 @interface NSMutableDictionary(XXnode)
-@property (nonatomic,copy,readonly) NodeBlock dict;
+@property (nonatomic,copy,readonly) DictNodeBlock dict;
 @end

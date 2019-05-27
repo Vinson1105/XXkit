@@ -1,13 +1,13 @@
 /**
  * @author: GWX
- * @date: 20190109
- * @descirption: 容器自定义cell的协议和shell容器类控制器基类.
- *               shell的继承类需要在重载initContext实现context的初始化.
+ * @date: 20190109 - 20190509
+ *
+ * <XXcellProtocol>容器自定义cell的协议
+ *  重载[setIndexPath: Data:]以获取cell对应的最新数据;
+ *  当cell有行为触发需要外部处理,可以使用[onEvent];
+ *
+ * <XXshell>容器类控制器基类.
  *               shell中的cellEventBlock主要是对应自定义cell触发的自定义事件.
- * @history:
- *        1.author:
- *          date:
- *          modification:
  */
 
 #import <UIKit/UIKit.h>
@@ -19,12 +19,10 @@ NS_ASSUME_NONNULL_BEGIN
 // 容器中自定义cell协议
 //
 @protocol XXcellProtocol <NSObject>
-/** cell的数据 */
-@property (nonatomic,strong,nullable) NSMutableDictionary *xxdata;
-/** cell的位置 */
-@property (nonatomic,strong,nullable) NSIndexPath *indexPath;
 /** cell的事件处理 */
-@property (nonatomic,copy,nullable) void(^eventBlock)(NSString *event,  NSDictionary * _Nullable params);
+@property (nonatomic,copy,nullable) void(^onEvent)(NSString *event, NSIndexPath *indexPath, id _Nullable param);
+/** cell的数据设置 */
+- (void) setIndexPath:(NSIndexPath*)indexPath Data:(id _Nullable)data;
 @end
 
 //
@@ -34,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** shell所控制的容器类,主要是tableView和collectView */
 @property (nonatomic,weak,readonly) id context;
 /** shell内部的整体数据 */
-@property (nonatomic,strong,nullable) NSMutableArray *xxdata;
+@property (nonatomic,strong,nullable) NSMutableArray *data;
 /** cell的类型 */
 @property (nonatomic,copy,readonly,nullable) NSString *cellType;
 /** cell的加载方式 */
@@ -45,7 +43,7 @@ typedef NS_ENUM(NSUInteger, XXcellLoadType){
 };
 @property (nonatomic,assign,readonly) XXcellLoadType cellLoadType;
 /** cell的事件回调block(默认cell无效) */
-@property (nonatomic,copy,nullable) void(^cellEventBlock)(NSString *event, NSDictionary * _Nullable params);
+@property (nonatomic,copy,nullable) void(^onCellEvent)(NSString *event, NSIndexPath *indexPath, id _Nullable param);
 
 /**
  * @brief    初始化为使用默认cell
