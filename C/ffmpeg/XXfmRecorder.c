@@ -1,7 +1,6 @@
 #include "XXfmRecorder.h"
 #include "XXfmUtility.h"
 #include <stdbool.h>
-#include <pthread.h>
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
