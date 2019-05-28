@@ -11,8 +11,6 @@
 #ifndef __XXocDefine_h
 #define __XXocDefine_h
 
-#include "../XXdefine.h"
-
 // 调试信息输出(注意：由于__FILE__并不是输出文件名称而是路径，调试信息输出可能过长，需要再添加部分处理以输出文件名称)
 #ifdef XX_DEBUG
 #define XXNSLog(...) NSLog(@"[XX] [FILE:%s] [LINE:%d] %@", __FILE__, __LINE__, [NSString stringWithFormat:__VA_ARGS__])
