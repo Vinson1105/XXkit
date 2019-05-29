@@ -28,9 +28,10 @@ public:
     void operator=(const XXl5StreamPusher &pusher);
     
 public:
+    void run();
     void sendVideoFrame();
     void sendAudioFrame();
-    void run();
+    void closeSource();
     
 private:
     int _rtpPort;
@@ -39,6 +40,8 @@ private:
     
     bool _isInterruptionRequested;
     bool _isRunning;
+    bool _isInited;
+    
     std::mutex _videoMutex;
     std::mutex _audioMutex;
     XXqueueHandle _videoQueueHandle;
@@ -46,8 +49,12 @@ private:
     
     UsageEnvironment *_usageEnvironment;
     TaskScheduler *_taskScheduler;
-    H264VideoRTPSink *_h264VideoRtpSink;
     RTSPServer *_rtspServer;
+    RTCPInstance *_rtcpInstance;
+    ServerMediaSession *_serverMediaSession;
+    
+    H264VideoRTPSink *_h264VideoRtpSink;
+    H264VideoStreamFramer *_videoStreamFramer;
     
     uint8_t *_videoBuffer;
     uint8_t *_audioBuffer;

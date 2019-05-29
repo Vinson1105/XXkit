@@ -3,11 +3,10 @@ const int VIDEO_BUFFER_SIZE_MAX = 128*1024;
 const int AUDIO_BUFFER_SIZE_MAX = 16*1024;
 
 static void afterVideoPlaying(void* clientData){
+    printf("[XXl5StreamPusher] run [%d] (%d)\n", __LINE__, getpid());
     XXl5StreamPusher *pusher = (XXl5StreamPusher*)clientData;
+    pusher->closeSource();
     pusher->sendVideoFrame();
-}
-static void startStream(XXl5StreamPusher *pusher){
-    pusher->run();
 }
 
 XXl5StreamPusher::XXl5StreamPusher(XXavFrameType videoType, XXavFrameType audioType, int rtpPort, int rtcpPort, int rtspPort){
@@ -15,15 +14,21 @@ XXl5StreamPusher::XXl5StreamPusher(XXavFrameType videoType, XXavFrameType audioT
     _rtcpPort   = rtcpPort;
     _rtspPort   = rtspPort;
     
-    _isInterruptionRequested = false;
-    _isRunning          = false;
+    _isInterruptionRequested    = false;
+    _isRunning                  = false;
+    _isInited                   = false;
+    
     _videoQueueHandle   = xxqueue_create(-1, NULL);
     _audioQueueHandle   = xxqueue_create(-1, NULL);
     
     _usageEnvironment   = NULL;
     _taskScheduler      = NULL;
-    _h264VideoRtpSink   = NULL;
     _rtspServer         = NULL;
+    _rtcpInstance       = NULL;
+    _serverMediaSession = NULL;
+    
+    _h264VideoRtpSink   = NULL;
+    _videoStreamFramer  = NULL;
     
     _videoBuffer    = NULL;
     _audioBuffer    = NULL;
@@ -63,8 +68,12 @@ void XXl5StreamPusher::start(){
     _runThread->detach();
     
     _isRunning = true;
+    printf("[XXl5StreamPusher] start\n");
 }
 void XXl5StreamPusher::stop(){
+    if (!_isRunning) {
+        return;
+    }
     _isInterruptionRequested = true;
 }
 void XXl5StreamPusher::pushVideoData(const XXdata *data){
@@ -86,46 +95,51 @@ void XXl5StreamPusher::operator=(const XXl5StreamPusher &pusher){
 }
 
 void XXl5StreamPusher::run(){
-    // 创建时间表
-    _taskScheduler = BasicTaskScheduler::createNew();
-    // 创建使用的环境
-    _usageEnvironment = BasicUsageEnvironment::createNew(*_taskScheduler);
+    printf("[XXl5StreamPusher] run (%d)\n", getpid());
+
+    if (!_isInited) {
+        // 创建时间表
+        _taskScheduler = BasicTaskScheduler::createNew();
+        // 创建使用的环境
+        _usageEnvironment = BasicUsageEnvironment::createNew(*_taskScheduler);
+        
+        struct in_addr destinationAddress;
+        destinationAddress.s_addr = chooseRandomIPv4SSMAddress(*_usageEnvironment);
+        
+        // rtp和rtcp端口
+        const uint8_t ttl = 255;
+        const Port rtpPort(_rtpPort);
+        const Port rtcpPort(_rtcpPort);
+        
+        // 创建rtp和rtcp收发socket
+        Groupsock rtpGroupsock(*_usageEnvironment, destinationAddress, rtpPort, ttl);
+        rtpGroupsock.multicastSendOnly();
+        Groupsock rtcpGroupsock(*_usageEnvironment, destinationAddress, rtcpPort, ttl);
+        rtpGroupsock.multicastSendOnly();
+        
+        OutPacketBuffer::maxSize = 100000;
+        _h264VideoRtpSink = H264VideoRTPSink::createNew(*_usageEnvironment, &rtpGroupsock, 96); // 96?
     
-    struct in_addr destinationAddress;
-    destinationAddress.s_addr = chooseRandomIPv4SSMAddress(*_usageEnvironment);
-    
-    // rtp和rtcp端口
-    const uint8_t ttl = 255;
-    const Port rtpPort(_rtpPort);
-    const Port rtcpPort(_rtcpPort);
-    
-    // 创建rtp和rtcp收发socket
-    Groupsock rtpGroupsock(*_usageEnvironment, destinationAddress, rtpPort, ttl);
-    rtpGroupsock.multicastSendOnly();
-    Groupsock rtcpGroupsock(*_usageEnvironment, destinationAddress, rtcpPort, ttl);
-    rtpGroupsock.multicastSendOnly();
-    
-    OutPacketBuffer::maxSize = 100000;
-    _h264VideoRtpSink = H264VideoRTPSink::createNew(*_usageEnvironment, &rtpGroupsock, 96); // 96?
-    
-    const uint32_t estimatedSessionBandwidth = 500;
-    const uint32_t maxCHAMElen = 100;
-    char CNAME[maxCHAMElen + 1];
-    gethostname(CNAME, maxCHAMElen);
-    CNAME[maxCHAMElen] = '\0';
-    RTCPInstance *rtcp = RTCPInstance::createNew(*_usageEnvironment, &rtcpGroupsock, estimatedSessionBandwidth, (unsigned char*)CNAME, _h264VideoRtpSink, NULL, true);
-    
-    _rtspServer = RTSPServer::createNew(*_usageEnvironment, _rtspPort, NULL);
-    if (NULL == _rtspServer) {
-        return;
+        const uint32_t estimatedSessionBandwidth = 500;
+        const uint32_t maxCHAMElen = 100;
+        char CNAME[maxCHAMElen + 1];
+        gethostname(CNAME, maxCHAMElen);
+        CNAME[maxCHAMElen] = '\0';
+        _rtcpInstance = RTCPInstance::createNew(*_usageEnvironment, &rtcpGroupsock, estimatedSessionBandwidth, (unsigned char*)CNAME, _h264VideoRtpSink, NULL, true);
+        
+        _rtspServer = RTSPServer::createNew(*_usageEnvironment, _rtspPort, NULL);
+        if (NULL == _rtspServer) {
+            return;
+        }
+        
+        _serverMediaSession = ServerMediaSession::createNew(*_usageEnvironment);
+        _serverMediaSession->addSubsession(PassiveServerMediaSubsession::createNew(*_h264VideoRtpSink, _rtcpInstance));
+        _rtspServer->addServerMediaSession(_serverMediaSession);
+        _isInited = true;
     }
     
-    ServerMediaSession *serverMediaSession = ServerMediaSession::createNew(*_usageEnvironment, "XXappStream");
-    serverMediaSession->addSubsession(PassiveServerMediaSubsession::createNew(*_h264VideoRtpSink, rtcp));
-    _rtspServer->addServerMediaSession(serverMediaSession);
-    
-    char* url = _rtspServer->rtspURL(serverMediaSession);
-    *_usageEnvironment << "Play this stream using the URL \"" << url << "\"\n";
+    char* url = _rtspServer->rtspURL(_serverMediaSession);
+    printf("[XXl5StreamPusher] url >> %s\n", url);
     delete[] url;
     
     sendVideoFrame();
@@ -164,7 +178,7 @@ void XXl5StreamPusher::sendVideoFrame(){
         return;
     }
     else if(XXQUEUE_IS_EMPTY == ret){
-        printf("[XXl5StreamPusher] [-] count:%d\n", count);
+        //printf("[XXl5StreamPusher] [-] count:%d(1)\n", count);
     }
     else{
         printf("[XXl5StreamPusher] [-] count:%d\n", count);
@@ -175,9 +189,16 @@ void XXl5StreamPusher::sendVideoFrame(){
         printf("[XXl5StreamPusher] [LINE:%d] could not create new video buffer source.\n", __LINE__);
         return;
     }
-    H264VideoStreamFramer *streamFramer = H264VideoStreamFramer::createNew(*_usageEnvironment, bufferSoucre, false);
-    _h264VideoRtpSink->startPlaying(*streamFramer, afterVideoPlaying, this);
+    _videoStreamFramer = H264VideoStreamFramer::createNew(*_usageEnvironment, (FramedSource*)bufferSoucre, false);
+    printf("[XXl5StreamPusher] [LINE:%d]\n", __LINE__);
+    _h264VideoRtpSink->startPlaying(*_videoStreamFramer, afterVideoPlaying, this);
+    printf("[XXl5StreamPusher] [LINE:%d]\n", __LINE__);
 }
 void XXl5StreamPusher::sendAudioFrame(){
     
 }
+void XXl5StreamPusher::closeSource(){
+    _h264VideoRtpSink->stopPlaying();
+    Medium::close((H264VideoStreamFramer*)_videoStreamFramer);
+}
+
