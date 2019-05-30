@@ -15,16 +15,19 @@
 #define XXQUEUE_IS_EMPTY 2
 typedef void* XXqueueHandle;
 typedef void** XXqueueHandlePtr;
-typedef void (*XXqueueDataFreeFunc)(void *data, uint64_t length);
+typedef void (*XXqueueDataFreeFunc)(void *data, int length);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
     
-    XXqueueHandle xxqueue_create(int maxCount, XXqueueDataFreeFunc itemFreeFunc);
-    int xxqueue_enqueue(XXqueueHandle handle, void *data, uint64_t length);
-    int xxqueue_dequeue(XXqueueHandle handle, void *data, uint64_t *length);
+    XXqueueHandle xxqueue_create(XXqueueDataFreeFunc dataFreeFunc);
+    XXqueueHandle xxqueue_createWithLimit(XXqueueDataFreeFunc dataFreeFunc, int maxCount, int maxHandle);   // maxHandle=1:掉头,=2:掉尾
+    
+    int xxqueue_enqueue(XXqueueHandle handle, void *data, int length);
+    int xxqueue_dequeue(XXqueueHandle handle, void *data, int *length);
     int xxqueue_count(XXqueueHandle handle);
+    void xxqueue_removeOne(XXqueueHandle handle, int index);
     void xxqueue_removeAll(XXqueueHandle handle);
     void xxqueue_free(XXqueueHandlePtr handlePtr);
     

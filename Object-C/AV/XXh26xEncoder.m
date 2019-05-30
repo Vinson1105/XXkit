@@ -92,6 +92,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     //NSDictionary *frameProperties = @{(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame: @(forceKeyFrame)};
     // 自定义指针
     void *voidSelf = (__bridge void*)self;
+    NSLog(@"[Encode] PTS:%.3f(开始编码)", timstamp);
     VTCompressionSessionEncodeFrame(_sessionRef, buffer, pts, kCMTimeInvalid, nil, voidSelf, nil);
     return YES;
 }
@@ -256,6 +257,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
         CMTime ptsTime      = timingInfo[0].presentationTimeStamp;
         NSTimeInterval pts  = (NSTimeInterval)ptsTime.value / (NSTimeInterval)ptsTime.timescale;
         
+        NSLog(@"[Encode] PTS:%.3f(整理数据)", pts);
         NSData *content = [encoder getContentFromSampleBufferRef:sampleBuffer];
         if (nil == content) {
             [encoder onError:@"[XXh26xEncoder] can not get content from sample buffer"];
@@ -287,6 +289,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
             [encoder onError:@"[XXh26xEncoder] can not to stream"];
             return;
         }
+        NSLog(@"[Encode] PTS:%.3f(输出数据)", pts);
         [encoder onData:data Dts:dts Pts:pts IsKeyFrame:isKeyFrame];
     }
 }

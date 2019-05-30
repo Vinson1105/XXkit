@@ -10,13 +10,16 @@
 #define H264LiveVideoServerMediaSubssion_h
 
 #include <liveMedia/H264VideoFileServerMediaSubsession.hh>
+#include "H264FramedLiveSource.h"
 
 class H264LiveVideoServerMediaSubssion : public H264VideoFileServerMediaSubsession {
 public:
-    static H264LiveVideoServerMediaSubssion* createNew(UsageEnvironment& env, Boolean reuseFirstSource, int *datasize, unsigned char*  databuf, bool *dosent);
+    //static H264LiveVideoServerMediaSubssion* createNew(UsageEnvironment& env, Boolean reuseFirstSource, unsigned char *frameData, int *frameDataSize,  bool *frameDataIsEnd);
+    static H264LiveVideoServerMediaSubssion* createNew(UsageEnvironment& env, Boolean reuseFirstSource, GetLiveDataFunc getLiveDataFunc, void *userData = NULL);
     
 protected: // we're a virtual base class
-    H264LiveVideoServerMediaSubssion(UsageEnvironment& env, Boolean reuseFirstSource, int *datasize, unsigned char*  databuf, bool *dosent);
+    //H264LiveVideoServerMediaSubssion(UsageEnvironment& env, Boolean reuseFirstSource, unsigned char *frameData, int *frameDataSize,  bool *frameDataIsEnd);
+    H264LiveVideoServerMediaSubssion(UsageEnvironment& env, Boolean reuseFirstSource, GetLiveDataFunc getLiveDataFunc, void *userData);
     ~H264LiveVideoServerMediaSubssion();
     
 protected: // redefined virtual functions
@@ -24,9 +27,13 @@ protected: // redefined virtual functions
     
 public:
     char fFileName[100];
-    int *Server_datasize;//数据区大小指针
-    unsigned char*  Server_databuf;//数据区指针
-    bool *Server_dosent;//发送标示
+    
+//    int *_frameDataSizeRef;         // 数据区大小指针
+//    unsigned char *_frameDataRef;   // 数据区指针
+//    bool *_frameDataIsEndRef;       // 发送标示
+    
+    GetLiveDataFunc _getLiveDataFunc;   // 获取数据回调
+    void *_userData;                    // 回调参数
 };
 
 #endif /* H264LiveVideoServerMediaSubssion_hpp */
