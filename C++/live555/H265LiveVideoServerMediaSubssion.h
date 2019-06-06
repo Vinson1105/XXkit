@@ -6,21 +6,21 @@
 //  Copyright © 2019 VINSON. All rights reserved.
 //
 
-#ifndef H264LiveVideoServerMediaSubssion_h
-#define H264LiveVideoServerMediaSubssion_h
+#ifndef H265LiveVideoServerMediaSubssion_h
+#define H265LiveVideoServerMediaSubssion_h
 
-#include <liveMedia/H264VideoFileServerMediaSubsession.hh>
+#include <liveMedia/H265VideoFileServerMediaSubsession.hh>
 #include "XXframedLiveSource.h"
 
-class H264LiveVideoServerMediaSubssion : public H264VideoFileServerMediaSubsession {
+class H265LiveVideoServerMediaSubssion : public H265VideoFileServerMediaSubsession {
 public:
     //static H264LiveVideoServerMediaSubssion* createNew(UsageEnvironment& env, Boolean reuseFirstSource, unsigned char *frameData, int *frameDataSize,  bool *frameDataIsEnd);
-    static H264LiveVideoServerMediaSubssion* createNew(UsageEnvironment& env, Boolean reuseFirstSource, GetLiveDataFunc getLiveDataFunc, void *userData = NULL);
+    static H265LiveVideoServerMediaSubssion* createNew(UsageEnvironment& env, Boolean reuseFirstSource, GetLiveDataFunc getLiveDataFunc, void *userData = NULL);
     
 protected: // we're a virtual base class
     //H264LiveVideoServerMediaSubssion(UsageEnvironment& env, Boolean reuseFirstSource, unsigned char *frameData, int *frameDataSize,  bool *frameDataIsEnd);
-    H264LiveVideoServerMediaSubssion(UsageEnvironment& env, Boolean reuseFirstSource, GetLiveDataFunc getLiveDataFunc, void *userData);
-    ~H264LiveVideoServerMediaSubssion();
+    H265LiveVideoServerMediaSubssion(UsageEnvironment& env, Boolean reuseFirstSource, GetLiveDataFunc getLiveDataFunc, void *userData);
+    ~H265LiveVideoServerMediaSubssion();
     
 protected: // redefined virtual functions
     FramedSource* createNewStreamSource(unsigned clientSessionId,unsigned& estBitrate);

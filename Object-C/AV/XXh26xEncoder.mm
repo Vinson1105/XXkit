@@ -2,14 +2,25 @@
 #import <AVFoundation/AVFoundation.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import <CoreFoundation/CoreFoundation.h>
+#include <pthread.h>
+
+const int TIMESCALE = 90000;
 
 @implementation XXh26xEncoderParam
-- (nonnull id)copyWithZone:(nullable NSZone *)zone {
-    XXh26xEncoderParam *obj = [[[self class] alloc] init];
-    obj.width       = self.width;
-    obj.height      = self.height;
-    obj.framerate   = self.framerate;
-    return obj;
++ (XXh26xEncoderParam*) paramWithWidth:(int)width Height:(int)height FrameRate:(int)frameRate BitRate:(int)bitRate IsH265:(BOOL)isH265{
+    return [[XXh26xEncoderParam alloc] initWithWidth:width Height:height FrameRate:frameRate BitRate:bitRate IsH265:isH265];
+}
+
+- (instancetype)initWithWidth:(int)width Height:(int)height FrameRate:(int)frameRate BitRate:(int)bitRate IsH265:(BOOL)isH265{
+    self = [super init];
+    if (self) {
+        _width      = width;
+        _height     = height;
+        _frameRate  = frameRate;
+        _bitRate    = bitRate;
+        _isH265     = isH265;
+    }
+    return self;
 }
 @end
 
@@ -20,7 +31,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
 //
 @interface XXh26xEncoder()
 @property (nonatomic,weak) id<XXvideoEncoderEvents> events;
-@property (nonatomic,copy) XXh26xEncoderParam *param;
+@property (nonatomic,strong) XXh26xEncoderParam *param;
 
 @property (nonatomic,assign) BOOL isRunning;
 @property (nonatomic,assign) VTCompressionSessionRef sessionRef;
@@ -48,23 +59,36 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     if (nil == _sessionRef) {
         // 创建session
         VTCompressionSessionRef session = nil;
-        status = VTCompressionSessionCreate(NULL, _param.width, _param.height, kCMVideoCodecType_H264, NULL, NULL, NULL, compressionOutputCallback, (__bridge void *)(self), &session);
+        status = VTCompressionSessionCreate(NULL,
+                                            _param.width,
+                                            _param.height,
+                                            _param.isH265 ? kCMVideoCodecType_HEVC : kCMVideoCodecType_H264,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            compressionOutputCallback,
+                                            (__bridge void *)(self), &session);
         if (status != noErr) {
             return NO;
         }
         
         // 设置码率
-        status |= VTSessionSetProperty(session, kVTCompressionPropertyKey_AverageBitRate, (__bridge CFTypeRef)@(512 * 1024));
+        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_AverageBitRate, (__bridge CFTypeRef)@(_param.bitRate));
         // 设置profile
-        status |= VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_H264_Baseline_3_1);
+        if (_param.isH265) {
+            status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_HEVC_Main_AutoLevel);
+        }
+        else{
+            status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_H264_Baseline_AutoLevel);
+        }
         // 设置实时编码
-        status |= VTSessionSetProperty(session, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
+        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
         // 设置是否允许生成B帧
-        status |= VTSessionSetProperty(session, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse);
+        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse);
         // 设置gop
-        status |= VTSessionSetProperty(session, kVTCompressionPropertyKey_MaxKeyFrameInterval, (__bridge CFTypeRef)@(_param.framerate));
+        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_MaxKeyFrameInterval, (__bridge CFTypeRef)@(_param.frameRate));
         // 设置session的帧率
-        status |= VTSessionSetProperty(session, kVTCompressionPropertyKey_ExpectedFrameRate, (__bridge CFTypeRef)@(_param.framerate));
+        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ExpectedFrameRate, (__bridge CFTypeRef)@(_param.frameRate));
         if (status != noErr) {
             VTCompressionSessionInvalidate(session);
             return NO;
@@ -87,12 +111,13 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
         return NO;
     }
     // pts
-    CMTime pts = CMTimeMake(timstamp * _param.timescale, _param.timescale);
+    CMTime pts = CMTimeMake(timstamp * TIMESCALE, TIMESCALE);
     // 设置是否为I帧
     //NSDictionary *frameProperties = @{(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame: @(forceKeyFrame)};
     // 自定义指针
     void *voidSelf = (__bridge void*)self;
-    NSLog(@"[Encode] PTS:%.3f(开始编码)", timstamp);
+    printf("[%.3f] [Encode] PTS:%.3f(开始编码) (线程ID:%p)\n", (double)clock()/(CLOCKS_PER_SEC/10), timstamp, pthread_self());
+    //NSLog(@"[Encode] PTS:%.3f(开始编码) (线程ID:%p)", timstamp, pthread_self());
     VTCompressionSessionEncodeFrame(_sessionRef, buffer, pts, kCMTimeInvalid, nil, voidSelf, nil);
     return YES;
 }
@@ -182,6 +207,9 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     return [NSData dataWithBytes:buffer length:length];
 }
 - (NSData*) getVPSFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef{
+    if (!_param.isH265) {
+        return nil;
+    }
     CMVideoFormatDescriptionRef description = CMSampleBufferGetFormatDescription(sampleBufferRef);
     
     const uint8_t *bytes    = nil;
@@ -192,12 +220,12 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     }
     return [NSData dataWithBytes:bytes length:size];
 }
-- (NSData*) getSPSFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef IsH264:(BOOL)isH264{
+- (NSData*) getSPSFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef{
     CMVideoFormatDescriptionRef description = CMSampleBufferGetFormatDescription(sampleBufferRef);
     
     const uint8_t *bytes    = nil;
     size_t size             = 0;
-    if(isH264){
+    if(!_param.isH265){
         CMVideoFormatDescriptionGetH264ParameterSetAtIndex(description, 0, &bytes, &size, nil, nil);
     }
     else{
@@ -208,12 +236,12 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     }
     return [NSData dataWithBytes:bytes length:size];
 }
-- (NSData*) getPPSFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef IsH264:(BOOL)isH264{
+- (NSData*) getPPSFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef{
     CMVideoFormatDescriptionRef description = CMSampleBufferGetFormatDescription(sampleBufferRef);
     
     const uint8_t *bytes    = nil;
     size_t size             = 0;
-    if(isH264){
+    if(!_param.isH265){
         CMVideoFormatDescriptionGetH264ParameterSetAtIndex(description, 1, &bytes, &size, nil, nil);
     }
     else{
@@ -243,6 +271,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
         return;
     }
     else{
+        // 取出时间信息
         CMSampleTimingInfo timingInfo[10];
         CMItemCount timingCount = 0;
         OSStatus status = CMSampleBufferGetSampleTimingInfoArray(sampleBuffer, 10, timingInfo, &timingCount);
@@ -251,13 +280,15 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
             return;
         }
         
+        // 根据timescale转换到pts和dts
         CMTime dtsTime      = timingInfo[0].decodeTimeStamp;
         NSTimeInterval dts  = (NSTimeInterval)dtsTime.value / (NSTimeInterval)dtsTime.timescale;
         
         CMTime ptsTime      = timingInfo[0].presentationTimeStamp;
         NSTimeInterval pts  = (NSTimeInterval)ptsTime.value / (NSTimeInterval)ptsTime.timescale;
         
-        NSLog(@"[Encode] PTS:%.3f(整理数据)", pts);
+        printf("[%.3f] [Encode] PTS:%.3f(整理数据) (线程ID:%p)\n", (double)clock()/(CLOCKS_PER_SEC/10), pts, pthread_self());
+        //NSLog(@"[Encode] PTS:%.3f(整理数据) (线程ID:%p)", pts, pthread_self());
         NSData *content = [encoder getContentFromSampleBufferRef:sampleBuffer];
         if (nil == content) {
             [encoder onError:@"[XXh26xEncoder] can not get content from sample buffer"];
@@ -272,14 +303,15 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
         BOOL isKeyFrame = [encoder isKeyFrame:sampleBuffer];
         NSData *data    = nil;
         if (isKeyFrame) {
-            NSData *sps = [encoder getSPSFromSampleBufferRef:sampleBuffer IsH264:YES];
-            NSData *pps = [encoder getPPSFromSampleBufferRef:sampleBuffer IsH264:YES];
+            NSData *vps = [encoder getVPSFromSampleBufferRef:sampleBuffer];
+            NSData *sps = [encoder getSPSFromSampleBufferRef:sampleBuffer];
+            NSData *pps = [encoder getPPSFromSampleBufferRef:sampleBuffer];
             if (nil == sps || nil == pps) {
                 [encoder onError:@"[XXh26xEncoder] can not get sps/pps from sample buffer"];
                 return;
             }
             
-            data = [encoder toStream:nalus VPS:nil SPS:sps PPS:pps];
+            data = [encoder toStream:nalus VPS:vps SPS:sps PPS:pps];
         }
         else{
             data = [encoder toStream:nalus VPS:nil SPS:nil PPS:nil];
@@ -289,7 +321,8 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
             [encoder onError:@"[XXh26xEncoder] can not to stream"];
             return;
         }
-        NSLog(@"[Encode] PTS:%.3f(输出数据)", pts);
         [encoder onData:data Dts:dts Pts:pts IsKeyFrame:isKeyFrame];
+        printf("[%.3f] [Encode] PTS:%.3f(输出数据) (线程ID:%p)\n", (double)clock()/(CLOCKS_PER_SEC/10), pts, pthread_self());
+        //NSLog(@"[Encode] PTS:%.3f(输出数据) (线程ID:%p)", pts, pthread_self());
     }
 }

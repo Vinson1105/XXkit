@@ -14,9 +14,6 @@
 #include <UsageEnvironment/UsageEnvironment.hh>
 #include <groupsock/GroupsockHelper.hh>
 
-#include "H264FramedLiveSource.h"
-#include "H264LiveVideoServerMediaSubssion.h"
-
 class XXl5StreamPusher {
 public:
     XXl5StreamPusher(XXavFrameType videoType, XXavFrameType audioType, int rtpPort, int rtcpPort, int rtspPort);
@@ -36,6 +33,9 @@ public:
     void getVideoDataInQueue(uint8_t *data, int *length);
         
 private:
+    XXavFrameType _videoType;
+    XXavFrameType _audioType;
+    
     int _rtpPort;
     int _rtcpPort;
     int _rtspPort;
@@ -53,10 +53,10 @@ private:
     TaskScheduler *_taskScheduler;
     RTSPServer *_rtspServer;
     RTCPInstance *_rtcpInstance;
-    H264VideoRTPSink *_h264VideoRtpSink;
+    H264or5VideoRTPSink *_h26xVideoRtpSink; 
     ServerMediaSession *_serverMediaSession;
     
-    H264LiveVideoServerMediaSubssion *_h264liveVideoServerMediaSubssion;
+    FileServerMediaSubsession *_h26xLiveVideoServerMediaSubssion;
     //H264VideoStreamFramer *_videoStreamFramer;
     
     uint8_t *_videoBuffer;
