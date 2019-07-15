@@ -137,7 +137,7 @@ void XXl5StreamPusher::run(){
         gethostname(CNAME, maxCHAMElen);
         CNAME[maxCHAMElen] = '\0';
         _rtcpInstance = RTCPInstance::createNew(*_usageEnvironment, &rtcpGroupsock, estimatedSessionBandwidth, (unsigned char*)CNAME, _h26xVideoRtpSink, NULL, true);
-        increaseSendBufferTo(*_usageEnvironment, _h26xVideoRtpSink->groupsockBeingUsed().socketNum(), 128*1024);
+        increaseSendBufferTo(*_usageEnvironment, _h26xVideoRtpSink->groupsockBeingUsed().socketNum(), 512*1024);
         
         _rtspServer = RTSPServer::createNew(*_usageEnvironment, _rtspPort, NULL);
         if (NULL == _rtspServer) {

@@ -11,7 +11,6 @@
 @property (nonatomic,strong) AVCaptureDeviceInput *captureDeviceInput;              // 采集输入设备
 @property (nonatomic,strong) AVCaptureVideoDataOutput *captureVideoDataOutput;      // 采集输出数据
 @property (nonatomic,strong) AVCaptureSession *captureSession;                      // 采集会话
-//@property (nonatomic,strong) AVCaptureConnection *captureConnection;                // 采集连接
 @property (nonatomic,strong) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;  // 采集预览layer
 
 @property (nonatomic,strong) dispatch_queue_t videoCaptureOutputQueue;
@@ -31,7 +30,7 @@
         
         _events     = events;
         _view       = view;
-        _isReady    = [self connect];
+        _isReady    = NO;
     }
     return self;
 }
@@ -44,6 +43,9 @@
 
 #pragma mark - 公共接口: <开始> <停止>
 - (BOOL) start{
+    if (!_isReady) {
+        _isReady = [self connect];
+    }
     if (!_isReady || _isRunning) {
         return NO;
     }

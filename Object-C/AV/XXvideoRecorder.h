@@ -1,8 +1,8 @@
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
+#import <UIKit/UIKit.h>
 #include "../../C/XXavUtility.h"
-#include "./XXencoder.h"
+#include "./XXcodecBase.h"
 
 typedef enum : NSUInteger {
     XXvideoRecorderResult_Finished = 0,
@@ -16,10 +16,10 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface XXvideoRecorder : NSObject<AVCaptureVideoDataOutputSampleBufferDelegate>
-@property (nonatomic,weak) XXvideoEncoder *videoEncoder;    // 内置的编码器
-@property (nonatomic,assign) int frameRate;                 // 帧率
-@property (nonatomic,assign) int type;                      // 输出图像类型(kCVPixelFormatType_XXX)
-@property (nonatomic,copy) NSString *preset;                // 分辨率(AVCaptureSessionPresetXXX)
+@property (nonatomic,weak) XXvideoEncoderBase *videoEncoder;    // 内置的编码器,当设置了该属性,会按编码输出
+@property (nonatomic,assign) int frameRate;     // 帧率
+@property (nonatomic,assign) int type;          // 输出图像类型(kCVPixelFormatType_XXX),注意:只有个别的类型可用,kCVPixelFormatType_32BGRA/kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+@property (nonatomic,copy) NSString *preset;    // 分辨率(AVCaptureSessionPresetXXX),注意:不同机型可能有不同的可用分辨率
 
 - (instancetype) initWithEvents:(id<XXvideoRecorderEvents>)events View:(UIView* _Nullable)view IsDefaultPositionFront:(BOOL)isFront;
 - (BOOL) start;

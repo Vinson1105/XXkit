@@ -7,7 +7,7 @@
 //
 
 #import "XXmtkYuvDelegate.h"
-#define VERTEX_FUNCTION_NAME @"yuv_vertex"
+#define VERTEX_FUNCTION_NAME @"common_vertex"
 #define FRAGMENT_FUNCTION_NAME @"yuv_fragment"
 
 typedef struct{
@@ -183,9 +183,28 @@ static const ConvertMatrix convertMatrix = {
     
     id<MTLCommandBuffer> commandBuffer              = [_commandQueue commandBuffer];
     id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];    // 编码绘制指令的Encoder
+    
+//    CGFloat widthPerItem = _drawableSize.x / 2.0;
+//    CGFloat heightPerItem = _drawableSize.y / 2.0;
+//    for (int row = 0; row < 2; row++) {
+//        CGFloat y = row * heightPerItem;
+//        for (int col = 0; col < 2; col++) {
+//            CGFloat x = col * widthPerItem;
+//
+//            [renderEncoder setViewport:(MTLViewport){x, y, widthPerItem, heightPerItem, -1.0, 1.0 }];                      // 设置显示区域
+//            [renderEncoder setRenderPipelineState:_renderPipelineState];                                                            // 设置渲染管道，以保证顶点和片元两个shader会被调用
+//
+//            [_pixelBufferCondition lock];
+//            [self renderPixelBufferRefToEncoder:renderEncoder PixelBufferRef:_pixelBufferRef];
+//            [_pixelBufferCondition unlock];
+//            [renderEncoder setVertexBuffer:_verticesBuffer offset:0 atIndex:0];                                 // 设置顶点缓存
+//            [renderEncoder setFragmentBuffer:_convertMatrixBuffer offset:0 atIndex:0];                          // 设置转换矩阵
+//            [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:_numOfVertices];   // 绘制
+//        }
+//    }
     [renderEncoder setViewport:(MTLViewport){0.0, 0.0, _drawableSize.x, _drawableSize.y, -1.0, 1.0 }];                      // 设置显示区域
     [renderEncoder setRenderPipelineState:_renderPipelineState];                                                            // 设置渲染管道，以保证顶点和片元两个shader会被调用
-    
+
     [_pixelBufferCondition lock];
     [self renderPixelBufferRefToEncoder:renderEncoder PixelBufferRef:_pixelBufferRef];
     [_pixelBufferCondition unlock];

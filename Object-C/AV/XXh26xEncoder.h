@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
-#import "XXencoder.h"
+#import "XXcodecBase.h"
 
 @interface XXh26xEncoderParam : NSObject
 @property (nonatomic,assign) int width;         // 宽度
@@ -12,7 +12,7 @@
 @end
 
 NS_ASSUME_NONNULL_BEGIN
-@interface XXh26xEncoder : XXvideoEncoder
-- (instancetype) initWithName:(NSString*)name Events:(id<XXvideoEncoderEvents> _Nullable)events Param:(XXh26xEncoderParam*)param;
+@interface XXh26xEncoder : XXvideoEncoderBase
++ (id) paramWithWidth:(int)width Height:(int)height FrameRate:(int)frameRate BitRate:(int)bitRate IsH265:(BOOL)isH265;
 @end
 NS_ASSUME_NONNULL_END
