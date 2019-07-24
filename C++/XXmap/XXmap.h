@@ -6,18 +6,18 @@
 //  Copyright © 2019 VINSON. All rights reserved.
 //
 
-#ifndef XXlevelMap_hpp
-#define XXlevelMap_hpp
+#ifndef XXmap_h
+#define XXmap_h
 
 #include <stdio.h>
 
-class XXlevelMap {
+class XXmap {
 public:
-    XXlevelMap(const char *name);
-    ~XXlevelMap();
+	XXmap(const char *name);
+    ~XXmap();
     
 public:
     
 };
 
-#endif /* XXlevelMap_hpp */
+#endif /* XXmap_h */
