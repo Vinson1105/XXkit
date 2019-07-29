@@ -1,11 +1,3 @@
-//
-//  XXlevelPath.hpp
-//  XXkitDemo
-//
-//  Created by VINSON on 2019/7/15.
-//  Copyright © 2019 VINSON. All rights reserved.
-//
-
 #ifndef XXpath_h
 #define XXpath_h
 
@@ -21,11 +13,12 @@ public:
 	XXpath(const XXpath &xxpath);
 	virtual ~XXpath();
 
-	const string& path() { return _path; }
+	const string& path() const{ return _path; }
 
 	void operator=(const XXpath &xxpath);
 	XXpath& operator<<(const char *node);
 	XXpath& operator<<(const string &node);
+	XXpath& operator<<(int node);
 
 private:
 	string _path;
