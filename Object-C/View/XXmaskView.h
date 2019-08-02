@@ -1,10 +1,3 @@
-//
-//  XXMaskView.h
-//  iCamSee
-//
-//  Created by VINSON on 2018/11/16.
-//  Copyright © 2018 Macrovideo. All rights reserved.
-//
 /*
     说明:
     20181023
