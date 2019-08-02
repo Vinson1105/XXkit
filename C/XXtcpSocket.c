@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+#include <string.h>
 
 #define DECLARE_CONTEXT(handle) XXtcpSocketContext *context = (XXtcpSocketContext*)(handle);
 
@@ -22,11 +23,14 @@ typedef struct XXtcpSocketContext{
     int     recvBufferSize;
     struct  timeval selectTime;
     bool    isConnected;
+    
+    bool    hasSomething;
+    int     recvCountAfterSelect;
 }XXtcpSocketContext;
 
 // 私有函数声明 {
 static void msecToTimeVal(struct timeval *time, time_t msec);
-static ssize_t loopToRecv(int socket, uint8_t *data, ssize_t maxLength, int times, struct timeval *timeval, fd_set *fdread);
+static ssize_t loopToRecv(int socket, uint8_t *data, ssize_t maxLength, int times, struct timeval *timeval, fd_set *fdread, bool *hasSomething, int *recvCountAfterSelect);
 // } 私有函数声明
 
 XXtcpSocketHandle xxtcpSocket_alloc(int recvBufferSize, int recvTryTimes, time_t waitSelectMsec){
@@ -35,6 +39,8 @@ XXtcpSocketHandle xxtcpSocket_alloc(int recvBufferSize, int recvTryTimes, time_t
     context->recvTryTimes       = recvTryTimes;
     context->recvBufferSize     = recvBufferSize;
     context->isConnected        = false;
+    context->hasSomething       = false;
+    context->recvCountAfterSelect = 0;
     msecToTimeVal(&(context->selectTime), waitSelectMsec);
     return context;
 }
@@ -57,6 +63,9 @@ int xxtcpSocket_connectToHost(XXtcpSocketHandle handle, const char *ip, int port
         
         sockaddr    = (struct sockaddr *)addr;
         newSocket   = socket(AF_INET, SOCK_STREAM, 0);
+        if (newSocket < 0) {
+            return -1;
+        }
     }
     else if (xxnet_isIPV6(ip)) {
         sockaddrLength              = sizeof(struct sockaddr_in6);
@@ -67,6 +76,9 @@ int xxtcpSocket_connectToHost(XXtcpSocketHandle handle, const char *ip, int port
 
         sockaddr    = (struct sockaddr *)addr;
         newSocket   = socket(AF_INET6, SOCK_STREAM, 0);
+        if (newSocket < 0) {
+            return -1;
+        }
     }
     else{
         return -1;
@@ -84,6 +96,7 @@ int xxtcpSocket_connectToHost(XXtcpSocketHandle handle, const char *ip, int port
     
     // 连接
     if(0 != connect(newSocket, sockaddr, sockaddrLength)){
+        //由于是非阻塞,connect并不会马上执行,所以此处不能就此判断是否连接成功
         //free(sockaddr);
         //return -1;
     }
@@ -103,14 +116,14 @@ int xxtcpSocket_connectToHost(XXtcpSocketHandle handle, const char *ip, int port
 }
 ssize_t xxtcpSocket_send(XXtcpSocketHandle handle, uint8_t *data, ssize_t length){
     DECLARE_CONTEXT(handle)
-    if (NULL == context || !context->isConnected) {
+    if (NULL == context || context->socket < 0 || !context->isConnected) {
         return -1;
     }
     
     FD_ZERO(&(context->fdwrite));
     FD_SET(context->socket, &context->fdwrite);
     
-    if (select(context->socket + 1,NULL, &(context->fdwrite), NULL, &(context->selectTime)) <= 0){
+    if (select(context->socket + 1, NULL, &(context->fdwrite), NULL, &(context->selectTime)) <= 0){
         return -1;
     }
     
@@ -118,25 +131,27 @@ ssize_t xxtcpSocket_send(XXtcpSocketHandle handle, uint8_t *data, ssize_t length
 }
 ssize_t xxtcpSocket_recv(XXtcpSocketHandle handle, uint8_t *data, ssize_t length){
     DECLARE_CONTEXT(handle)
-    if (NULL == context || !context->isConnected) {
+    if (NULL == context || context->socket < 0 || !context->isConnected) {
+        printf("[GWX] error/n");
         return -1;
     }
-    
-    return loopToRecv(context->socket, data, length, context->recvTryTimes, &(context->selectTime), &(context->fdread));
+    memset(data, 0, length);
+    return loopToRecv(context->socket, data, length, context->recvTryTimes, &(context->selectTime), &(context->fdread), &(context->hasSomething), &(context->recvCountAfterSelect));
 }
-ssize_t xxtcpSocket_waitForRecv(XXtcpSocketHandle handle, uint8_t *data, ssize_t maxLength, int times, time_t msec){
+ssize_t xxtcpSocket_waitForRecv(XXtcpSocketHandle handle, uint8_t *data, ssize_t maxLength, int times, time_t waitSelectMsec){
     DECLARE_CONTEXT(handle)
-    if (NULL == context || !context->isConnected) {
+    if (NULL == context || context->socket < 0 || !context->isConnected) {
         return -1;
     }
     
+    memset(data, 0, maxLength);
     struct timeval selectTime;
-    msecToTimeVal(&selectTime, msec);
-    return loopToRecv(context->socket, data, maxLength, context->recvTryTimes, &selectTime, &(context->fdread));
+    msecToTimeVal(&selectTime, waitSelectMsec);
+    return loopToRecv(context->socket, data, maxLength, context->recvTryTimes, &selectTime, &(context->fdread), &(context->hasSomething), &(context->recvCountAfterSelect));
 }
 void xxtcpSocket_disconnect(XXtcpSocketHandle handle){
     DECLARE_CONTEXT(handle)
-    if (NULL == context || !context->isConnected) {
+    if (NULL == context || context->socket < 0 || !context->isConnected) {
         return;
     }
     
@@ -149,12 +164,16 @@ void xxtcpSocket_free(XXtcpSocketHandle *handle){
         return;
     }
     
-    if (context->isConnected) {
+    if (context->socket > 0 && context->isConnected) {
         close(context->socket);
     }
     
     free(context);
     *handle = NULL;
+}
+int xxtcpSocket_socket(XXtcpSocketHandle handle){
+    DECLARE_CONTEXT(handle)
+    return context->socket;
 }
 
 //
@@ -164,40 +183,74 @@ static void msecToTimeVal(struct timeval *time, time_t msec){
     time->tv_usec   = msec % 1000 * 1000;
     time->tv_sec    = msec / 1000;
 }
-static ssize_t loopToRecv(int socket, uint8_t *data, ssize_t maxLength, int times, struct timeval *timeval, fd_set *fdread){
+static ssize_t loopToRecv(int socket,
+                          uint8_t *data,
+                          ssize_t maxLength,
+                          int times,
+                          struct timeval *timeval,
+                          fd_set *fdread,
+                          bool *hasSomething,
+                          int *recvCountAfterSelect){
     ssize_t receivedSize = 0;
     //printf("[GWX] [XXtcpSocket] [循环接收] 目标大小:%zd 循环次数:%d 单次时间:%ld\r\n", maxLength, times, timeval->tv_sec * 1000 + timeval->tv_usec / 1000);
     for (int index = 0; index < times; index++) {
-        FD_ZERO(fdread);
-        FD_SET(socket, fdread);
-        int ret = select(socket + 1, fdread, NULL, NULL, timeval);
+        if (!*hasSomething) {
+            FD_ZERO(fdread);
+            FD_SET(socket, fdread);
+            int ret = select(socket + 1, fdread, NULL, NULL, timeval);
+            if (ret < 0) {
+                //printf("[GWX] [XXtcpSocket] [%d] socket error\n", __LINE__);
+                return -100;
+            }
+            else if(0 == ret) {
+                continue;
+            }
+            else {
+                *hasSomething = true;
+                *recvCountAfterSelect = 0;
+                //printf("[GWX] [XXtcpSocket] [%d] select通过\n", __LINE__);
+            }
+        }
+        else{
+            //printf("[GWX] [XXtcpSocket] [%d] 之前有数据跳过select\n", __LINE__);
+        }
         
-        if (ret < 0) {
-            return -1;
+        ssize_t size = recv(socket, data + receivedSize, maxLength - receivedSize, MSG_DONTWAIT);
+        if (size < 0) {
+            //printf("[GWX] [XXtcpSocket] [%d] socket error\n", __LINE__);
+            if (*hasSomething) {
+                *hasSomething = false;
+                continue;
+            }
+            else{
+               return -101;
+            }
         }
-        else if(0 == ret) {
-            //usleep(20000);
-            //printf("[GWX] [XXtcpSocket] [循环接收] select超时\r\n");
-            continue;
+        else if (0 == size) {
+            if (0 == *recvCountAfterSelect) {
+                return XXSOCKET_ERROR_CLOSED;
+            }
+            else{
+                *recvCountAfterSelect   = 0;
+                *hasSomething           = false;
+                continue;
+            }
         }
-        else {
-            //printf("[GWX] [XXtcpSocket] [循环接收] select通过\r\n");
-        }
-        
-        ssize_t size = recv(socket, data + receivedSize, maxLength - receivedSize, 0);
-        if (size <= 0) {
-            return -1;
+        else{
+            *recvCountAfterSelect += 1;
         }
         
         receivedSize += size;
         if (receivedSize > maxLength) {
-            return -1;
+            //printf("[GWX] [XXtcpSocket] [%d] socket error\n", __LINE__);
+            return -102;
         }
         else if(receivedSize == maxLength) {
+            //printf("[GWX] [XXtcpSocket] 接收完毕 %d/%d\n", receivedSize, maxLength);
             break;
         }
         else {
-            //printf("[GWX] [XXtcpSocket] [循环接收] 收到:%zd 总接收:%zdd\r\n", size, receivedSize);
+            //printf("[GWX] [XXtcpSocket] %d >> %d/%d\n", size, receivedSize, maxLength);
         }
         
         //struct timeval start, end;

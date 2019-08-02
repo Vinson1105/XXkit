@@ -1,8 +1,7 @@
 #import <Foundation/Foundation.h>
 
-
+NS_ASSUME_NONNULL_BEGIN
 @interface XXnode : NSObject
-
 typedef NSString*(^StringBlock)(void);
 typedef NSUInteger(^NSUintBlock)(void);
 typedef NSInteger(^NSIntBlock)(void);
@@ -18,3 +17,4 @@ typedef XXnode*(^DictNodeBlock)(id key);
 
 - (instancetype) initWithData:(id)root;
 @end
+NS_ASSUME_NONNULL_END

@@ -20,8 +20,9 @@ typedef struct XXqueueItem{
 
 typedef struct XXqueueContext{
     XXqueueItem headItem;               // 头部item
+    XXqueueDataCopyFunc dataCopyFunc;   // item复制函数
     XXqueueDataFreeFunc dataFreeFunc;   // item释放函数
-    int maxCount;                      // 最大数量
+    int maxCount;                       // 最大数量
     int maxHandle;
     int count;
 }XXqueueContext;
@@ -29,21 +30,23 @@ typedef struct XXqueueContext{
 static void freeQueueItem(XXqueueContext *context, XXqueueItem *item);
 static XXqueueItem* posQueueItem(XXqueueContext *context, int index);
 
-XXqueueHandle xxqueue_create(XXqueueDataFreeFunc dataFreeFunc){
+XXqueueHandle xxqueue_create(XXqueueDataCopyFunc dataCopyFunc, XXqueueDataFreeFunc dataFreeFunc){
     XXqueueContext *context = (XXqueueContext*)malloc(sizeof(XXqueueContext));
-    context->maxCount = 0;
-    context->count = 0;
-    context->dataFreeFunc = dataFreeFunc;
+    context->maxCount       = 0;
+    context->count          = 0;
+    context->dataCopyFunc   = dataCopyFunc;
+    context->dataFreeFunc   = dataFreeFunc;
     
     INIT_LIST_HEAD(&(context->headItem.list));
     return context;
 }
-XXqueueHandle xxqueue_createWithLimit(XXqueueDataFreeFunc dataFreeFunc, int maxCount, int maxHandle){
+XXqueueHandle xxqueue_createWithLimit(XXqueueDataCopyFunc dataCopyFunc, XXqueueDataFreeFunc dataFreeFunc, int maxCount, int maxHandle){
     XXqueueContext *context = (XXqueueContext*)malloc(sizeof(XXqueueContext));
-    context->maxCount = maxCount;
-    context->maxHandle = maxHandle;
-    context->count = 0;
-    context->dataFreeFunc = dataFreeFunc;
+    context->maxCount       = maxCount;
+    context->maxHandle      = maxHandle;
+    context->count          = 0;
+    context->dataCopyFunc   = dataCopyFunc;
+    context->dataFreeFunc   = dataFreeFunc;
     
     INIT_LIST_HEAD(&(context->headItem.list));
     return context;
@@ -68,8 +71,15 @@ int xxqueue_enqueue(XXqueueHandle handle, void *data, int length){
     }
     XXqueueItem *newItem = (XXqueueItem*)malloc(sizeof(XXqueueItem));
     newItem->length = length;
+    
     newItem->data = malloc(length);
-    memcpy(newItem->data, (uint8_t*)data, length);
+    memset(newItem->data, 0, length);
+    if (NULL != context->dataCopyFunc) {
+         context->dataCopyFunc(newItem->data, data, length);
+    }
+    else{
+        memcpy(newItem->data, (uint8_t*)data, length);
+    }
     list_add_tail(&(newItem->list), &(context->headItem.list));
     
     context->count++;
@@ -89,10 +99,20 @@ int xxqueue_dequeue(XXqueueHandle handle, void *data, int *length){
     XXqueueItem *item = list_entry(pos, XXqueueItem, list);
     list_del(pos);
     
-    memcpy(data, item->data, item->length);
+    if (NULL != context->dataCopyFunc) {
+        context->dataCopyFunc(data, item->data, item->length);
+    }
+    else{
+        memcpy(data, item->data, item->length);
+    }
     *length = item->length;
     context->count--;
-    free(item);
+    freeQueueItem(context, item);
+    
+//    memcpy(data, item->data, item->length);
+//    *length = item->length;
+//    free(item);
+//    context->count--;
     return 0;
 }
 int xxqueue_count(XXqueueHandle handle){

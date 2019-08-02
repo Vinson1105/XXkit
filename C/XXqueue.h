@@ -11,18 +11,19 @@
 
 #include <stdio.h>
 
-#define XXQUEUE_IS_FULL 1
-#define XXQUEUE_IS_EMPTY 2
+#define XXQUEUE_IS_FULL     -10
+#define XXQUEUE_IS_EMPTY    -11
 typedef void* XXqueueHandle;
 typedef void** XXqueueHandlePtr;
+typedef void (*XXqueueDataCopyFunc)(void *dest, void *src, int length);
 typedef void (*XXqueueDataFreeFunc)(void *data, int length);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
     
-    XXqueueHandle xxqueue_create(XXqueueDataFreeFunc dataFreeFunc);
-    XXqueueHandle xxqueue_createWithLimit(XXqueueDataFreeFunc dataFreeFunc, int maxCount, int maxHandle);   // maxHandle=1:掉头,=2:掉尾
+    XXqueueHandle xxqueue_create(XXqueueDataCopyFunc dataCopyFunc, XXqueueDataFreeFunc dataFreeFunc);
+    XXqueueHandle xxqueue_createWithLimit(XXqueueDataCopyFunc dataCopyFunc, XXqueueDataFreeFunc dataFreeFunc, int maxCount, int maxHandle);   // maxHandle=1:丢头,=2:丢尾
     
     int xxqueue_enqueue(XXqueueHandle handle, void *data, int length);
     int xxqueue_dequeue(XXqueueHandle handle, void *data, int *length);

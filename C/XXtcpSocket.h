@@ -1,16 +1,12 @@
-/**
- * @author:
- * @date: 20190329
- * @descirption: 基于socket作了一个简易封装,主要是把循环接收机制封装
- * @history:
- * date - author
- */
-
 #ifndef XXtcpSocket_h
 #define XXtcpSocket_h
 
 #include <stdio.h>
 #include <stdbool.h>
+
+#define XXSOCKET_ERROR_UNDEFINED    -1
+#define XXSOCKET_ERROR_TIMEOUT      -2
+#define XXSOCKET_ERROR_CLOSED       -3
 
 typedef void* XXtcpSocketHandle;
 
@@ -60,10 +56,10 @@ extern "C" {
      * @param    data 用于存储接收的数据
      * @param    maxLength 最大接收长度
      * @param    times 循环接收次数
-     * @param    msec 单次循环等待时间
+     * @param    waitSelectMsec 单次循环select等待时间
      * @return   返回>=0实际接收数据长度,否则失败
      */
-    ssize_t xxtcpSocket_waitForRecv(XXtcpSocketHandle handle, uint8_t *data, ssize_t maxLength, int times, time_t msec);
+    ssize_t xxtcpSocket_waitForRecv(XXtcpSocketHandle handle, uint8_t *data, ssize_t maxLength, int times, time_t waitSelectMsec);
     
     /**
      * @brief    断开连接
@@ -76,6 +72,9 @@ extern "C" {
      * @param    handle 目标句柄地址
      */
     void xxtcpSocket_free(XXtcpSocketHandle *handle);
+    
+    /** 用于测试 */
+    int xxtcpSocket_socket(XXtcpSocketHandle handle);
 
 #ifdef __cplusplus
 }

@@ -5,6 +5,9 @@
 #include <map>
 #include "XXpath.h"
 
+//
+// XXmapBase
+//
 class XXmapBase {
 	friend class XXmapRef;
 public:
@@ -31,6 +34,9 @@ private:
 	string _name;
 };
 
+//
+// XXmap
+//
 class XXmap : public XXmapBase
 {
 public:
@@ -67,6 +73,9 @@ private:
 	std::map<string,string> _map;
 };
 
+//
+// XXmapRef
+//
 class XXmapRef {
 public:
 	XXmapRef(XXmapBase &mapBase);

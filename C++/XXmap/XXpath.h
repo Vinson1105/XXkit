@@ -24,4 +24,4 @@ private:
 	string _path;
 };
 
-#endif /* XXlevelPath_hpp */
+#endif
