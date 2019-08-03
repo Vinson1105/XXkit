@@ -2,11 +2,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 @interface XXnode : NSObject
-typedef NSString*(^StringBlock)(void);
+typedef NSString* _Nullable (^StringBlock)(void);
 typedef NSUInteger(^NSUintBlock)(void);
 typedef NSInteger(^NSIntBlock)(void);
-typedef XXnode*(^ArrayNodeBlock)(uint index);
-typedef XXnode*(^DictNodeBlock)(id key);
+typedef  XXnode* _Nullable (^ArrayNodeBlock)(uint index);
+typedef  XXnode* _Nullable (^DictNodeBlock)(id key);
 
 @property (nonatomic,weak,nullable) id value;
 @property (nonatomic,copy,readonly) StringBlock string;

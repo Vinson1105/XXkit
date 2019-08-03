@@ -14,12 +14,12 @@
  * @brief    返回当前app语言
  * @return   nil:跟随系统
  */
-+ (NSString*) currentLanguage;
++ (nullable NSString*) currentLanguage;
 
 /**
  * @brief    设置app语言,注意需要跟'.lproj'文件名称一致
  * @param    language 语言缩写,nil即为跟随系统
  * @param    refreshable YES:自动刷新View,否则不自动刷新,注意自动刷新只是兼容了一部分的情况,如有特殊情况需要手动刷新UI
  */
-+ (void) setCurrentLanguage:(NSString* _Nullable)language Refresh:(BOOL)refreshable;
++ (void) setCurrentLanguage:(nullable NSString*)language Refresh:(BOOL)refreshable;
 @end

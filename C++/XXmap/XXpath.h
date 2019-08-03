@@ -21,7 +21,7 @@ public:
 	XXpath& operator<<(int node);
 
 private:
-	string _path;
+    std::string _path;
 };
 
 #endif

@@ -4,48 +4,76 @@
 #include <stdio.h>
 #include <string>
 
+typedef enum XXobjectType{
+    XXobjectType_Base           = 0,
+    XXobjectType_Int,        
+    XXobjectType_Double,
+    XXobjectType_String,
+    XXobjectType_CustomBegin    = 100,
+} XXobjectType;
+
+class XXintObject;
+class XXdoubleObject;
+class XXstringObject;
 class XXobject {
+    friend class XXintObject;
+    friend class XXdoubleObject;
+    friend class XXstringObject;
 protected:
-    XXobject();
+    XXobject(XXobjectType type) 
+        : _type(type)
+        , _intValue(0)
+        , _doubleValue(0)
+        , _stringValue(""){}
+    XXobjectType _type; 
+
+private: 
+    int _intValue;                  
+    double _doubleValue;
+    std::string _stringValue;
+
 public:
-    virtual ~XXobject();
+    virtual ~XXobject(){}
+    void operator=(const XXobject &object){
+        if (_type != object._type){
+            return;
+        }
+        copy(object);
+    }
+
+    bool isInt()    { return XXobjectType_Int       == _type; }
+    bool isDouble() { return XXobjectType_Double    == _type; }
+    bool isString() { return XXobjectType_String    == _type; }
     
-    virtual bool isInt()    { return false; }
-    virtual bool isDouble() { return false; }
-    virtual bool isString() { return false; }
-    //virtual bool isObject() { return false; }
-    
-    virtual int toInt()             { return 0; }
-    virtual double toDouble()       { return 0; }
-    virtual std::string toString()  { return ""; }
-//    template <class T>
-//    T* toObject()           { return this; }
+    int toInt()             { return _intValue; }
+    double toDouble()       { return _doubleValue; }
+    std::string toString()  { return _stringValue; }
+
+protected:
+    virtual void copy(const XXobject &object){}
 };
 
 class XXintObject : public XXobject {
 public:
-    XXintObject(int value = 0) : XXobject(), _value(value){}
-    bool isInt()    { return true; }
-    int toInt()     { return _value; }
-private:
-    int _value;
+    XXintObject(int value = 0);
+    operator int() const;
+protected:
+    void copy(const XXobject &object);
 };
 
 class XXdoubleObject : public XXobject {
 public:
-    XXdoubleObject(double value = 0) : XXobject(), _value(value){}
-    bool isDouble()     { return true; }
-    double toDouble()   { return _value; }
-private:
-    double _value;
+    XXdoubleObject(double value = 0);
+    operator double() const;
+protected:
+    void copy(const XXobject &object);
 };
 
 class XXstringObject : public XXobject {
 public:
-    XXstringObject(std::string value = "") : XXobject(), _value(value){}
-    bool isString()         { return true; }
-    std::string toString()  { return _value; }
-private:
-    std::string _value;
+    XXstringObject(std::string value = "");
+    operator std::string() const;
+protected:
+    void copy(const XXobject &object);
 };
 #endif

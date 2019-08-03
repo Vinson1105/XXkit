@@ -4,31 +4,30 @@
 #include <stdio.h>
 #include <map>
 #include "XXpath.h"
+#include "XXobject.h"
+#include <memory>
+
+typedef std::shared_ptr<XXobject> XXobjectShared;
 
 //
-// XXmapBase
+// XXdataBase
 //
-class XXmapBase {
-	friend class XXmapRef;
+class XXdataBase {
+	friend class XXdataBaseRef;
+protected:
+	XXdataBase(const char *name) : _name(name) {}
+	XXdataBase(const string &name) : _name(name) {}
+	XXdataBase(XXdataBase &mapBase) : _name("") {}
+	XXdataBase() : _name("") {}
 public:
-	XXmapBase(const char *name) : _name(name) {}
-	XXmapBase(const string &name) : _name(name) {}
-	XXmapBase(XXmapBase &mapBase) : _name("") {}
-	XXmapBase() : _name("") {}
-	virtual ~XXmapBase() {}
+	virtual ~XXdataBase() {}
 
 protected:
 	virtual bool contains(const string &key) const = 0;
-	virtual string get(const string &key) const = 0;
-	virtual void set(const string &key, const string &value) = 0;
-	virtual void set(const string &key, int value) = 0;
+	virtual XXobjectShared get(const string &key) const = 0;
+	virtual void set(const string &key, const XXobject &object) = 0;
+	virtual void set(const string &key, XXobjectShared objectShared) = 0;
 	virtual void del(const string &key) = 0;
-
-// 	virtual bool contains(const string &key) const { return false; }
-// 	virtual string get(const string &key) const { return ""; }
-// 	virtual void set(const string &key, const string &value) { return; }
-// 	virtual void del(const string &key) { return; }
-// 	virtual XXmapBase map(const string &path) { return XXmapBase(); }
 
 private:
 	string _name;
@@ -37,30 +36,30 @@ private:
 //
 // XXmap
 //
-class XXmap : public XXmapBase
+class XXmap : public XXdataBase
 {
 public:
-	XXmap(const char *name) : XXmapBase(name) {}
-	XXmap(const string &name) : XXmapBase(name) {}
-	XXmap(XXmap &mapBase) : XXmapBase(mapBase) {}
-	XXmap() : XXmapBase() {}
+	XXmap(const char *name) : XXdataBase(name) {}
+	XXmap(const string &name) : XXdataBase(name) {}
+	XXmap(XXmap &xxmap) : XXdataBase(xxmap) {}
+	XXmap() : XXdataBase("") {}
 	~XXmap() {}
 private:
 	bool contains(const string &key) const {
 		return _map.end() != _map.find(key);
 	}
-	string get(const string &key) const {
+	XXobjectShared get(const string &key) const {
 		auto iter = _map.find(key);
 		if (_map.end() == iter){
-			return "";
+			return nullptr;
 		}
 		return iter->second;
 	}
-	void set(const string &key, const string &value) {
-		_map[key] = value;
+	void set(const string &key, const XXobject &object) {
+		_map[key] = XXobjectShared(new XXobject(object));
 	}
-	void set(const string &key, int value) {
-		_map[key] = to_string(value);
+	virtual void set(const string &key, XXobjectShared objectShared){
+		_map[key] = objectShared;
 	}
 	void del(const string &key) {
 		auto iter = _map.find(key);
@@ -70,33 +69,38 @@ private:
 		_map.erase(iter);
 	}
 private:
-	std::map<string,string> _map;
+	std::map<std::string,XXobjectShared> _map;
 };
 
 //
-// XXmapRef
+// XXdataBaseRef
 //
-class XXmapRef {
+class XXdataBaseRef {
 public:
-	XXmapRef(XXmapBase &mapBase);
-	XXmapRef(const XXmapRef &mapRef);			// ÔÚ¹¹Ôìº¯ÊıÖĞ£¬»á¸´ÖÆpathºÍÒıÓÃmap
-	virtual ~XXmapRef();
+	XXdataBaseRef(XXdataBase &dataBase);
+	XXdataBaseRef(const XXdataBaseRef &dataBaseRef);	// åœ¨æ„é€ å‡½æ•°ä¸­ï¼Œä¼šå¤åˆ¶pathå’Œå¼•ç”¨map
+	virtual ~XXdataBaseRef();
 
-	void operator=(const XXmapRef &mapRef);		// ÔÚ¸³Öµº¯ÊıÖĞ£¬Ö»»á¶ÔÓ¦¶ÔÆä½øĞĞÖµ¸´ÖÆ
-	void operator=(const string &value);
+	void operator=(const XXdataBaseRef &dataBaseRef);	// åœ¨èµ‹å€¼å‡½æ•°ä¸­ï¼Œåªä¼šå¯¹åº”å¯¹å…¶è¿›è¡Œå€¼å¤åˆ¶
+	void operator=(XXobjectShared objectShared);
 	void operator=(int value);
+	void operator=(double value);
+	void operator=(const string &value);
 
-	XXmapRef operator[](const string &key);
-	XXmapRef operator[](int key);
+	XXobjectShared object();
+	operator XXobjectShared() const;
+	// operator int() const;
+	// operator double() const;
+	// operator std::string() const; 
 
-	string toString() const;
-	int toInt() const;
+	XXdataBaseRef operator[](const string &key);
+	XXdataBaseRef operator[](int key);
 
 private:
-	const XXmapBase& map() const { return _mapBase; }
+	const XXdataBase& dataBase() const { return _dataBase; }
 
 private:
-	XXmapBase &_mapBase;
+	XXdataBase &_dataBase;
 	XXpath _path;
 };
 
