@@ -1,5 +1,6 @@
 #include "XXobject.h"
 
+//
 XXintObject::XXintObject(int value)
     : XXobject(XXobjectType_Int){
     _intValue = value;
@@ -11,6 +12,7 @@ void XXintObject::copy(const XXobject &object){
     _intValue = object._intValue;
 }
 
+//
 XXdoubleObject::XXdoubleObject(double value)
     : XXobject(XXobjectType_Double){
     _doubleValue = value;
@@ -22,6 +24,7 @@ void XXdoubleObject::copy(const XXobject &object){
     _doubleValue = object._doubleValue;
 }
 
+//
 XXstringObject::XXstringObject(std::string value)
     : XXobject(XXobjectType_String){
     _stringValue = value;
@@ -31,4 +34,15 @@ XXstringObject::operator std::string() const{
 }
 void XXstringObject::copy(const XXobject &object){
     _stringValue = object._stringValue;
+}
+
+//
+XXvectorObject::XXvectorObject(XXvector xxvector)
+    : XXobject(XXobjectType_Vector){
+}
+XXvectorObject::operator XXvector() const{
+    return _vectorValue;
+}
+void XXvectorObject::copy(const XXobject &object){
+    _vectorValue = object._vectorValue;
 }

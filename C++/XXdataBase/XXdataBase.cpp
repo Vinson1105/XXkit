@@ -1,4 +1,4 @@
-#include "XXmap.h"
+#include "XXdataBase.h"
 
 XXdataBaseRef::XXdataBaseRef(XXdataBase &dataBase) 
 	: _dataBase(dataBase)
@@ -22,45 +22,25 @@ void XXdataBaseRef::operator=(int value) {
 void XXdataBaseRef::operator=(double value) {
 	_dataBase.set(_path.path(), XXobjectShared(new XXdoubleObject(value)));
 }
-void XXdataBaseRef::operator=(const string &value) {
+void XXdataBaseRef::operator=(const std::string &value) {
 	_dataBase.set(_path.path(), XXobjectShared(new XXstringObject(value)));
 }
+void XXdataBaseRef::operator=(const XXvector &xxvector){
+    _dataBase.set(_path.path(), XXobjectShared(new XXvectorObject(xxvector)));
+}
 
-XXobjectShared XXdataBaseRef::object(){
+XXobjectShared XXdataBaseRef::obj(){
 	return _dataBase.get(_path.path());
 }
 XXdataBaseRef::operator XXobjectShared() const{
 	return _dataBase.get(_path.path());
 }
-// XXdataBaseRef::operator int() const{
-// 	XXobjectShared objectShared = _dataBase.get(_path.path());
-// 	XXobject *object 			= objectShared.get();
-// 	if (objectShared->isInt()){
-// 		XXintObject *intObject = dynamic_cast<XXintObject*>(object);
-// 		return *intObject;
-// 	}
-// 	return 0;
-// }
-// XXdataBaseRef::operator double() const{
-// 	XXobjectShared objectShared = _dataBase.get(_path.path());
-// 	XXobject *object 			= objectShared.get();
-// 	if (objectShared->isDouble()){
-// 		XXdoubleObject *doubleObject = dynamic_cast<XXdoubleObject*>(object);
-// 		return *doubleObject;
-// 	}
-// 	return 0.0;
-// }
-// XXdataBaseRef::operator std::string() const{
-// 		XXobjectShared objectShared = _dataBase.get(_path.path());
-// 	XXobject *object 			= objectShared.get();
-// 	if (objectShared->isDouble()){
-// 		XXstringObject *stringObject = dynamic_cast<XXstringObject*>(object);
-// 		return *stringObject;
-// 	}
-// 	return "";
-// }
 
-XXdataBaseRef XXdataBaseRef::operator[](const string &key) {
+XXdataBaseRef XXdataBaseRef::ref(){
+    XXdataBaseRef dataBaseRef(_dataBase);
+    return dataBaseRef;
+}
+XXdataBaseRef XXdataBaseRef::operator[](const std::string &key) {
 	XXdataBaseRef dataBaseRef(_dataBase);
 	dataBaseRef._path = _path;
 	dataBaseRef._path << key;
