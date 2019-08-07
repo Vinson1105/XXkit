@@ -4,7 +4,6 @@
 #include "XXobject.h"
 #include <memory>
 
-typedef std::shared_ptr<XXobject> XXobjectShared;
 
 //
 // XXpath
@@ -62,11 +61,13 @@ public:
 	virtual ~XXdataBaseRef();
 
 	void operator=(const XXdataBaseRef &dataBaseRef);	// 在赋值函数中，只会对应对其进行值复制
+	void operator=(const XXobject &object);
 	void operator=(XXobjectShared objectShared);
 	void operator=(int value);
 	void operator=(double value);
 	void operator=(const std::string &value);
-    void operator=(const XXvector &xxvector);
+    void operator=(const XXobjectSharedVector &objectSharedVector);
+	void operator=(const XXobjectSharedMap &objectSharedMap);
 
 	XXobjectShared obj();
 	operator XXobjectShared() const; 

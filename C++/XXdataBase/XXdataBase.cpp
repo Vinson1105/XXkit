@@ -13,6 +13,9 @@ XXdataBaseRef::~XXdataBaseRef()
 void XXdataBaseRef::operator=(const XXdataBaseRef &dataBaseRef) {
 	_dataBase.set(_path.path(), dataBaseRef);
 }
+void XXdataBaseRef::operator=(const XXobject &object){
+	_dataBase.set(_path.path(), object.create());
+}
 void XXdataBaseRef::operator=(XXobjectShared objectShared){
 	_dataBase.set(_path.path(), objectShared);
 }
@@ -25,8 +28,11 @@ void XXdataBaseRef::operator=(double value) {
 void XXdataBaseRef::operator=(const std::string &value) {
 	_dataBase.set(_path.path(), XXobjectShared(new XXstringObject(value)));
 }
-void XXdataBaseRef::operator=(const XXvector &xxvector){
-    _dataBase.set(_path.path(), XXobjectShared(new XXvectorObject(xxvector)));
+void XXdataBaseRef::operator=(const XXobjectSharedVector &objectSharedVector){
+    _dataBase.set(_path.path(), XXobjectShared(new XXvectorObject(objectSharedVector)));
+}
+void XXdataBaseRef::operator=(const XXobjectSharedMap &objectSharedMap){
+	_dataBase.set(_path.path(), XXobjectShared(new XXmapObject(objectSharedMap)));
 }
 
 XXobjectShared XXdataBaseRef::obj(){

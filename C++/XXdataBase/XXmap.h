@@ -30,7 +30,7 @@ private:
 	void set(const std::string &key, const XXobject &object) {
 		_map[key] = XXobjectShared(new XXobject(object));
 	}
-	virtual void set(const std::string &key, XXobjectShared objectShared){
+	void set(const std::string &key, XXobjectShared objectShared){
 		_map[key] = objectShared;
 	}
 	void del(const std::string &key) {
