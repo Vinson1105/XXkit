@@ -75,6 +75,8 @@ public:
     XXdataBaseRef ref();
 	XXdataBaseRef operator[](const std::string &key);
 	XXdataBaseRef operator[](int key);
+	// XXdataBaseRef operator()(const std::string &key);
+	// XXdataBaseRef operator()(int key);
 
 private:
 	const XXdataBase& dataBase() const { return _dataBase; }
