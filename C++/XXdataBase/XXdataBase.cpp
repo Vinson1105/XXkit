@@ -14,7 +14,8 @@ void XXdataBaseRef::operator=(const XXdataBaseRef &dataBaseRef) {
 	_dataBase.set(_path.path(), dataBaseRef);
 }
 void XXdataBaseRef::operator=(const XXobject &object){
-	_dataBase.set(_path.path(), object.create());
+	XXobjectShared objectShared(object.create());
+	_dataBase.set(_path.path(), objectShared);
 }
 void XXdataBaseRef::operator=(XXobjectShared objectShared){
 	_dataBase.set(_path.path(), objectShared);
