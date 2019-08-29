@@ -1,29 +1,26 @@
-/**
- * @author: GWX
- * @date: 20190508
- * @descirption:
- *      1.从MP4中读取帧,可以解码输出或者不解码输出(不解码输出时,可能欠缺了帧类型)
- *      2.所有函数线程不安全
- * @history:
- *  xxx - xxx
- *  1.
- *  2.
- */
+//
+//  XXfmFrameReader.h
+//  XXapp
+//
+//  Created by VINSON on 2019/5/6.
+//  Copyright © 2019 VINSON. All rights reserved.
+//
+
 #ifndef XXfmMp4Reader_h
 #define XXfmMp4Reader_h
 
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "../XXavUtility.h"
+#include "XXavUtility.h"
 
 #define XXFM_MP4_READER_IS_END_OF_FILE 1
+#define XXFM_MP4_READER_NEXT 2
 typedef void* XXfmMp4ReaderHandle;
 
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
-    
     /**
      * @brief   创建句柄
      * @param   path 目标MP4文件路径
@@ -53,6 +50,15 @@ extern "C"{
      * @param   handle 目标句柄
      */
     void xxfmMp4Reader_free(XXfmMp4ReaderHandle *handle);
+    
+    /**
+     * @brief   获取文件分辨率
+     * @param   handle 目标句柄
+     * @param   width 宽度输出
+     * @param   height 高度输出
+     * @return  返回0,成功;否则失败
+     */
+    int xxfmMp4Reader_resolution(XXfmMp4ReaderHandle handle, int *width, int *height);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

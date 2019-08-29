@@ -36,17 +36,20 @@ XXfmMp4ReaderHandle xxfmMp4Reader_create(const char *path, bool needDecode){
     av_register_all();
     avcodec_register_all();
     if(avformat_open_input(&formatContext, path, NULL, NULL)){
+        printf("[XXfmMp4Reader] can not open file.(%s)\n", path);
         goto FailureToCreate;
     }
     if(avformat_find_stream_info(formatContext, NULL) < 0){
+        printf("[XXfmMp4Reader] can not find stream info.\n");
         goto FailureToCreate;
     }
     
     // 查找音视频轨
     streamCount = formatContext->nb_streams;
-    if (2 != streamCount) {
-        goto FailureToCreate;
-    }
+//    if (2 != streamCount) {
+//        printf("[XXfmMp4Reader] count of stream is not 2.\n");
+//        goto FailureToCreate;
+//    }
     for (streamIndex = 0; streamIndex < streamCount; streamIndex++) {
         AVStream *stream = formatContext->streams[streamIndex];
         if (AVMEDIA_TYPE_VIDEO == stream->codecpar->codec_type) {
@@ -62,6 +65,7 @@ XXfmMp4ReaderHandle xxfmMp4Reader_create(const char *path, bool needDecode){
         }
     }
     if (NULL == videoStream || NULL == audioStream) {
+        printf("[XXfmMp4Reader] can not find audio or video stream.\n");
         goto FailureToCreate;
     }
     
@@ -71,6 +75,7 @@ XXfmMp4ReaderHandle xxfmMp4Reader_create(const char *path, bool needDecode){
         videoCodecContext = avcodec_alloc_context3(videoCodec);
         avcodec_parameters_to_context(videoCodecContext, videoStream->codecpar);
         if (avcodec_open2(videoCodecContext, videoCodec, NULL)) {
+            printf("[XXfmMp4Reader] can not open video codec.\n");
             goto FailureToCreate;
         }
         
@@ -78,6 +83,7 @@ XXfmMp4ReaderHandle xxfmMp4Reader_create(const char *path, bool needDecode){
         audioCodecContext = avcodec_alloc_context3(audioCodec);
         avcodec_parameters_to_context(audioCodecContext, audioStream->codecpar);
         if (avcodec_open2(audioCodecContext, audioCodec, NULL)) {
+            printf("[XXfmMp4Reader] can not open audio codec.\n");
             goto FailureToCreate;
         }
     }
@@ -90,9 +96,9 @@ XXfmMp4ReaderHandle xxfmMp4Reader_create(const char *path, bool needDecode){
     context->videoStream = videoStream;
     context->audioStream = audioStream;
     context->needDecode = needDecode;
-    
     context->videoStreamIndex = videoStreamIndex;
     context->audioStreamIndex = audioStreamIndex;
+    
     context->packet = av_packet_alloc();
     context->frame = av_frame_alloc();
     return context;
@@ -121,17 +127,17 @@ int xxfmMp4Reader_next(XXfmMp4ReaderHandle handle, XXavFrame *frame){
     if(av_read_frame(formatContext, context->packet)){
         return XXFM_MP4_READER_IS_END_OF_FILE;
     }
-    
+
     // 找出帧数据对应的解码器
     AVCodecContext *codecContext = NULL;
     bool isVideoFrame = false;
     bool isKeyFrame = false;
-    if (context->packet->stream_index == context->videoStreamIndex) {
+    if (context->packet->stream_index == context->videoStream->index) {
         codecContext = context->videoCodecContext;
         isVideoFrame = true;
         isKeyFrame = context->packet->flags & AV_PKT_FLAG_KEY;
     }
-    else if(context->packet->stream_index == context->audioStreamIndex){
+    else if(context->packet->stream_index == context->audioStream->index){
         codecContext = context->audioCodecContext;
         isVideoFrame = false;
     }
@@ -139,25 +145,23 @@ int xxfmMp4Reader_next(XXfmMp4ReaderHandle handle, XXavFrame *frame){
         return -1;
     }
     
-    // 不需要解码直接返回
-    int timebase = isVideoFrame ? context->videoStream->time_base.den : context->audioStream->time_base.den;
-    if (!context->needDecode) {
-        frame->dts      = context->packet->dts * 1000 / timebase;
-        frame->pts      = context->packet->pts * 1000 / timebase;
-        frame->isVideo  = isVideoFrame;
-        frame->isKey    = isKeyFrame;
-        return 0;
-    }
-    
     // 解码
-    if(avcodec_send_packet(codecContext, context->packet)){
+    int ret = avcodec_send_packet(codecContext, context->packet);
+    if(ret){
         return -1;
     }
-    if(avcodec_receive_frame(codecContext, context->frame)){
-        return -1;
+    ret = avcodec_receive_frame(codecContext, context->frame);
+    if(ret == AVERROR(EAGAIN)){
+        return XXFM_MP4_READER_NEXT;
+    }
+    else {
+        if (0 != ret) {
+            return -1;
+        }
     }
     
     // 整合数据
+    int timebase    = isVideoFrame ? context->videoStream->time_base.den : context->audioStream->time_base.den;
     frame->dts      = context->frame->pkt_dts * 1000 / timebase;
     frame->pts      = context->frame->pkt_pts * 1000 / timebase;
     frame->isVideo  = isVideoFrame;
@@ -172,8 +176,9 @@ int xxfmMp4Reader_next(XXfmMp4ReaderHandle handle, XXavFrame *frame){
         toYuv420p(frame->data, context->frame);
     }
     else{
-        frame->length = context->frame->nb_samples;
-        frame->data = malloc(context->frame->nb_samples);
+        frame->length = context->frame->linesize[0];
+        frame->data = malloc(context->frame->linesize[0]);
+        memcpy(frame->data, context->frame->data[0], context->frame->linesize[0]);
     }
     
     return 0;
@@ -187,8 +192,6 @@ int xxfmMp4Reader_seek(XXfmMp4ReaderHandle handle, uint64_t msec){
     int64_t timestamp = msec * context->videoStream->time_base.den / 1000;
     av_seek_frame(context->formatContext, context->videoStreamIndex, timestamp, AVSEEK_FLAG_BACKWARD);
     avcodec_flush_buffers(context->videoCodecContext);
-    //timestamp = msec * context->audioStream->time_base.den / 1000;
-    //av_seek_frame(context->formatContext, context->audioStreamIndex, timestamp, AVSEEK_FLAG_BACKWARD);
     return 0;
 }
 void xxfmMp4Reader_free(XXfmMp4ReaderHandle *handle){
@@ -209,6 +212,17 @@ void xxfmMp4Reader_free(XXfmMp4ReaderHandle *handle){
     }
     free(*context);
     *context = NULL;
+}
+
+int xxfmMp4Reader_resolution(XXfmMp4ReaderHandle handle, int *width, int *height){
+    XXfmMp4ReaderContext *context = (XXfmMp4ReaderContext*)handle;
+    if (NULL == context || NULL == context->videoStream) {
+        return -1;
+    }
+
+    *width = context->videoStream->codecpar->width;
+    *height = context->videoStream->codecpar->height;
+    return 0;
 }
 
 static void toYuv420p(int8_t *buffer, AVFrame *frame){

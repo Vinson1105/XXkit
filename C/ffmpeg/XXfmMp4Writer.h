@@ -1,13 +1,13 @@
 /**
- * @author: GWX
+ * @author:
  * @date: 20190319
  * @descirption:
  *      1.以AVCC(264)或者HVCC(265)格式合成MP4
  *      2.所有函数线程不安全
  * @history:
- *  GWX - 20190321
- *  1.close接口增加是否保存文件参数
- *  2.优化部分逻辑
+ *  20190321
+ *      1.close接口增加是否保存文件参数
+ *      2.优化部分逻辑
  */
 #ifndef XXfmMp4Writer_h
 #define XXfmMp4Writer_h
@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "../XXavUtility.h"
+#include "XXavUtility.h"
 
 // 视频参数
 typedef struct XXfmMp4WriterVideoParam{
@@ -65,7 +65,7 @@ extern "C" {
      * @param   audioParam 音频对应参数
      * @return  返回NULL失败,否则成功
      */
-    XXfmMp4WriterHandle xxfmMp4Writer_create(const char *path, XXfmMp4WriterVideoParam *videoParam, XXfmMp4WriterAudioParam *audioParam);
+    XXfmMp4WriterHandle xxfmMp4Writer_create(char *path, XXfmMp4WriterVideoParam *videoParam, XXfmMp4WriterAudioParam *audioParam);
     
     /**
      * @brief   写入视频帧数据,暂不能处理分片过的数据
@@ -76,7 +76,7 @@ extern "C" {
      * @param   isKeyFrame 是否为关键帧
      * @return  返回>=0成功,否则失败
      */
-    int xxfmMp4Writer_video(XXfmMp4WriterHandle handle, const uint8_t *data, int length, int64_t timestamp, bool isKeyFrame);
+    int xxfmMp4Writer_video(XXfmMp4WriterHandle handle, uint8_t *data, int length, int64_t timestamp, bool isKeyFrame);
     
     /**
      * @brief   写入音频帧数据
@@ -86,7 +86,7 @@ extern "C" {
      * @param   timestamp 时间戳,注意需要是毫秒级别,否则请置为0
      * @return  返回>=0成功,否则失败
      */
-    int xxfmMp4Writer_audio(XXfmMp4WriterHandle handle, const uint8_t *data, int length, int64_t timestamp);
+    int xxfmMp4Writer_audio(XXfmMp4WriterHandle handle, uint8_t *data, int length, int64_t timestamp);
     
     /**
      * @brief   关闭并释放资源,并把handle置为NULL

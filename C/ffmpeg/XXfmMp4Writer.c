@@ -1,10 +1,10 @@
 #include "XXfmMp4Writer.h"
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
+#include "avcodec.h"
+#include "avformat.h"
 #include <pthread.h>
 #include <unistd.h>
 
-//#define WRITER_DEBUG                        // 调试信息输出宏
+#define WRITER_DEBUG                        // 调试信息输出宏
 #define MIN_MSEC_TIMESTAMP  31507200000     // 毫秒级别时间戳最小值
 #define MAX_MSEC_TIMESTAMP  4687730032000   // 毫秒级别时间戳最大值
 #define IS_MSEC(timestamp)  (MIN_MSEC_TIMESTAMP < timestamp && timestamp  < MAX_MSEC_TIMESTAMP)
@@ -66,21 +66,21 @@ typedef struct XXavNalu{
 static AVCodecContext* createCodecContext(enum AVCodecID codecID, void *param);             // 创建对应的CodecContext
 static AVStream* addStream(AVFormatContext *formatContext, AVCodecContext *codecContext);   // 在formatContext中创建新的音视频轨
 
-static enum AVCodecID videoTypeToAVCodecID(enum XXavFrameType type);               // 支持的视频类型对应的ffmpeg视频类型
+static enum AVCodecID videoTypeToAVCodecID(enum XXavFrameType type);                        // 支持的视频类型对应的ffmpeg视频类型
 static int makeAvcc(AVCodecContext *context, XXavNalu *sps, XXavNalu *pps);                 // 生成h264对应的视频参数(具体百度avcc结构)
 static int makeHvcc(AVCodecContext *context, XXavNalu *sps, XXavNalu *pps, XXavNalu *vps);  // 生成h265对应的视频参数(具体百度hvcc结构)
 static int initVideoContext(XXfmMp4WriterContext *context, XXavNalu *vps, XXavNalu *sps, XXavNalu *pps);    // 初始化videoContext
 
-static enum AVCodecID audioTypeToAVCodecID(enum XXavFrameType type);                       // 支持的音频类型对应的ffmpeg音频类型
+static enum AVCodecID audioTypeToAVCodecID(enum XXavFrameType type);                                // 支持的音频类型对应的ffmpeg音频类型
 static void makeAdts(AVCodecContext *context, int sampleRate, uint8_t channel);                     // 生成AAC的adts部分参数体
 static void configAudioCodecContext(AVCodecContext *codecContext, XXfmMp4WriterAudioParam *param);  // 对不同的编码的codecContext做特定配置
 
-static int splitNalu(XXavNalu naluList[], int naluListMax, const uint8_t *data, int length, bool isH264);     // 拆机nalu
-static XXavNaluType toXXavNaluType(const uint8_t *data, bool isH264);                                         // 将h26x的nalu类型转换到本文件定义的枚举
+static int splitNalu(XXavNalu naluList[], int naluListMax, uint8_t *data, int length, bool isH264);     // 拆机nalu
+static XXavNaluType toXXavNaluType(uint8_t *data, bool isH264);                                         // 将h26x的nalu类型转换到本文件定义的枚举
 static int replaceStringInFile(const char *filePath, const char *src, const char *dest, int length);    // 文件内字符串替换,src和dest的长度需要一致,都为length
 
 // 创建句柄
-XXfmMp4WriterHandle xxfmMp4Writer_create(const char *path, XXfmMp4WriterVideoParam *videoParam, XXfmMp4WriterAudioParam *audioParam){
+XXfmMp4WriterHandle xxfmMp4Writer_create(char *path, XXfmMp4WriterVideoParam *videoParam, XXfmMp4WriterAudioParam *audioParam){
     av_register_all();
     avcodec_register_all();
     
@@ -91,6 +91,13 @@ XXfmMp4WriterHandle xxfmMp4Writer_create(const char *path, XXfmMp4WriterVideoPar
     AVCodecContext *audioCodecContext   = NULL;
     AVStream *audioStream               = NULL;
     AVBSFContext *audioBSFContext       = NULL;
+    
+    // 数据检查
+    if (NULL == path ||
+        NULL == videoParam || 0 == videoParam->width || 0 == videoParam->height ||
+        NULL == audioParam || 0 == audioParam->sampleRate || 0 == audioParam->channelCount) {
+        return NULL;
+    }
     
     // 创建输出context
     avformat_alloc_output_context2(&context, NULL, NULL, path);
@@ -148,7 +155,7 @@ XXfmMp4WriterHandle xxfmMp4Writer_create(const char *path, XXfmMp4WriterVideoPar
     
     // writer对象
 #ifdef WRITER_DEBUG
-    printf("[XXfmMp4Writer] succeed to create handle\n");
+    printf("[XXfmMp4Writer] succeed to create handle\r\n");
 #endif
     XXfmMp4WriterContext *writerContext = (XXfmMp4WriterContext*)malloc(sizeof(XXfmMp4WriterContext));
     writerContext->context              = context;
@@ -174,7 +181,7 @@ XXfmMp4WriterHandle xxfmMp4Writer_create(const char *path, XXfmMp4WriterVideoPar
     
 FailureToCreate:
 #ifdef WRITER_DEBUG
-    printf("[XXfmMp4Writer] failure to create handle\n");
+    printf("[XXfmMp4Writer] failure to create handle\r\n");
 #endif
 //    if (videoBSFContext) {
 //        av_bsf_free(&videoBSFContext);
@@ -197,7 +204,7 @@ FailureToCreate:
     return NULL;
 }
 // 写入视频数据
-int xxfmMp4Writer_video(XXfmMp4WriterHandle handle, const uint8_t *data, int length, int64_t timestamp, bool isKeyFrame){
+int xxfmMp4Writer_video(XXfmMp4WriterHandle handle, uint8_t *data, int length, int64_t timestamp, bool isKeyFrame){
     XXfmMp4WriterContext *context   = (XXfmMp4WriterContext*)handle;
     if (NULL == context || (NULL == data && length != 0)) { //} || 0 != waitToLocked(context)) {
         return -1;
@@ -292,7 +299,7 @@ int xxfmMp4Writer_video(XXfmMp4WriterHandle handle, const uint8_t *data, int len
         packet->pts =  currentIndex * timeBaseDen / context->videoFrameRate;
     }
 #ifdef WRITER_DEBUG
-    printf("[XXfmMp4Writer] [video] %lld %d %d %d\n", packet->pts, currentIndex, context->videoFrameRate, timeBaseDen);
+    printf("[XXfmMp4Writer] [video] %lld %d %d %d\r\n", packet->pts, currentIndex, context->videoFrameRate, timeBaseDen);
 #endif
     
     // 写入
@@ -303,7 +310,7 @@ int xxfmMp4Writer_video(XXfmMp4WriterHandle handle, const uint8_t *data, int len
     av_packet_free(&packet);
     return 0;
 }
-int xxfmMp4Writer_audio(XXfmMp4WriterHandle handle, const uint8_t *data, int length, int64_t timestamp){
+int xxfmMp4Writer_audio(XXfmMp4WriterHandle handle, uint8_t *data, int length, int64_t timestamp){
     XXfmMp4WriterContext *context   = (XXfmMp4WriterContext*)handle;
     if (NULL == context || (NULL == data && length != 0) || NULL == context->audioStream) { //} || 0 != waitToLocked(context)) {
         return -1;
@@ -321,7 +328,7 @@ int xxfmMp4Writer_audio(XXfmMp4WriterHandle handle, const uint8_t *data, int len
     int frameSize       = context->audioCodecContext->frame_size;
 
     AVPacket *packet        = av_packet_alloc();
-    packet->data            = (uint8_t*)data;
+    packet->data            = data;
     packet->size            = length;
     
     // 过滤流媒体数据头
@@ -349,7 +356,7 @@ int xxfmMp4Writer_audio(XXfmMp4WriterHandle handle, const uint8_t *data, int len
         packetAfterBSF->pts = currentIndex * (frameSize * 1000 / context->audioSampleRate) * (timeBaseDen / 1000);
     }
 #ifdef WRITER_DEBUG
-    printf("[XXfmMp4Writer] [audio] %lld %d %d %d %d\n", packetAfterBSF->pts, currentIndex, frameSize, context->audioSampleRate, timeBaseDen);
+    printf("[XXfmMp4Writer] [audio] %lld %d %d %d %d\r\n", packetAfterBSF->pts, currentIndex, frameSize, context->audioSampleRate, timeBaseDen);
 #endif
     
     // 写入
@@ -375,12 +382,12 @@ void xxfmMp4Writer_close(XXfmMp4WriterHandle *handle, bool save){
     if (save && context->isInited) {
         if(0!=av_write_trailer(context->context)){
 #ifdef WRITER_DEBUG
-            printf("[XXfmMp4Writer] failure to write trailer\n");
+            printf("[XXfmMp4Writer] failure to write trailer\r\n");
 #endif
         }
         else{
 #ifdef WRITER_DEBUG
-            printf("[XXfmMp4Writer] succeed to write trailer\n");
+            printf("[XXfmMp4Writer] succeed to write trailer\r\n");
 #endif
         }
     }
@@ -408,9 +415,9 @@ void xxfmMp4Writer_close(XXfmMp4WriterHandle *handle, bool save){
         replaceStringInFile(context->context->filename, HEV1, HVC1, strlen(HEV1));
     }
     else{
-        remove(context->context->filename);
+        int ret = remove(context->context->filename);
 #ifdef WRITER_DEBUG
-        printf("[XXfmMp4Writer] remove file(%s)\n", context->context->filename);
+        printf("[XXfmMp4Writer] remove file(%s), ret=%d\r\n", context->context->filename, ret);
 #endif
     }
     avformat_free_context(context->context);
@@ -634,7 +641,7 @@ static void configAudioCodecContext(AVCodecContext *codecContext, XXfmMp4WriterA
     }
 }
 
-static int splitNalu(XXavNalu naluList[], int naluListMax, const uint8_t *data, int length, bool isH264){
+static int splitNalu(XXavNalu naluList[], int naluListMax, uint8_t *data, int length, bool isH264){
     uint8_t naluCount           = 0;
     int index                   = 0;
     int previousNaluOffset      = -1;
@@ -648,7 +655,7 @@ static int splitNalu(XXavNalu naluList[], int naluListMax, const uint8_t *data, 
             }
             
             currentNaluOffset           = index;                                    // 记录nale数据起始偏移
-            naluList[naluCount].data    = (uint8_t*)data + currentNaluOffset;                 // 记录nale数据起始地址,注意:此处直接使用源数据的地址
+            naluList[naluCount].data    = data + currentNaluOffset;                 // 记录nale数据起始地址,注意:此处直接使用源数据的地址
             naluList[naluCount].length  = 0;                                        // 由于本nalu的长度需要获取下一个nalu的startCode位置才可以计算,所以先置为0
             naluList[naluCount].type    = toXXavNaluType(data + index, isH264);     // 将nale类型转换到统一的类型定义
             if (naluCount > 0) {
@@ -668,7 +675,7 @@ static int splitNalu(XXavNalu naluList[], int naluListMax, const uint8_t *data, 
     }
     return naluCount;
 }
-static XXavNaluType toXXavNaluType(const uint8_t *data, bool isH264){
+static XXavNaluType toXXavNaluType(uint8_t *data, bool isH264){
     if(isH264){
         uint8_t type = *data & 0x1f;
         switch (type) {
@@ -718,7 +725,7 @@ static int replaceStringInFile(const char *filePath, const char *src, const char
     
     if (!isFound) {
 #ifdef WRITER_DEBUG
-        printf("[XXfmMp4Writer] could not find 'hev1'\n");
+        printf("[XXfmMp4Writer] could not find 'hev1'\r\n");
 #endif
         fclose(file);
         return -1;
@@ -726,7 +733,7 @@ static int replaceStringInFile(const char *filePath, const char *src, const char
     
     if(length != fwrite(dest, 1, length, file)){
 #ifdef WRITER_DEBUG
-        printf("[XXfmMp4Writer] could not replace hev1 with hvc1 by fwrite (%ld).\n", ftell(file));
+        printf("[XXfmMp4Writer] could not replace hev1 with hvc1 by fwrite (%ld).\r\n", ftell(file));
 #endif
         fclose(file);
         return -1;
