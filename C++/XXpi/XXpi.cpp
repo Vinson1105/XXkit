@@ -1,10 +1,12 @@
 #include "XXpi.h"
+#include "../Common/XXstdStringExtend.h"
 
 #define DEFAULT_DATASTRING_LENGTH 512
-
 #define FIRST_KEY      "XXenterPi" 
 #define SPLIT_KV        ":"
 #define SPLIT_PAIRS     "\r\n"
+
+using namespace 
 
 XXpi::XXpi(const string &subPi)
     : _subPi(subPi){
@@ -22,6 +24,17 @@ shared_ptr<string> XXpi::getData(){
     return stringPtr;
 }
 bool XXpi::parseData(const int8_t *data, int length, map<string,string> &map){
+    StringShared dataString(new std::string((char*)data, length));
+    auto pairs = XXstdStringExtend::split(*dataString, SPLIT_PAIRS);
+    for (auto iter = pairs.begin(); iter != pairs.end(); iter++)
+    {
+        auto key = XXstdStringExtend::section(**iter, SPLIT_KV, 0, 0);
+        auto value = XXstdStringExtend::section(**iter, SPLIT_KV, 1, 1);
+        map[key] = value;
+    }
+    return true;
+}
+int XXpi::composeData(int8_t *data){
     
 }
 

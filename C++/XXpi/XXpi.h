@@ -5,28 +5,29 @@
 #include <map>
 #include <memory>
 
-using namespace std;
 class XXpi{
 protected:
-    XXpi(const string &subPi);
+    XXpi(const std::string &subPi);
 public:
     virtual ~XXpi();
     
 public:
-    shared_ptr<string> getData();
-    bool parseData(const int8_t *data, int length, map<string,string> &map);
+    std::shared_ptr<std::string> getData();
+    bool parseData(const int8_t *data, int length, std::map<std::string,std::string> &map);
+    int composeData(int8_t *data);
+    int composeData(int8_t *data, const std::map<std::string,std::string> &map);
 
 protected:
     void resetPairs();
-    XXpi& addPairToLocalMap(const string &key, const string &value);
-    XXpi& removePairAtLocalMap(const string &key);
+    XXpi& addPairToLocalMap(const std::string &key, const std::string &value);
+    XXpi& removePairAtLocalMap(const std::string &key);
 
 private:
-    void addPairToString(shared_ptr<string> &stringPtr, const string &key, const string &value);
+    void addPairToString(std::shared_ptr<std::string> &stringPtr, const std::string &key, const std::string &value);
 
 private:
-    string _subPi;
-    map<string,string> _map;
+    std::string _subPi;
+    std::map<std::string,std::string> _map;
 };
 
 #endif
