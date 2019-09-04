@@ -17,6 +17,8 @@ public:
     int composeData(int8_t *data);
     int composeData(int8_t *data, const std::map<std::string,std::string> &map);
 
+    bool operator<<(const std::string &data);
+
 protected:
     void resetPairs();
     XXpi& addPairToLocalMap(const std::string &key, const std::string &value);
@@ -28,6 +30,7 @@ private:
 private:
     std::string _subPi;
     std::map<std::string,std::string> _map;
+    char *_buffer;
 };
 
 #endif

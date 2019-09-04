@@ -1,21 +1,27 @@
 #include "XXpi.h"
 #include "../Common/XXstdStringExtend.h"
 
-#define DEFAULT_DATASTRING_LENGTH 512
+#define DATASTRING_LENGTH   512
+#define BUFFER_LENGTH       4*1024
+
 #define FIRST_KEY      "XXenterPi" 
 #define SPLIT_KV        ":"
 #define SPLIT_PAIRS     "\r\n"
 
-using namespace 
+using namespace std;
 
 XXpi::XXpi(const string &subPi)
-    : _subPi(subPi){
+: _subPi(subPi){
+    _buffer = (char*)malloc(BUFFER_LENGTH);
 }
-XXpi::~XXpi(){}
+XXpi::~XXpi(){
+    free(_buffer);
+    _buffer = nullptr;
+}
 
 shared_ptr<string> XXpi::getData(){
     shared_ptr<string> stringPtr(new string());
-    stringPtr->reserve(DEFAULT_DATASTRING_LENGTH);
+    stringPtr->reserve(DATASTRING_LENGTH);
     addPairToString(stringPtr, FIRST_KEY, _subPi);
     for (auto iter = _map.begin(); iter != _map.end(); iter++)
     {
