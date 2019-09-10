@@ -5,6 +5,8 @@
 #include <string>
 #include <map>
 
+#define XXMAP_VALUE_INVALID ""  // 无效值
+
 //
 // XXpath
 //
