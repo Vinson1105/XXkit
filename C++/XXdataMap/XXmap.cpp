@@ -1,8 +1,9 @@
 #include "XXmap.h"
 #include "../Common/XXstdStringExtend.h"
 
-#define VALUE_LIST_PREFIX "()"      // 数组中间节点的标识，如：1/2/3 : (),COUNT,0,1,2
-#define VALUE_LIST_DELIMITER ','    // 数组节点/值的分隔符    
+#define PATH_DELIMITER          '/'     // 路径分隔符
+#define VALUE_LIST_PREFIX       '.'     // 数组中间节点的标识，如：1/2/3 : (),COUNT,0,1,2
+#define VALUE_LIST_DELIMITER    ','     // 数组节点/值的分隔符    
 
 /// 构建析构函数
 XXmapRef::XXmapRef(XXmap &map)
@@ -19,12 +20,8 @@ XXmapRef XXmapRef::operator[](const std::string &key){
 }
 XXmapRef XXmapRef::operator()(unsigned int index){
     XXmapRef mapRef(*this);
-    mapRef._path << std::to_string(index);
-    return mapRef;
-}
-XXmapRef XXmapRef::operator()(const std::string &index){
-    XXmapRef mapRef(*this);
-    mapRef._path << index;
+    std::string key = "." + std::to_string(index);
+    mapRef._path << key;
     return mapRef;
 }
 
@@ -75,4 +72,20 @@ double XXmapRef::toDouble() const{
 std::list<std::string> XXmapRef::toList() const{
     std::string value = this->toString();
     return XXstdStringExtend::splitToList(value, VALUE_LIST_DELIMITER);
+}
+
+/// 私有函数 - 
+void XXmapRef::setValue(const std::string &value){
+    XXpath realPath;
+    auto nodeList = XXstdStringExtend::splitToList(_path._data, PATH_DELIMITER);
+    for (auto listIter = nodeList.cbegin(); listIter != nodeList.cend(); listIter++)
+    {
+        auto stringIter = listIter->cbegin();
+        if ()
+        {
+            /* code */
+        }
+        
+    }
+    
 }

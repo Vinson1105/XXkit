@@ -65,7 +65,6 @@ public:
 public:
     XXmapRef operator[](const std::string &key);
     XXmapRef operator()(unsigned int index);
-    XXmapRef operator()(const std::string &index);
     
 public:
     void operator=(const std::string &value);
@@ -84,6 +83,9 @@ public:
     void listInsert(unsigned int index, const std::string &value);
     void listRemove(unsigned int index);
     std::string listAt(unsigned int index);
+
+private:
+    void setValue(const std::string &value);
 
 private:
     XXpath _path;
