@@ -22,7 +22,7 @@
 
 const char HEV1[]           = "hev1";
 const char HVC1[]           = "hvc1";
-const uint8_t START_CODE[]  = {0x00, 0x00, 0x00, 0x01};
+static const uint8_t START_CODE[]  = {0x00, 0x00, 0x00, 0x01};
 
 // 句柄实际内容,需要handle->context的强制转换
 typedef struct XXfmMp4WriterContext{

@@ -1,4 +1,5 @@
 #include "XXmap.h"
+#include "../Common/XXstdStringExtend.h"
 
 #define VALUE_LIST_PREFIX "()"      // 数组中间节点的标识，如：1/2/3 : (),COUNT,0,1,2
 #define VALUE_LIST_DELIMITER ','    // 数组节点/值的分隔符    
@@ -44,9 +45,9 @@ void XXmapRef::operator=(const std::list<std::string> &list){
         return;
     
     std::string listString;
-    for (auto iter = list.cbegin(); iter != list.cend(); iter++){
+    for (auto iter = list.cbegin(); iter != list.cend();){
         listString += *iter;
-        if (iter + 1 != list.end()){        
+        if (++iter != list.cend()){        
             listString += ',';
         }
     }
@@ -72,7 +73,6 @@ double XXmapRef::toDouble() const{
     return std::stod(this->toString());
 }
 std::list<std::string> XXmapRef::toList() const{
-    std::list<std::string> stringList;
     std::string value = this->toString();
-    
+    return XXstdStringExtend::splitToList(value, VALUE_LIST_DELIMITER);
 }

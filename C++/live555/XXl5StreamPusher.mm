@@ -21,7 +21,7 @@ XXl5StreamPusher::XXl5StreamPusher(XXavFrameType videoType, XXavFrameType audioT
     _isInited                   = false;
     
     _videoQueueHandle   = NULL;//xxqueue_create(NULL);
-    _audioQueueHandle   = xxqueue_create(NULL);
+    _audioQueueHandle   = xxqueue_create(NULL,NULL);
     
     _usageEnvironment   = NULL;
     _taskScheduler      = NULL;
@@ -171,7 +171,7 @@ void XXl5StreamPusher::closeSource(){
 void XXl5StreamPusher::getVideoDataInQueue(uint8_t *data, int *length){
     _videoMutex.lock();
     if (NULL == _videoQueueHandle) {
-        _videoQueueHandle = xxqueue_createWithLimit(NULL, 12, 1);//(NULL);
+        _videoQueueHandle = xxqueue_createWithLimit(NULL, NULL, 12, 1);//(NULL);
     }
     _videoMutex.unlock();
     

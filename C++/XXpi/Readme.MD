@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------
-#XXenterPi - 一种以字符串形式、在相邻键值对中以‘\r\n’作为分隔符的基础通信格式
+# XXenterPi - 一种以字符串形式、在相邻键值对中以‘\r\n’作为分隔符的基础通信格式
 XXenterPi:SubPi\r\n		**SubPi为使用的实际协议**
 key1:value1\r\n
 key2:value2\r\n
@@ -17,16 +17,21 @@ Message:xxx\r\n
 
 
 ----------------------------------------------------------------------
-#XXbytePi - 一种以字节形式、按不同的数据以不同的字节数存储的通信格式，
+# XXbytePi - 一种以字节形式、按不同的数据以不同的字节数存储的通信格式，
 #           并且这种格式可以使用一个JSON数据表来描述不同的数据，是使用哪种格式存储
-XXbytePi + LENGTH(64) + FromJSON
-
+XXbytePi + LENGTH(64) + ...
 {
     ByteOrder:Big/Little,
-    key1:type_start_end,
-    key1:{
-        type:,      **64/32/16/8/String**
-        start:,     **该值的起始位置**
-        end:,       **该值的结束位置**
-    },
+    Context:[
+        **方式1，注意name不能包含’_‘字符**
+        "name_type_start_Length",  
+        **方式2**
+        {
+            name:,      **该值的名称**
+            type:,      **Int（64/32/16/8）、String**
+            start:,     **该值的起始位置**
+            Length:,    **该值的字节长度，Int:可以省缺，String:不可省缺**
+        },
+    ]
+    
 }

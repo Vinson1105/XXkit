@@ -7,7 +7,7 @@
 //
 
 #import "XXh26xDecoder.h"
-#include "XXnaluSpliter.h"
+#include "../../C/XXnaluSpliter.h"
 
 //#define USING_DECODETIME_MARKET
 #define DEFAULT_FRAME_BUFFER_SIZE   512*1024
@@ -142,14 +142,14 @@ static void decodeOutputCallBack(void *decompressionOutputRefCon,
 - (BOOL)initDecode{
     [self mediaInfoSpliterHandle:_spliterHandle VPS:&_vps SPS:&_sps PPS:&_pps];
     if ((!_isH264 && nil == _vps) || nil == _sps || nil == _pps) {
-        GWXLog(@"[XXh26xDecorder] 错误(%d) %d %d %d", __LINE__, (!_isH264 && nil == _vps), nil == _sps, nil == _pps);
+        //GWXLog(@"[XXh26xDecorder] 错误(%d) %d %d %d", __LINE__, (!_isH264 && nil == _vps), nil == _sps, nil == _pps);
         return NO;
     }
     
     if(nil != _descriptionRef){ CFRelease(_descriptionRef); _descriptionRef = nil; }
     _descriptionRef = [self createDescriptionUsingVPS:_vps SPS:_sps PPS:_pps IsH264:_isH264];
     if (nil == _descriptionRef) {
-        GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
+        //GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
         return NO;
     }
     
@@ -158,7 +158,7 @@ static void decodeOutputCallBack(void *decompressionOutputRefCon,
     if (nil == _sessionRef) {
         CFRelease(_descriptionRef);
         _descriptionRef = nil;
-        GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
+        //GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
         return NO;
     }
     return YES;
@@ -278,7 +278,7 @@ static void decodeOutputCallBack(void *decompressionOutputRefCon,
         xxnaluSpliter_pframeRef(_spliterHandle, &dataRef, &dataRefLength, false);
     }
     if (NULL == dataRef || 0 == dataRefLength) {
-        GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
+        //GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
         *length = 0;
         return;
     }
@@ -295,13 +295,13 @@ static void decodeOutputCallBack(void *decompressionOutputRefCon,
     CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
 #endif
     if (NULL == data || length <= 0) {
-        GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
+        //GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
         return nil;
     }
     
     int naluCount = xxnaluSpliter_split(_spliterHandle, data, length, _isH264);
     if (naluCount <= 0) {
-        GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
+        //GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
         return nil;
     }
     
@@ -310,7 +310,7 @@ static void decodeOutputCallBack(void *decompressionOutputRefCon,
             _isInited = YES;
         }
         else{
-            GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
+            //GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
             return nil;
         }
     }
@@ -318,12 +318,12 @@ static void decodeOutputCallBack(void *decompressionOutputRefCon,
     uint32_t frameLength = 0;
     [self mediaDataUsingSpliterHandle:_spliterHandle Buffer:_frameBuffer Length:&frameLength];
     if (0 == frameLength) {
-        GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
+        //GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
         return nil;
     }
     CMSampleBufferRef sampleBufferRef = nil;
     if(![self toSampleBufferRef:&sampleBufferRef FrameData:_frameBuffer Length:frameLength DescriptionRef:_descriptionRef]){
-        GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
+        //GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
         return nil;
     }
     
@@ -342,7 +342,7 @@ static void decodeOutputCallBack(void *decompressionOutputRefCon,
             case kVTVideoDecoderBadDataErr: break;
             default:break;
         }
-        GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
+        //GWXLog(@"[XXh26xDecorder] 错误(%d)", __LINE__);
         return nil;
     }
 #ifdef USING_DECODETIME_MARKET
