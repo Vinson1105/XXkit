@@ -14,6 +14,8 @@ namespace XXstdStringExtend{
      * @return  返回已经分割的字符串节点vector
     */
     std::vector<std::string> splitToVector(const std::string &target, const std::string &sep);
+    std::vector<std::string> splitToVector(const std::string &target, const char *sep);
+    std::vector<std::string> splitToVector(const std::string &target, char sep);
 
     /**
      * @brief   字符串分割，按照指定的标识进行分割，会保存空字符串节点（“”）

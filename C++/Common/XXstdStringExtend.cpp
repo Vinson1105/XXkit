@@ -25,6 +25,13 @@ std::vector<std::string> XXstdStringExtend::splitToVector(const std::string &tar
 
     return stringVector;
 }
+std::vector<std::string> XXstdStringExtend::splitToVector(const std::string &target, const char *sep){
+    return splitToVector(target, string(sep));
+}
+std::vector<std::string> XXstdStringExtend::splitToVector(const std::string &target, char sep){
+    return splitToVector(target, string(1, sep));
+}
+
 std::list<std::string> XXstdStringExtend::splitToList(const std::string &target, const std::string &sep){
     list<string> stringList;
 

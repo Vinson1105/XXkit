@@ -21,6 +21,7 @@ public:
 
 	const std::string& path() const{ return _data; }
 
+    operator std::string()                      {return _data;}
 	void operator=(const XXpath &xxpath)        { _data = xxpath._data;}
 	void operator<<(const char *node)           { _data += '/'; _data += node;}
 	void operator<<(const std::string &node)    { _data += '/'; _data += node;}
@@ -42,6 +43,7 @@ public:
     XXmap(std::map< std::string,std::string > map) :_data(map){}
 	virtual ~XXmap() {}
 
+    operator std::map<std::string,std::string>(){return _data;}
     void operator=(const XXmap &xxmap){
         _name   = xxmap._name;
         _data   = xxmap._data;
@@ -70,7 +72,8 @@ public:
     void operator=(const std::string &value);
     void operator=(int value);
     void operator=(double value);
-    void operator=(const std::list<std::string> &list);
+    void operator=(const std::list<std::string> &value);
+    void operator=(const std::vector<std::string> &value);
 
 public:
     operator std::string() const;
@@ -86,6 +89,7 @@ public:
 
 private:
     void setValue(const std::string &value);
+    void setArrayValue(const std::string &prefixPath, unsigned int index, const std::string &value);
 
 private:
     XXpath _path;
