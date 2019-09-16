@@ -1,16 +1,16 @@
 #include "XXmap.h"
 #include "../Common/XXstdStringExtend.h"
 
-#define PATH_DELIMITER          '/'     // 路径分隔符
-#define KEY_LIST_PREFIX             '.' // 
+#define PATH_DELIMITER              "/" // 路径分隔符
+#define KEY_ARRAY_PREFIX            "." // 
 
-#define VALUE_LIST_ITEMCOUNT_MIN    3   // 数组信息中项最小值：.,COUNT,MAX 
-#define VALUE_LIST_PREFIX           '.' // 数组信息的标识，如：1/2/3 : .,COUNT,MAX,0,1,2
-#define VALUE_LIST_DELIMITER        ',' // 数组节点/值的分隔符
-    #define VALUE_LIST_INDEX_PREFIX 0   // 数组信息中的标识符编号
-    #define VALUE_LIST_INDEX_COUNT  1   // 数组信息中的数量编号
-    #define VALUE_LIST_INDEX_MAX    2   // 数组信息中的最大项值编号
-    #define VALUE_LIST_INDEX_ITEMSTART  3 // 数组信息中的项
+#define VALUE_ARRAY_ITEMCOUNT_MIN           3   // 数组信息中项最小值：.,COUNT,MAX,编号 
+#define VALUE_ARRAY_PREFIX                  "." // 数组信息的标识，如：1/2/3 : .,COUNT,MAX,0,1,2
+#define VALUE_ARRAY_DELIMITER               "," // 数组节点/值的分隔符
+    #define VALUE_ARRAY_INDEX_PREFIX        0   // 数组信息中的标识符编号
+    #define VALUE_ARRAY_INDEX_COUNT         1   // 数组信息中的数量编号
+    #define VALUE_ARRAY_INDEX_MAX           2   // 数组信息中的最大项值编号
+    #define VALUE_ARRAY_INDEX_ITEMSTART     3 // 数组信息中的项
 
 /// 构建析构函数
 XXmapRef::XXmapRef(XXmap &map)
@@ -27,7 +27,7 @@ XXmapRef XXmapRef::operator[](const std::string &key){
 }
 XXmapRef XXmapRef::operator()(unsigned int index){
     XXmapRef mapRef(*this);
-    std::string key = "." + std::to_string(index);
+    std::string key = KEY_ARRAY_PREFIX + std::to_string(index);
     mapRef._path << key;
     return mapRef;
 }
@@ -44,20 +44,6 @@ void XXmapRef::operator=(int value){
 void XXmapRef::operator=(double value){
     _map._data.insert(_path._data, std::to_string(value));
 }
-void XXmapRef::operator=(const std::list<std::string> &value){
-    if (0 == value.size())
-        return;
-    
-    std::string valueString;
-    for (auto iter = value.cbegin(); iter != value.cend();){
-        valueString += *iter;
-        if (++iter != value.cend()){        
-            valueString += VALUE_LIST_DELIMITER;
-        }
-    }
-
-    _map._data.insert(_path._data, valueString);
-}
 void XXmapRef::operator=(const std::vector<std::string> &value){
     if (0 == value.size())
         return;
@@ -66,7 +52,7 @@ void XXmapRef::operator=(const std::vector<std::string> &value){
     for (auto iter = value.cbegin(); iter != value.cend();){
         valueString += *iter;
         if (++iter != value.cend()){        
-            valueString += VALUE_LIST_DELIMITER;
+            valueString += VALUE_ARRAY_DELIMITER;
         }
     }
 
@@ -90,47 +76,61 @@ int XXmapRef::toInt() const{
 double XXmapRef::toDouble() const{
     return std::stod(this->toString());
 }
-std::list<std::string> XXmapRef::toList() const{
+std::vector<std::string> XXmapRef::toVector() const{
     std::string value = this->toString();
-    return XXstdStringExtend::splitToList(value, VALUE_LIST_DELIMITER);
+    return XXstdStringExtend::splitToVector(value, VALUE_ARRAY_DELIMITER);
 }
 
 /// 私有函数 - <值设置(会进行数组检查)>
-void XXmapRef::setValue(const std::string &value){
+void XXmapRef::setValue(const std::string &path, const std::vector<std::string> &value){
+    std::string valueString;
+    for (auto iter = value.cbegin(); iter != value.cend();){
+        valueString += *iter;
+
+        auto nextIter = ++iter;
+        if (value.cend() != nextIter){
+            valueString += VALUE_ARRAY_DELIMITER;  
+        }      
+    }
+    _map._data.insert(path, valueString);
+}
+void XXmapRef::setValue(const std::string &path, const std::string &value){
+    _map._data.insert(path, value);
+}
+void XXmapRef::setValue(const std::string &path, const std::string &value){
     XXpath realPath;
 
-    // 路径拆分并遍历
-    auto nodeList = XXstdStringExtend::splitToList(_path._data, PATH_DELIMITER);
-    for (auto nodeIter = nodeList.cbegin(); nodeIter != nodeList.cend(); nodeIter++)
+    // [1] 路径拆分并遍历
+    auto nodes = XXstdStringExtend::splitToList(path, PATH_DELIMITER);
+    for (auto nodeIter = nodes.cbegin(); nodeIter != nodes.cend(); nodeIter++)
     {
-        // 空节点
+        // 空节点，不作处理，直接跳过
         if (0 == nodeIter->length()){
             realPath << *nodeIter;
             continue;
         }
 
-        auto charIter = nodeIter->cbegin();
-        if (*charIter == VALUE_LIST_PREFIX){
+        if (nodeIter->substr(0,1) == VALUE_ARRAY_PREFIX){
             // 数组节点编号
-            unsigned int index  = std::stoi(std::string(++charIter,nodeIter->cend()));
+            unsigned int index  = std::stoi(nodeIter->substr(1));
             
             // 数组信息
-            int count = -1;
-
-            auto listInfoIter = _map._data.find(realPath._data);
-            if(_map._data.end() != listInfoIter){
-                
-            }
-
-            // 数组管理节点值
-            if (_map._data.end() == listInfoIter){
-                std::string value(1, VALUE_LIST_PREFIX);
-                value += VALUE_LIST_DELIMITER;
-                value += 
-                _map._data.insert(realPath, );
+            auto infoIter = _map._data.find(realPath._data);
+            if (_map._data.end() == infoIter){
+                if(0 != index){
+                    printf("[XXmap] LINE:%d error\n", __LINE__);
+                    return; 
+                }
+                    
+                std::string nodeIter = addArrayItem(realPath._data);
+                if("" == nodeIter){
+                    printf("[XXmap] LINE:%d error\n", __LINE__);
+                    return;                   
+                }
             }
             else{
-
+                std::vector<std::string> infoItems = XXstdStringExtend::splitToVector(nodeIter.second, VALUE_LIST_DELIMITER);
+                
             }
         }
         else{
@@ -139,7 +139,34 @@ void XXmapRef::setValue(const std::string &value){
         }
     }
 }
-void XXmapRef::setArrayValue(const std::string &prefixPath, unsigned int index, const std::string &value){
+std::string XXmapRef::addArrayItem(const std::string &path){
+    auto infoIter = _map._data.find(path);
+    if (_map._data.end() == infoIter){
+        std::string infoValue(VALUE_ARRAY_PREFIX);               // 标识头：'.'
+        infoValue += VALUE_ARRAY_DELIMITER + std::to_string(1);  // 分隔符：',' + 数组长度：'1'
+        infoValue += VALUE_ARRAY_DELIMITER + std::to_string(0);  // 分隔符：',' + 数组元素节点：'0'
+        return "0";
+    }
+    else{
+        std::vector<std::string> infoItems = XXstdStringExtend::splitToVector(infoIter->second, VALUE_LIST_DELIMITER);
+        if (infoItems.size() < VALUE_ARRAY_ITEMCOUNT_MIN){
+            return "";
+        }
+        else if(VALUE_ARRAY_PREFIX != infoItems[VALUE_ARRAY_INDEX_PREFIX]){
+            return "";
+        }
+        else{
+            std::string nextIndexString = std::to_string(std::stoi(infoItems[VALUE_ARRAY_INDEX_MAX]) + 1);
+            std::string countString = std::to_string(std::stoi(infoItems[VALUE_ARRAY_INDEX_COUNT]) + 1);
+            infoItems[VALUE_ARRAY_INDEX_MAX] = nextIndexString;
+            infoItems[VALUE_ARRAY_INDEX_COUNT] = countString;
+            infoItems.push_back(nextIndexString);
+            setValue(path, infoItems);
+            return nextIndexString;
+        }
+    }
+}
+bool XXmapRef::setArrayValue(const std::string &prefixPath, unsigned int index, const std::string &value){
     /**
      * 数组信息节点组成：".,Count,Max,Index"，其中：
      * ','：为分隔符；
@@ -155,13 +182,13 @@ void XXmapRef::setArrayValue(const std::string &prefixPath, unsigned int index, 
     if (_map._data.end() == infoIter){
         // [2.1] 没能找到信息节点的迭代器（即表中没有信息节点值），此时如果index==0，则可以视为数组的初始化
         if (0 != index){
-            return;
+            return false;
         }
         
         // [2.2] 组成数组信息节点对应的值（value）
-        std::string infoValue(1, VALUE_LIST_PREFIX);            // 标识头：'.'
-        infoValue += VALUE_LIST_DELIMITER + std::to_string(1);  // 
-        infoValue += VALUE_LIST_DELIMITER + indexString;
+        std::string infoValue(VALUE_ARRAY_PREFIX);               // 标识头：'.'
+        infoValue += VALUE_ARRAY_DELIMITER + std::to_string(1);  // 
+        infoValue += VALUE_ARRAY_DELIMITER + indexString;
 
         // [2.3] 组成数组元素的键（key）并写入数组元素数据
         XXpath path(prefixPath);
@@ -173,35 +200,72 @@ void XXmapRef::setArrayValue(const std::string &prefixPath, unsigned int index, 
     }
     else{
         // [3.1] 取出数组信息数据，并拆分
-        auto info       = infoIter->second;
-        auto infoNodes  = XXstdStringExtend::splitToVector(info, VALUE_LIST_DELIMITER);
-        if (infoNodes.size() <= 2 || std::string(1,VALUE_LIST_PREFIX) != infoNodes[VALUE_LIST_INDEX_PREFIX]){
-            return;
+        auto infoItems = XXstdStringExtend::splitToVector(infoIter->second, VALUE_ARRAY_DELIMITER);
+        if (infoItems.size() <= 2 || VALUE_ARRAY_PREFIX != infoItems[VALUE_ARRAY_INDEX_PREFIX]){
+            return false; // 数组信息异常
         }
 
         // [3.2] 判断数量的合法性
-        int count   = std::stoi(infoNodes[VALUE_LIST_INDEX_COUNT]);
-        int max     = std::stoi(infoNodes[VALUE_LIST_INDEX_MAX]);
+        int count   = std::stoi(infoItems[VALUE_ARRAY_INDEX_COUNT]);
+        int max     = std::stoi(infoItems[VALUE_ARRAY_INDEX_MAX]);
         if (count <= 0){
-            return; // 异常数量
+            return false; // 数组长度异常
         }
 
         // [3.3] 判断index和数组数量的关系
         if (index < count){
-            std::string pathNode = infoNodes[VALUE_LIST_INDEX_ITEMSTART+index];
+            std::string pathNode = infoItems[VALUE_ARRAY_INDEX_ITEMSTART+index];
             XXpath path(prefixPath);
             path << pathNode;
             _map._data.insert(path._data, value);
         }
         else if(index == count){
             std::string maxString = std::to_string(max+1);
-            infoNodes.push_back(maxString);
-            infoNodes[VALUE_LIST_INDEX_COUNT]   = std::to_string(count+1);
-            infoNodes[VALUE_LIST_INDEX_MAX]     = maxString;
+            infoItems.push_back(maxString);
+            infoItems[VALUE_ARRAY_INDEX_COUNT]   = std::to_string(count+1);
+            infoItems[VALUE_ARRAY_INDEX_MAX]     = maxString;
+            setValue(prefixPath, infoItems);
+
+            XXpath path(prefixPath);
+            path << maxString;
+            _map._data.insert(path._data, value);
         }
         else{
-            return;
+            return false; // 数据越界
         }
     }
+    return true;
 }
 
+/// pragma mark - 私有函数
+bool XXmapRef::isArrayInfo(const std::vector<std::string> &arrayValue){
+    if(arrayValue.size() < VALUE_ARRAY_ITEMCOUNT_MIN){
+        return false;
+    }
+    else if(VALUE_ARRAY_PREFIX != arrayValue[VALUE_ARRAY_INDEX_PREFIX]){
+        return false;
+    }
+    else if(arrayValue.size()-VALUE_ARRAY_ITEMCOUNT_MIN !=  std::stoi(arrayValue[VALUE_ARRAY_INDEX_COUNT])){
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+bool XXmapRef::isArrayContains(const std::vector<std::string> &arrayInfo, unsigned int index){
+    return std::stoi(arrayInfo[VALUE_ARRAY_INDEX_COUNT]) > index;
+}
+std::string XXmapRef::getArrayNode(const std::string &path, unsigned int index){
+    auto infoIter = _map._data.find(path);
+    if(_map._data.end() == infoIter){
+        return "";
+    }
+
+    auto infoItems = XXstdStringExtend::splitToVector(infoIter->second, VALUE_ARRAY_DELIMITER);
+    if (!isArrayInfo(infoItems)){
+        return "";
+    }
+    
+    int count = std::stoi(infoItems[VALUE_ARRAY_INDEX_COUNT]);
+    return index >= count ? "" : infoItems[VALUE_ARRAY_INDEX_ITEMSTART + index];
+}
