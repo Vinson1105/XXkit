@@ -95,78 +95,68 @@ void XXmapRef::setValue(const std::string &path, const std::vector<std::string> 
     _map._data.insert(path, valueString);
 }
 void XXmapRef::setValue(const std::string &path, const std::string &value){
-    _map._data.insert(path, value);
-}
-void XXmapRef::setValue(const std::string &path, const std::string &value){
     XXpath realPath;
 
     // [1] 路径拆分并遍历
     auto nodes = XXstdStringExtend::splitToList(path, PATH_DELIMITER);
     for (auto nodeIter = nodes.cbegin(); nodeIter != nodes.cend(); nodeIter++)
     {
-        // 空节点，不作处理，直接跳过
+        // [2.1] 空节点，不作处理，直接跳过
         if (0 == nodeIter->length()){
             realPath << *nodeIter;
             continue;
         }
 
+        // [2.2] 具有.index的节点
         if (nodeIter->substr(0,1) == VALUE_ARRAY_PREFIX){
-            // 数组节点编号
+            // [3.1] 数组节点编号
             unsigned int index  = std::stoi(nodeIter->substr(1));
             
-            // 数组信息
+            // [3.2] 数组信息
             auto infoIter = _map._data.find(realPath._data);
             if (_map._data.end() == infoIter){
+                // 没有数组信息，并index不为0，不能创建item
                 if(0 != index){
                     printf("[XXmap] LINE:%d error\n", __LINE__);
                     return; 
                 }
-                    
-                std::string nodeIter = addArrayItem(realPath._data);
-                if("" == nodeIter){
+
+                // 没有数组信息，index为0，创建一个新的数值信息，并附带一个item    
+                std::string item = addArrayItem(realPath._data);
+                if("" == item){
                     printf("[XXmap] LINE:%d error\n", __LINE__);
                     return;                   
                 }
+                realPath << item;
             }
             else{
-                std::vector<std::string> infoItems = XXstdStringExtend::splitToVector(nodeIter.second, VALUE_LIST_DELIMITER);
+                std::vector<std::string> info = XXstdStringExtend::splitToVector(nodeIter.second, VALUE_LIST_DELIMITER);
+                if (!isArrayInfo(info)){
+                    printf("[XXmap] LINE:%d error\n", __LINE__);
+                    return;
+                }
                 
+                if (isArrayContains(info, index)){
+                    std::string item = getArrayItem(info, index);
+                    realPath << item;
+                }
+                else if(isArrayNext(info, index)){
+                    std::string item = addArrayItem(info);
+                }
+                else{
+                    printf("[XXmap] LINE:%d error\n", __LINE__);
+                    return;
+                }
             }
         }
+        // [2.3] 其余节点
         else{
-            // 一般节点
             realPath << *nodeIter;
         }
     }
 }
-std::string XXmapRef::addArrayItem(const std::string &path){
-    auto infoIter = _map._data.find(path);
-    if (_map._data.end() == infoIter){
-        std::string infoValue(VALUE_ARRAY_PREFIX);               // 标识头：'.'
-        infoValue += VALUE_ARRAY_DELIMITER + std::to_string(1);  // 分隔符：',' + 数组长度：'1'
-        infoValue += VALUE_ARRAY_DELIMITER + std::to_string(0);  // 分隔符：',' + 数组元素节点：'0'
-        return "0";
-    }
-    else{
-        std::vector<std::string> infoItems = XXstdStringExtend::splitToVector(infoIter->second, VALUE_LIST_DELIMITER);
-        if (infoItems.size() < VALUE_ARRAY_ITEMCOUNT_MIN){
-            return "";
-        }
-        else if(VALUE_ARRAY_PREFIX != infoItems[VALUE_ARRAY_INDEX_PREFIX]){
-            return "";
-        }
-        else{
-            std::string nextIndexString = std::to_string(std::stoi(infoItems[VALUE_ARRAY_INDEX_MAX]) + 1);
-            std::string countString = std::to_string(std::stoi(infoItems[VALUE_ARRAY_INDEX_COUNT]) + 1);
-            infoItems[VALUE_ARRAY_INDEX_MAX] = nextIndexString;
-            infoItems[VALUE_ARRAY_INDEX_COUNT] = countString;
-            infoItems.push_back(nextIndexString);
-            setValue(path, infoItems);
-            return nextIndexString;
-        }
-    }
-}
-bool XXmapRef::setArrayValue(const std::string &prefixPath, unsigned int index, const std::string &value){
+
+bool XXmapRef::setArrayValue(const std::string &path, unsigned int index, const std::string &value){
     /**
      * 数组信息节点组成：".,Count,Max,Index"，其中：
      * ','：为分隔符；
@@ -178,7 +168,7 @@ bool XXmapRef::setArrayValue(const std::string &prefixPath, unsigned int index, 
     
     // [1] 取出数组信息节点
     std::string indexString = std::to_string(index);
-    auto infoIter = _map._data.find(prefixPath);
+    auto infoIter = _map._data.find(path);
     if (_map._data.end() == infoIter){
         // [2.1] 没能找到信息节点的迭代器（即表中没有信息节点值），此时如果index==0，则可以视为数组的初始化
         if (0 != index){
@@ -191,12 +181,12 @@ bool XXmapRef::setArrayValue(const std::string &prefixPath, unsigned int index, 
         infoValue += VALUE_ARRAY_DELIMITER + indexString;
 
         // [2.3] 组成数组元素的键（key）并写入数组元素数据
-        XXpath path(prefixPath);
+        XXpath path(path);
         path << indexString;
         _map._data.insert(path._data, value);
 
         // [2.4] 写入数组信息数据
-        _map._data.insert(prefixPath, infoValue);
+        _map._data.insert(path, infoValue);
     }
     else{
         // [3.1] 取出数组信息数据，并拆分
@@ -215,7 +205,7 @@ bool XXmapRef::setArrayValue(const std::string &prefixPath, unsigned int index, 
         // [3.3] 判断index和数组数量的关系
         if (index < count){
             std::string pathNode = infoItems[VALUE_ARRAY_INDEX_ITEMSTART+index];
-            XXpath path(prefixPath);
+            XXpath path(path);
             path << pathNode;
             _map._data.insert(path._data, value);
         }
@@ -224,9 +214,9 @@ bool XXmapRef::setArrayValue(const std::string &prefixPath, unsigned int index, 
             infoItems.push_back(maxString);
             infoItems[VALUE_ARRAY_INDEX_COUNT]   = std::to_string(count+1);
             infoItems[VALUE_ARRAY_INDEX_MAX]     = maxString;
-            setValue(prefixPath, infoItems);
+            setValue(path, infoItems);
 
-            XXpath path(prefixPath);
+            XXpath path(path);
             path << maxString;
             _map._data.insert(path._data, value);
         }
@@ -255,7 +245,13 @@ bool XXmapRef::isArrayInfo(const std::vector<std::string> &arrayValue){
 bool XXmapRef::isArrayContains(const std::vector<std::string> &arrayInfo, unsigned int index){
     return std::stoi(arrayInfo[VALUE_ARRAY_INDEX_COUNT]) > index;
 }
-std::string XXmapRef::getArrayNode(const std::string &path, unsigned int index){
+bool XXmapRef::isArrayNext(const std::vector<std::string> &arrayInfo, unsigned int index){
+    return std::stoi(arrayInfo[VALUE_ARRAY_INDEX_COUNT]) == index;
+}
+std::string XXmapRef::getArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index){
+    return arrayInfo[VALUE_ARRAY_INDEX_ITEMSTART+index];
+}
+std::string XXmapRef::getArrayItem(const std::string &path, unsigned int index){
     auto infoIter = _map._data.find(path);
     if(_map._data.end() == infoIter){
         return "";
@@ -268,4 +264,35 @@ std::string XXmapRef::getArrayNode(const std::string &path, unsigned int index){
     
     int count = std::stoi(infoItems[VALUE_ARRAY_INDEX_COUNT]);
     return index >= count ? "" : infoItems[VALUE_ARRAY_INDEX_ITEMSTART + index];
+}
+std::string XXmapRef::addArrayItem(std::vector<std::string> &arrayInfo){
+    std::string max = std::to_string(std::stoi(arrayInfo[VALUE_ARRAY_INDEX_MAX]) + 1);
+    std::string count = std::to_string(std::stoi(arrayInfo[VALUE_ARRAY_INDEX_COUNT]) + 1);
+    
+    arrayInfo[VALUE_ARRAY_INDEX_MAX] = max;
+    arrayInfo[VALUE_ARRAY_INDEX_COUNT] = count;
+    arrayInfo.push_back(max);
+}
+std::string XXmapRef::addArrayItem(const std::string &path){
+    auto infoIter = _map._data.find(path);
+    if (_map._data.end() == infoIter){
+        std::string infoValue(VALUE_ARRAY_PREFIX);               // 标识头：'.'
+        infoValue += VALUE_ARRAY_DELIMITER + std::to_string(1);  // 分隔符：',' + 数组长度：'1'
+        infoValue += VALUE_ARRAY_DELIMITER + std::to_string(0);  // 分隔符：',' + 数组元素节点：'0'
+        return "0";
+    }
+    else{
+        std::vector<std::string> arrayInfo = XXstdStringExtend::splitToVector(infoIter->second, VALUE_LIST_DELIMITER);
+        if (arrayInfo.size() < VALUE_ARRAY_ITEMCOUNT_MIN){
+            return "";
+        }
+        else if(VALUE_ARRAY_PREFIX != arrayInfo[VALUE_ARRAY_INDEX_PREFIX]){
+            return "";
+        }
+        else{
+            addArrayItem(arrayInfo);
+            setValue(path, arrayInfo);
+            return nextIndexString;
+        }
+    }
 }
