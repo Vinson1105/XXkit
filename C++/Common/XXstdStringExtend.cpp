@@ -23,6 +23,7 @@ std::vector<std::string> XXstdStringExtend::splitToVector(const std::string &tar
         }
     }
 
+    stringVector.push_back(target.substr(nodeBeginPos));
     return stringVector;
 }
 std::vector<std::string> XXstdStringExtend::splitToVector(const std::string &target, const char *sep){
@@ -53,6 +54,7 @@ std::list<std::string> XXstdStringExtend::splitToList(const std::string &target,
         }
     }
 
+    stringList.push_back(target.substr(nodeBeginPos));
     return stringList;
 }
 std::list<std::string> XXstdStringExtend::splitToList(const std::string &target, const char *sep){
