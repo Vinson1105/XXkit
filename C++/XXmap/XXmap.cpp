@@ -33,6 +33,13 @@ XXmapRef XXmapRef::operator()(unsigned int index){
 }
 
 /// 公共函数 - 赋值函数
+void XXmapRef::operator=(XXmapRef &mapRef){
+    std::string value = mapRef.checkAndGetValue(mapRef._path._data);
+    if(XXMAP_VALUE_INVALID == value){
+        return;
+    }
+    checkAndSetValue(_path._data, value);
+}
 void XXmapRef::operator=(const std::string &value){
     if(XXMAP_VALUE_INVALID == value)
         return;
@@ -60,25 +67,23 @@ void XXmapRef::operator=(const std::vector<std::string> &value){
 }
 
 /// 公共函数 - 取值函数
-XXmapRef::operator std::string() const{
+XXmapRef::operator std::string(){
     return this->toString();
 }
-std::string XXmapRef::toString() const{
-    auto iter = _map._data.find(_path._data);
-    if (_map._data.end() == iter){
-        return XXMAP_VALUE_INVALID;
-    }
-    return iter->second;
+std::string XXmapRef::toString(){
+    return checkAndGetValue(_path._data);
 }
-int XXmapRef::toInt() const{
-    return std::stoi(this->toString());
+int XXmapRef::toInt(){
+    std::string value = checkAndGetValue(_path._data);
+    return XXMAP_VALUE_INVALID == value ? 0 : std::stoi(value);
 }
-double XXmapRef::toDouble() const{
-    return std::stod(this->toString());
+double XXmapRef::toDouble(){
+    std::string value = checkAndGetValue(_path._data);
+    return XXMAP_VALUE_INVALID == value ? 0 : std::stod(value);
 }
-std::vector<std::string> XXmapRef::toVector() const{
-    std::string value = this->toString();
-    return XXstdStringExtend::splitToVector(value, VALUE_ARRAY_DELIMITER);
+std::vector<std::string> XXmapRef::toVector(){
+    std::string value = checkAndGetValue(_path._data);
+    return XXMAP_VALUE_INVALID == value ? std::vector<std::string>() : XXstdStringExtend::splitToVector(value, VALUE_ARRAY_DELIMITER);
 }
 
 /// 私有函数 - <值设置(会进行数组检查)>
@@ -95,7 +100,83 @@ void XXmapRef::setValue(const std::string &path, const std::vector<std::string> 
     _map._data[path] = valueString;
 }
 void XXmapRef::checkAndSetValue(const std::string &path, const std::string &value){
-    XXpath realPath;
+    std::string realPath;
+    if(getRealPath(path, realPath, true)){
+        _map._data[realPath] = value;
+    }
+    // XXpath realPath;
+
+    // // [1] 路径拆分并遍历
+    // auto nodes = XXstdStringExtend::splitToList(path, PATH_DELIMITER);
+    // for (auto nodeIter = nodes.begin(); nodeIter != nodes.end(); nodeIter++)
+    // {
+    //     // [2.1] 空节点，不作处理，直接跳过
+    //     if (0 == nodeIter->length()){
+    //         realPath << *nodeIter;
+    //         continue;
+    //     }
+
+    //     // [2.2] 具有.index的节点
+    //     if (nodeIter->substr(0,1) == VALUE_ARRAY_PREFIX){
+    //         // [3.1] 数组节点编号
+    //         unsigned int index  = std::stoi(nodeIter->substr(1));
+            
+    //         // [3.2] 数组信息
+    //         auto infoIter = _map._data.find(realPath._data);
+    //         if (_map._data.end() == infoIter){
+    //             // 没有数组信息，并index不为0，不能创建item
+    //             if(0 != index){
+    //                 printf("[XXmap] LINE:%d error\n", __LINE__);
+    //                 return; 
+    //             }
+
+    //             // 没有数组信息，index为0，创建一个新的数值信息，并附带一个item    
+    //             auto arrayInfo = createArrayInfo(1);
+    //             setValue(realPath._data, arrayInfo);
+    //             realPath << "0";
+    //         }
+    //         else{
+    //             std::vector<std::string> info = XXstdStringExtend::splitToVector(infoIter->second, VALUE_ARRAY_DELIMITER);
+    //             if (!isArrayInfo(info)){
+    //                 printf("[XXmap] LINE:%d error\n"
+    //                         "   Value:%s\n", __LINE__, infoIter->second.data());
+    //                 return;
+    //             }
+                
+    //             if (isArrayContains(info, index)){
+    //                 std::string item = getArrayItem(info, index);
+    //                 realPath << item;
+    //             }
+    //             else if(isArrayNext(info, index)){
+    //                 std::string item = addArrayItem(info);
+    //                 setValue(realPath._data, info);
+    //                 realPath << item;
+    //             }
+    //             else{
+    //                 printf("[XXmap] LINE:%d error\n", __LINE__);
+    //                 return;
+    //             }
+    //         }
+    //     }
+    //     // [2.3] 其余节点
+    //     else{
+    //         realPath << *nodeIter;
+    //     }
+    // }
+
+    // // [3] 节点转换完成，值设置
+    // _map._data[realPath._data] = value;
+}
+std::string XXmapRef::checkAndGetValue(const std::string &path){
+    std::string realPath;
+    if(!getRealPath(path, realPath, false)){
+        return XXMAP_VALUE_INVALID;
+    }
+    auto iter = _map._data.find(realPath);
+    return _map._data.end() == iter ? XXMAP_VALUE_INVALID : iter->second;
+}
+bool XXmapRef::getRealPath(const std::string &path, std::string &realPath, bool creating){
+    XXpath xxRealPath;
 
     // [1] 路径拆分并遍历
     auto nodes = XXstdStringExtend::splitToList(path, PATH_DELIMITER);
@@ -103,7 +184,7 @@ void XXmapRef::checkAndSetValue(const std::string &path, const std::string &valu
     {
         // [2.1] 空节点，不作处理，直接跳过
         if (0 == nodeIter->length()){
-            realPath << *nodeIter;
+            xxRealPath << *nodeIter;
             continue;
         }
 
@@ -113,52 +194,51 @@ void XXmapRef::checkAndSetValue(const std::string &path, const std::string &valu
             unsigned int index  = std::stoi(nodeIter->substr(1));
             
             // [3.2] 数组信息
-            auto infoIter = _map._data.find(realPath._data);
+            auto infoIter = _map._data.find(xxRealPath._data);
             if (_map._data.end() == infoIter){
                 // 没有数组信息，并index不为0，不能创建item
-                if(0 != index){
+                if(0 != index || !creating){
                     printf("[XXmap] LINE:%d error\n", __LINE__);
-                    return; 
+                    return false; 
                 }
 
                 // 没有数组信息，index为0，创建一个新的数值信息，并附带一个item    
                 auto arrayInfo = createArrayInfo(1);
-                setValue(realPath._data, arrayInfo);
-                realPath << "0";
+                setValue(xxRealPath._data, arrayInfo);
+                xxRealPath << "0";
             }
             else{
                 std::vector<std::string> info = XXstdStringExtend::splitToVector(infoIter->second, VALUE_ARRAY_DELIMITER);
                 if (!isArrayInfo(info)){
                     printf("[XXmap] LINE:%d error\n"
                             "   Value:%s\n", __LINE__, infoIter->second.data());
-                    return;
+                    return false;
                 }
                 
                 if (isArrayContains(info, index)){
                     std::string item = getArrayItem(info, index);
-                    realPath << item;
+                    xxRealPath << item;
                 }
-                else if(isArrayNext(info, index)){
+                else if(isArrayNext(info, index) && creating){
                     std::string item = addArrayItem(info);
-                    setValue(realPath._data, info);
-                    realPath << item;
+                    setValue(xxRealPath._data, info);
+                    xxRealPath << item;
                 }
                 else{
                     printf("[XXmap] LINE:%d error\n", __LINE__);
-                    return;
+                    return false;
                 }
             }
         }
         // [2.3] 其余节点
         else{
-            realPath << *nodeIter;
+            xxRealPath << *nodeIter;
         }
     }
 
-    // [3] 节点转换完成，值设置
-    _map._data[realPath._data] = value;
+    realPath = xxRealPath._data;
+    return true;
 }
-
 // bool XXmapRef::setArrayValue(const std::string &path, unsigned int index, const std::string &value){
 //     /**
 //      * 数组信息节点组成：".,Count,Max,Index"，其中：

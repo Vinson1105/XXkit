@@ -37,21 +37,15 @@ private:
 class XXmap{
     friend class XXmapRef;
 public:
-	XXmap(const char *name) : _name(name) {}
-	XXmap(const std::string &name) : _name(name) {}
+    XXmap(){}
 	XXmap(const XXmap &xxmap) { *this = xxmap; }
     XXmap(std::map< std::string,std::string > map) :_data(map){}
 	virtual ~XXmap() {}
 
-    operator std::map<std::string,std::string>(){return _data;}
-    void operator=(const XXmap &xxmap){
-        _name   = xxmap._name;
-        _data   = xxmap._data;
-    }
+    void operator=(const XXmap &xxmap){ _data = xxmap._data; }
     std::map<std::string,std::string> data() { return _data; }
 
 private:
-    std::string _name;
 	std::map<std::string,std::string> _data;
 };
 
@@ -70,24 +64,28 @@ public: /* 路径编辑运算符 */
     XXmapRef operator()(unsigned int index);
     
 public: /* 赋值运算符 */
+    /** 只会进行值复制，不会产生map的引用 */
+    void operator=(XXmapRef &mapRef);
     void operator=(const std::string &value);
     void operator=(int value);
     void operator=(double value);
     void operator=(const std::vector<std::string> &value);
 
 public: /* 值转换 */
-    operator std::string() const;
-    std::string toString() const;
-    int toInt() const;
-    double toDouble() const;
-    std::vector<std::string> toVector() const;
+    
+    operator std::string(); /** 省缺类型转换 */
+    std::string toString(); /** 路径有误时，或者没有对应的值时，返回XXMAP_VALUE_INVALID */
+    int toInt();            /** 路径有误时，或者没有对应的值时，返回0 */
+    double toDouble();      /** 路径有误时，或者没有对应的值时，返回0 */
+    std::vector<std::string> toVector();    /** 路径有误时，或者没有对应的值时，空的列表 */
 
 private: /* 值设置[内部]*/
     void setValue(const std::string &path, const std::vector<std::string> &value);
     void checkAndSetValue(const std::string &path, const std::string &value);
-    //bool setArrayValue(const std::string &path, unsigned int index, const std::string &value);
+    std::string checkAndGetValue(const std::string &path);
+    bool getRealPath(const std::string &path, std::string &realPath, bool creating);
 
-private: /* s */
+private: /* 数组信息操作[内部] */
     /**
      * @brief   判断infoItems中的元素是否用来描述一个XXmap中ArrayValue的信息
      * @param   arrayValue  需要判断的数组型数据
