@@ -60,16 +60,15 @@ public:
     virtual ~XXmapRef(){}
 
 public: /* 路径编辑运算符 */
-    XXmapRef operator[](const std::string &key);
-    XXmapRef operator()(unsigned int index);
+    XXmapRef operator[](const std::string &key);    /** 一般路径编辑 */
+    XXmapRef operator()(unsigned int index);        /** 数组路径编辑 */
     
 public: /* 赋值运算符 */
-    /** 只会进行值复制，不会产生map的引用 */
-    void operator=(XXmapRef &mapRef);
-    void operator=(const std::string &value);
+    void operator=(XXmapRef &mapRef);               /** 只会进行值复制，不会产生map的引用 */
+    void operator=(const std::string &value);       
     void operator=(int value);
     void operator=(double value);
-    void operator=(const std::vector<std::string> &value);
+    void operator=(const std::vector<std::string> &value);  /** 会将数组内容转换成item1,item2,item3,...,itemN */
 
 public: /* 值转换 */
     

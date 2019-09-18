@@ -86,7 +86,7 @@ std::vector<std::string> XXmapRef::toVector(){
     return XXMAP_VALUE_INVALID == value ? std::vector<std::string>() : XXstdStringExtend::splitToVector(value, VALUE_ARRAY_DELIMITER);
 }
 
-/// 私有函数 - <值设置(会进行数组检查)>
+/// 私有函数 - <数组型值设置> <值写入(会检查路径节点)> <值读取(会检查路径节点)> <路径节点替换>
 void XXmapRef::setValue(const std::string &path, const std::vector<std::string> &value){
     std::string valueString;
     for (auto iter = value.cbegin(); iter != value.cend();){
@@ -104,68 +104,6 @@ void XXmapRef::checkAndSetValue(const std::string &path, const std::string &valu
     if(getRealPath(path, realPath, true)){
         _map._data[realPath] = value;
     }
-    // XXpath realPath;
-
-    // // [1] 路径拆分并遍历
-    // auto nodes = XXstdStringExtend::splitToList(path, PATH_DELIMITER);
-    // for (auto nodeIter = nodes.begin(); nodeIter != nodes.end(); nodeIter++)
-    // {
-    //     // [2.1] 空节点，不作处理，直接跳过
-    //     if (0 == nodeIter->length()){
-    //         realPath << *nodeIter;
-    //         continue;
-    //     }
-
-    //     // [2.2] 具有.index的节点
-    //     if (nodeIter->substr(0,1) == VALUE_ARRAY_PREFIX){
-    //         // [3.1] 数组节点编号
-    //         unsigned int index  = std::stoi(nodeIter->substr(1));
-            
-    //         // [3.2] 数组信息
-    //         auto infoIter = _map._data.find(realPath._data);
-    //         if (_map._data.end() == infoIter){
-    //             // 没有数组信息，并index不为0，不能创建item
-    //             if(0 != index){
-    //                 printf("[XXmap] LINE:%d error\n", __LINE__);
-    //                 return; 
-    //             }
-
-    //             // 没有数组信息，index为0，创建一个新的数值信息，并附带一个item    
-    //             auto arrayInfo = createArrayInfo(1);
-    //             setValue(realPath._data, arrayInfo);
-    //             realPath << "0";
-    //         }
-    //         else{
-    //             std::vector<std::string> info = XXstdStringExtend::splitToVector(infoIter->second, VALUE_ARRAY_DELIMITER);
-    //             if (!isArrayInfo(info)){
-    //                 printf("[XXmap] LINE:%d error\n"
-    //                         "   Value:%s\n", __LINE__, infoIter->second.data());
-    //                 return;
-    //             }
-                
-    //             if (isArrayContains(info, index)){
-    //                 std::string item = getArrayItem(info, index);
-    //                 realPath << item;
-    //             }
-    //             else if(isArrayNext(info, index)){
-    //                 std::string item = addArrayItem(info);
-    //                 setValue(realPath._data, info);
-    //                 realPath << item;
-    //             }
-    //             else{
-    //                 printf("[XXmap] LINE:%d error\n", __LINE__);
-    //                 return;
-    //             }
-    //         }
-    //     }
-    //     // [2.3] 其余节点
-    //     else{
-    //         realPath << *nodeIter;
-    //     }
-    // }
-
-    // // [3] 节点转换完成，值设置
-    // _map._data[realPath._data] = value;
 }
 std::string XXmapRef::checkAndGetValue(const std::string &path){
     std::string realPath;
@@ -239,76 +177,6 @@ bool XXmapRef::getRealPath(const std::string &path, std::string &realPath, bool 
     realPath = xxRealPath._data;
     return true;
 }
-// bool XXmapRef::setArrayValue(const std::string &path, unsigned int index, const std::string &value){
-//     /**
-//      * 数组信息节点组成：".,Count,Max,Index"，其中：
-//      * ','：为分隔符；
-//      * '.'：为数组信息数据标识；
-//      * 'Count'：为数组长度；
-//      * 'Max'：实际数组元素在map中的路径最大节点值，后续增加节点需要在此值的基础上递增，并且此值只增不减
-//      * 'Index'：实际数组元素在map中的路径节点
-//     */
-    
-//     // [1] 取出数组信息节点
-//     std::string indexString = std::to_string(index);
-//     auto infoIter = _map._data.find(path);
-//     if (_map._data.end() == infoIter){
-//         // [2.1] 没能找到信息节点的迭代器（即表中没有信息节点值），此时如果index==0，则可以视为数组的初始化
-//         if (0 != index){
-//             return false;
-//         }
-        
-//         // [2.2] 组成数组信息节点对应的值（value）
-//         std::string infoValue(VALUE_ARRAY_PREFIX);               // 标识头：'.'
-//         infoValue += VALUE_ARRAY_DELIMITER + std::to_string(1);  // 
-//         infoValue += VALUE_ARRAY_DELIMITER + indexString;
-
-//         // [2.3] 组成数组元素的键（key）并写入数组元素数据
-//         XXpath xxpath(path);
-//         xxpath << indexString;
-//         _map._data.insert(xxpath._data, value);
-
-//         // [2.4] 写入数组信息数据
-//         _map._data.insert(path, infoValue);
-//     }
-//     else{
-//         // [3.1] 取出数组信息数据，并拆分
-//         auto infoItems = XXstdStringExtend::splitToVector(infoIter->second, VALUE_ARRAY_DELIMITER);
-//         if (infoItems.size() <= 2 || VALUE_ARRAY_PREFIX != infoItems[VALUE_ARRAY_INDEX_PREFIX]){
-//             return false; // 数组信息异常
-//         }
-
-//         // [3.2] 判断数量的合法性
-//         int count   = std::stoi(infoItems[VALUE_ARRAY_INDEX_COUNT]);
-//         int max     = std::stoi(infoItems[VALUE_ARRAY_INDEX_MAX]);
-//         if (count <= 0){
-//             return false; // 数组长度异常
-//         }
-
-//         // [3.3] 判断index和数组数量的关系
-//         if (index < count){
-//             std::string pathNode = infoItems[VALUE_ARRAY_INDEX_ITEMSTART+index];
-//             XXpath path(path);
-//             path << pathNode;
-//             _map._data.insert(path._data, value);
-//         }
-//         else if(index == count){
-//             std::string maxString = std::to_string(max+1);
-//             infoItems.push_back(maxString);
-//             infoItems[VALUE_ARRAY_INDEX_COUNT]   = std::to_string(count+1);
-//             infoItems[VALUE_ARRAY_INDEX_MAX]     = maxString;
-//             setValue(path, infoItems);
-
-//             XXpath path(path);
-//             path << maxString;
-//             _map._data.insert(path._data, value);
-//         }
-//         else{
-//             return false; // 数据越界
-//         }
-//     }
-//     return true;
-// }
 
 /// pragma mark - 私有函数
 bool XXmapRef::isArrayInfo(const std::vector<std::string> &arrayValue){
