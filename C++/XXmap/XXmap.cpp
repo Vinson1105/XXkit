@@ -86,6 +86,52 @@ std::vector<std::string> XXmapRef::toVector(){
     return XXMAP_VALUE_INVALID == value ? std::vector<std::string>() : XXstdStringExtend::splitToVector(value, VALUE_ARRAY_DELIMITER);
 }
 
+/// 
+bool XXmapRef::isArray(){
+    auto iter = _map._data.find(_path._data);
+    if(_map._data.end() == iter){
+        return false;
+    }
+    auto arrayValue = XXstdStringExtend::splitToVector(iter->second, VALUE_ARRAY_DELIMITER);
+    return isArrayInfo(arrayValue);
+}
+unsigned int XXmapRef::arrayCount(){
+    auto iter = _map._data.find(_path._data);
+    if(_map._data.end() == iter){
+        return 0;
+    }
+    auto arrayValue = XXstdStringExtend::splitToVector(iter->second, VALUE_ARRAY_DELIMITER);
+    if(!isArrayInfo(arrayValue)){
+        return 0;
+    }
+    return std::stoi(arrayValue[VALUE_ARRAY_INDEX_COUNT]);
+}
+bool XXmapRef::arrayTake(unsigned int from, unsigned int to){
+
+}
+bool XXmapRef::arraySwap(unsigned int index1, unsigned int index2){
+    auto iter = _map._data.find(_path._data);
+    if(_map._data.end() == iter){
+        return false;
+    }
+    auto arrayValue = XXstdStringExtend::splitToVector(iter->second, VALUE_ARRAY_DELIMITER);
+    if(!isArrayInfo(arrayValue)){
+        return false;
+    } 
+
+    if (!isArrayContains(index1) || !isArrayContains(index2)){
+        return false;
+    }
+    std::string item1 = getArrayItem(arrayValue, index1);
+    std::string item2 = getArrayItem(arrayValue, index2);
+    setArrayItem(arrayValue, index1, item2);
+    setArrayItem(arrayValue, index2, item1);
+}
+bool XXmapRef::arrayInsert(unsigned int index){
+
+}
+bool XXmapRef::arrayDelete(unsigned int index);
+
 /// 私有函数 - <数组型值设置> <值写入(会检查路径节点)> <值读取(会检查路径节点)> <路径节点替换>
 void XXmapRef::setValue(const std::string &path, const std::vector<std::string> &value){
     std::string valueString;
@@ -199,22 +245,15 @@ bool XXmapRef::isArrayContains(const std::vector<std::string> &arrayInfo, unsign
 bool XXmapRef::isArrayNext(const std::vector<std::string> &arrayInfo, unsigned int index){
     return std::stoi(arrayInfo[VALUE_ARRAY_INDEX_COUNT]) == index;
 }
+std::string XXmapRef::takeArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index){
+    std::string item = arrayInfo[VALUE_ARRAY_INDEX_ITEMSTART+index];
+    arrayInfo.at
+}
 std::string XXmapRef::getArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index){
     return arrayInfo[VALUE_ARRAY_INDEX_ITEMSTART+index];
 }
-std::string XXmapRef::getArrayItem(const std::string &path, unsigned int index){
-    auto infoIter = _map._data.find(path);
-    if(_map._data.end() == infoIter){
-        return "";
-    }
-
-    auto infoItems = XXstdStringExtend::splitToVector(infoIter->second, VALUE_ARRAY_DELIMITER);
-    if (!isArrayInfo(infoItems)){
-        return "";
-    }
-    
-    int count = std::stoi(infoItems[VALUE_ARRAY_INDEX_COUNT]);
-    return index >= count ? "" : infoItems[VALUE_ARRAY_INDEX_ITEMSTART + index];
+void XXmapRef::setArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index, std::string &item){
+    arrayInfo[VALUE_ARRAY_INDEX_ITEMSTART+index] = item;
 }
 std::string XXmapRef::addArrayItem(std::vector<std::string> &arrayInfo){
     std::string max = std::to_string(std::stoi(arrayInfo[VALUE_ARRAY_INDEX_MAX]) + 1);

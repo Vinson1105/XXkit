@@ -71,12 +71,19 @@ public: /* 赋值运算符 */
     void operator=(const std::vector<std::string> &value);  /** 会将数组内容转换成item1,item2,item3,...,itemN */
 
 public: /* 值转换 */
-    
     operator std::string(); /** 省缺类型转换 */
     std::string toString(); /** 路径有误时，或者没有对应的值时，返回XXMAP_VALUE_INVALID */
     int toInt();            /** 路径有误时，或者没有对应的值时，返回0 */
     double toDouble();      /** 路径有误时，或者没有对应的值时，返回0 */
     std::vector<std::string> toVector();    /** 路径有误时，或者没有对应的值时，空的列表 */
+
+public:
+    bool isArray();
+    unsigned int arrayCount();
+    bool arrayTake(unsigned int from, unsigned int to);
+    bool arraySwap(unsigned int index1, unsigned int index2);
+    bool arrayInsert(unsigned int index);
+    bool arrayDelete(unsigned int index);
 
 private: /* 值设置[内部]*/
     void setValue(const std::string &path, const std::vector<std::string> &value);
@@ -84,58 +91,32 @@ private: /* 值设置[内部]*/
     std::string checkAndGetValue(const std::string &path);
     bool getRealPath(const std::string &path, std::string &realPath, bool creating);
 
-private: /* 数组信息操作[内部] */
-    /**
-     * @brief   判断infoItems中的元素是否用来描述一个XXmap中ArrayValue的信息
-     * @param   arrayValue  需要判断的数组型数据
-     * @return  返回true：这是一个数组信息描述对象，否则这不是用来描述数组
-    */
+private: /* 数组信息操作[内部]，注意：arrayValue!=arrayInfo，arrayInfo是一个符合数组信息描述结构的vector，而arrayValue只是vector即可 */
+    /** 判断数组信息arrayValue中的元素是否用来描述一个XXmap中数组结构的信息 */
     bool isArrayInfo(const std::vector<std::string> &arrayValue);
 
-    /**
-     * @brief   判断指定编号index是否在arrayInfo中为有效的编号，注意：arrayInfo需要为一个有效的数组信息描述对象
-     * @param   index   目标编号
-     * @return  返回true：这是一个有效编号
-    */
+    /** 判断指定编号index是否在数组信息arrayInfo中为有效的编号 */
     bool isArrayContains(const std::vector<std::string> &arrayInfo, unsigned int index);
 
-    /**
-     * @brief   判断指定编号index是否在arrayInfo中不是一个有效的编号，但是在arrayInfo中是下一个有效编号，
-     *          如：array中有5个元素，那么0-4是有效的编号，则5为下一个有效编号
-     * @param   index   目标编号
-     * @return  返回true：是下一个有效编号
-    */
+    /** 判断index是否为数组信息arrayInfo的下一个有效编号，如：info中有5个元素，那么0-4是有效的编号，则5为下一个有效编号 */
     bool isArrayNext(const std::vector<std::string> &arrayInfo, unsigned int index);
 
-    /**
-     * @brief   在数组中取指定的项
-     * @param   index   目标编号
-     * @return  返回true：是下一个有效编号
-    */
+    /** 在数组信息arrayInfo中取指定编号的item，并删除 */
+    std::string takeArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index);
+
+    /** 在数组信息arrayInfo中取指定编号的item */
     std::string getArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index);
 
-    /**
-     * @brief   取数据表中以path为键的数据，并以这分数据作为一个数组描述对象，
-     *          取出指点index的中间节点
-     * @param   path    目标路径
-     * @param   index   数组中的编号
-     * @return  返回非空字符串：成功取出对应的中间节点，否则该路径对应的数据并不是用来描述数据，
-     *          或者编号index不在可取值的范围
-    */
-    std::string getArrayItem(const std::string &path, unsigned int index);
+    /** 在数组信息arrayInfo中设置指定编号的item */
+    void setArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index, std::string &item);
 
-    /**
-     * @brief   在数组信息中追加一个item
-     * @param   arrayInfo   目标数组信息
-     * @return  返回产生的item
-    */
+    /** 在数组信息arrayInfo中追加一个item，并返回item值 */
     std::string addArrayItem(std::vector<std::string> &arrayInfo);
 
-    /**
-     * @brief   在数组信息中追加一个item
-     * @param   arrayInfo   目标数组信息
-     * @return  返回非空字符串：为追加产生的item，否则追加失败
-    */
+    /** 在数组信息中追加一个指定的item，如有重复的item值则返回false */
+    bool addArrayItem(std::vector<std::string> &arrayInfo, std::string &item);
+
+    /** 创建一个新的数组信息，并分配好指定数量count的item */
     std::vector<std::string> createArrayInfo(unsigned int count);
 
 private:
