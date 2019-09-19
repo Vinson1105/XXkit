@@ -88,3 +88,17 @@ std::string XXstdStringExtend::section(const std::string &target, const std::str
 
     return sectionString;
 }
+
+bool XXstdStringExtend::hasPrefix(const std::string &target, const std::string &prefix){
+    if(0 == target.size() || 0 == prefix.size() || prefix.size() > target.size()){
+        return false;
+    }
+    return 0 == memcmp(target.data(), prefix.data(), prefix.size());
+}
+bool XXstdStringExtend::hasSuffix(const std::string &target, const std::string &suffix){
+    if(0 == target.size() || 0 == suffix.size() || suffix.size() > target.size()){
+        return false;
+    }
+    int targetOffset = target.size() - suffix.size();
+    return 0 == memcmp(target.data()+targetOffset, suffix.data(), suffix.size());
+}

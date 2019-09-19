@@ -36,5 +36,8 @@ namespace XXstdStringExtend{
      * @return  返回从起始序号到结束序号之后的字符串
     */
     std::string section(const std::string &target, const std::string &sep, uint8_t start, int8_t end);
+
+    bool hasPrefix(const std::string &target, const std::string &prefix);
+    bool hasSuffix(const std::string &target, const std::string &suffix);
 };
 #endif

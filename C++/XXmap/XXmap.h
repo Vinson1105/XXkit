@@ -59,69 +59,58 @@ public:
     XXmapRef(const XXmapRef &mapRef);
     virtual ~XXmapRef(){}
 
-public: /* 路径编辑运算符 */
+public: /** 路径编辑运算符 */
     XXmapRef operator[](const std::string &key);    /** 一般路径编辑 */
     XXmapRef operator()(unsigned int index);        /** 数组路径编辑 */
     
-public: /* 赋值运算符 */
+public: /** 赋值运算符 */
     void operator=(XXmapRef &mapRef);               /** 只会进行值复制，不会产生map的引用 */
     void operator=(const std::string &value);       
     void operator=(int value);
     void operator=(double value);
     void operator=(const std::vector<std::string> &value);  /** 会将数组内容转换成item1,item2,item3,...,itemN */
 
-public: /* 值转换 */
+public: /** 值转换 */
     operator std::string(); /** 省缺类型转换 */
     std::string toString(); /** 路径有误时，或者没有对应的值时，返回XXMAP_VALUE_INVALID */
     int toInt();            /** 路径有误时，或者没有对应的值时，返回0 */
     double toDouble();      /** 路径有误时，或者没有对应的值时，返回0 */
     std::vector<std::string> toVector();    /** 路径有误时，或者没有对应的值时，空的列表 */
 
-public:
+public: /** 数组信息操作 */
     bool isArray();
-    unsigned int arrayCount();
-    bool arrayTake(unsigned int from, unsigned int to);
-    bool arraySwap(unsigned int index1, unsigned int index2);
-    bool arrayInsert(unsigned int index);
-    bool arrayDelete(unsigned int index);
+    unsigned int arrayItemCount();
+    bool moveArrayItem(unsigned int from, unsigned int to);
+    bool swapArrayItem(unsigned int index1, unsigned int index2);
+    std::string insertArrayItem(unsigned int index, bool toBack);
+    bool deleteArrayItem(unsigned int index);
 
-private: /* 值设置[内部]*/
+private: /** 值设置[内部]*/
+    void deleteSub(const std::string &path);
     void setValue(const std::string &path, const std::vector<std::string> &value);
     void checkAndSetValue(const std::string &path, const std::string &value);
     std::string checkAndGetValue(const std::string &path);
     bool getRealPath(const std::string &path, std::string &realPath, bool creating);
 
-private: /* 数组信息操作[内部]，注意：arrayValue!=arrayInfo，arrayInfo是一个符合数组信息描述结构的vector，而arrayValue只是vector即可 */
-    /** 判断数组信息arrayValue中的元素是否用来描述一个XXmap中数组结构的信息 */
-    bool isArrayInfo(const std::vector<std::string> &arrayValue);
+private: /** 数组信息操作[内部]，注意：arrayValue!=arrayInfo，arrayInfo是一个符合数组信息描述结构的vector，而arrayValue只是vector即可；item是一个整型字符串 */
+    bool isArrayInfo(const std::vector<std::string> &arrayValue);                           /** 判断数组信息arrayValue中的元素是否用来描述一个XXmap中数组结构的信息 */    
+    bool isArrayContains(const std::vector<std::string> &arrayInfo, unsigned int index);    /** 判断指定编号index是否在数组信息arrayInfo中为有效的编号 */
+    bool isArrayNext(const std::vector<std::string> &arrayInfo, unsigned int index);        /** 判断index是否为数组信息arrayInfo的下一个有效编号，如：info中有5个元素，那么0-4是有效的编号，则5为下一个有效编号 */
 
-    /** 判断指定编号index是否在数组信息arrayInfo中为有效的编号 */
-    bool isArrayContains(const std::vector<std::string> &arrayInfo, unsigned int index);
+    std::string takeArrayItem(std::vector<std::string> &arrayInfo, unsigned int index);             /** 在数组信息arrayInfo中取指定编号的item，并删除 */    
+    std::string getArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index);        /** 在数组信息arrayInfo中取指定编号的item */    
+    void setArrayItem(std::vector<std::string> &arrayInfo, unsigned int index, std::string &item);  /** 在数组信息arrayInfo中设置指定编号的item */
+    
+    void swapArrayItem(std::vector<std::string> &arrayInfo, unsigned int index1, unsigned int index2);              /** 在数组信息arrayInfo中，将两个指定的编号在顺序替换*/
+    bool insertArrayItem(std::vector<std::string> &arrayInfo, unsigned int index, std::string &item, bool toBack);  /** 在数组信息arrayInfo中，往指定的编号[前/后]插入指定的item (toBack?前插入:后插入) */
+    std::string insertArrayItem(std::vector<std::string> &arrayInfo, unsigned int index, bool toBack);              /** 在数组信息arrayInfo中，往指定的编号[前/后]插入由内部生成item，并返回 (toBack?前插入:后插入) */              
 
-    /** 判断index是否为数组信息arrayInfo的下一个有效编号，如：info中有5个元素，那么0-4是有效的编号，则5为下一个有效编号 */
-    bool isArrayNext(const std::vector<std::string> &arrayInfo, unsigned int index);
-
-    /** 在数组信息arrayInfo中取指定编号的item，并删除 */
-    std::string takeArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index);
-
-    /** 在数组信息arrayInfo中取指定编号的item */
-    std::string getArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index);
-
-    /** 在数组信息arrayInfo中设置指定编号的item */
-    void setArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index, std::string &item);
-
-    /** 在数组信息arrayInfo中追加一个item，并返回item值 */
-    std::string addArrayItem(std::vector<std::string> &arrayInfo);
-
-    /** 在数组信息中追加一个指定的item，如有重复的item值则返回false */
-    bool addArrayItem(std::vector<std::string> &arrayInfo, std::string &item);
-
-    /** 创建一个新的数组信息，并分配好指定数量count的item */
-    std::vector<std::string> createArrayInfo(unsigned int count);
+    std::string addArrayItem(std::vector<std::string> &arrayInfo);              /** 在数组信息arrayInfo中追加一个item，并返回item值 */
+    bool addArrayItem(std::vector<std::string> &arrayInfo, std::string &item);  /** 在数组信息中追加一个指定的item，如有重复的item值则返回false */
+    std::vector<std::string> createArrayInfo(unsigned int count);               /** 创建一个新的数组信息，并分配好指定数量count的item */
 
 private:
     XXpath _path;
     XXmap &_map;
-    bool _isList;
 };
 #endif
