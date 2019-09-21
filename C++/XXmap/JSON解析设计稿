@@ -1,0 +1,49 @@
+{
+	"AAA" : "AAA",
+
+	"Student":[
+		{
+			"Name" : "A",
+			"ID" : 1,
+		},
+		{
+			"Name" : "B",
+			"ID" : 2,
+		},
+		{
+			"Name" : "C",
+			"ID" : 3,
+		},
+		{
+			"Name" : "D",
+			"ID" : 4,
+		}
+	],
+}
+
+AAA:AAA
+Student:.,3,0,1,2,3
+Student/0/ID:1
+Student/0/Name:A
+Student/1/ID:2
+Student/1/Name:B
+Student/2/ID:3
+Student/2/Name:C
+Student/3/ID:4
+Student/3/Name:D
+
+注意：不考虑容错性，尽可能简单
+ToJson
+[1] 获取key中的'/'的个数，从而得知缩进层次(currIndent)，与上一次缩进层次(lastIndent)相比
+		if 相等
+			追加currIndent缩进
+		if 增加
+			追加lastIndent缩进
+			追加'{'进行换行
+			追加currentIndent缩进
+		if 减少
+
+	
+
+FromJson
+

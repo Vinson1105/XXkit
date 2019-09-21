@@ -3,14 +3,21 @@
 
 /** 异常、错误标志 */
 #define ERROR_LOG printf("[XXmap] LINE:%d error\n", __LINE__);
-/** 如果当前路径下不是数组节点则返回false */
-#define RETURN_IFNOT_ARRAY(ret)     auto iter = _map._data.find(_path._data); \
-                                    if(_map._data.end() == iter) return ret;   \
-                                    auto arrayValue = XXstdStringExtend::splitToVector(iter->second, VALUE_ARRAY_DELIMITER); \
-                                    if(!isArrayInfo(arrayValue)) return ret;
+/** 如果当前路径下不是数组节点则返回false（使用了isArrayInfo） */
+#define RETURN_VALUE_IFNOT_ARRAY(mapIter, arrayInfo, value)\
+                                    auto mapIter = _map._data.find(_path._data); \
+                                    if(_map._data.end() == mapIter) return value;   \
+                                    auto arrayInfo = XXstdStringExtend::splitToVector(mapIter->second, VALUE_ARRAY_DELIMITER); \
+                                    if(!isArrayInfo(arrayInfo)) return value;
+/** 如果当前路径下不是数组节点则直接返回 （使用了isArrayInfo）*/
+#define RETURN_IFNOT_ARRAY(mapIter, arrayInfo)\
+                                    auto mapIter = _map._data.find(_path._data); \
+                                    if(_map._data.end() == mapIter) return;   \
+                                    auto arrayInfo = XXstdStringExtend::splitToVector(mapIter->second, VALUE_ARRAY_DELIMITER); \
+                                    if(!isArrayInfo(arrayInfo)) return;
 
 #define PATH_DELIMITER              "/" // 路径分隔符
-#define KEY_ARRAY_PREFIX            "." // 
+#define KEY_ARRAY_PREFIX            "." // (n)-->.n保存在路径中，其中n是整型字符串
 
 #define VALUE_ARRAY_INFOCOUNT_MIN           2   // 数组信息中项最小值：.,MAX(,编号) 
 #define VALUE_ARRAY_PREFIX                  "." // 数组信息的标识，如：1/2/3 : .,MAX,0,1,2
@@ -113,42 +120,91 @@ unsigned int XXmapRef::arrayItemCount(){
     }
     return arrayValue.size()-VALUE_ARRAY_INFOCOUNT_MIN;
 }
-bool XXmapRef::moveArrayItem(unsigned int from, unsigned int to){
-    RETURN_IFNOT_ARRAY(false)
-    // TODO
-    return true;
-}
 bool XXmapRef::swapArrayItem(unsigned int index1, unsigned int index2){
-    RETURN_IFNOT_ARRAY(false)
-    std::string item1 = getArrayItem(arrayValue, index1);
-    std::string item2 = getArrayItem(arrayValue, index2);
-    setArrayItem(arrayValue, index1, item2);
-    setArrayItem(arrayValue, index2, item1);
-    setValue(_path._data, arrayValue);
+    RETURN_VALUE_IFNOT_ARRAY(mapIter, arrayInfo, false)
+    std::string item1 = getArrayItem(arrayInfo, index1);
+    std::string item2 = getArrayItem(arrayInfo, index2);
+    setArrayItem(arrayInfo, index1, item2);
+    setArrayItem(arrayInfo, index2, item1);
+    setValue(_path._data, arrayInfo);
     return true;
 }
 std::string XXmapRef::insertArrayItem(unsigned int index, bool toBack){
-    RETURN_IFNOT_ARRAY(XXMAP_VALUE_INVALID)
-    return insertArrayItem(arrayValue, index, toBack);
+    RETURN_VALUE_IFNOT_ARRAY(mapIter, arrayInfo, XXMAP_VALUE_INVALID)
+    std::string item = insertArrayItem(arrayInfo, index, toBack);
+    if (XXMAP_VALUE_INVALID != item){
+         setValue(_path._data, arrayInfo);
+    }
+    return item;
 }
-bool XXmapRef::deleteArrayItem(unsigned int index){
-    RETURN_IFNOT_ARRAY(false)
-    std::string item = takeArrayItem(arrayValue, index);
+bool XXmapRef::insertArrayItem(unsigned int index, std::string &item, bool toBack){
+    RETURN_VALUE_IFNOT_ARRAY(mapIter, arrayInfo, false)
+    if(!insertArrayItem(arrayInfo, index, item, toBack)){
+        return false;
+    }
+    setValue(_path._data, arrayInfo);
+    return true;
+}
+
+std::string XXmapRef::addArrayItem(){
+    RETURN_VALUE_IFNOT_ARRAY(mapIter, arrayInfo, XXMAP_VALUE_INVALID)
+    std::string item = addArrayItem(arrayInfo);
+    if (XXMAP_VALUE_INVALID != item){
+        setValue(_path._data, arrayInfo);
+    }
+    return item;
+}
+std::string XXmapRef::getArrayItem(unsigned int index){
+    RETURN_VALUE_IFNOT_ARRAY(mapIter, arrayInfo, XXMAP_VALUE_INVALID)
+    return getArrayItem(arrayInfo, index);
+}
+std::string XXmapRef::takeArrayItem(unsigned int index){
+    RETURN_VALUE_IFNOT_ARRAY(mapIter, arrayInfo, XXMAP_VALUE_INVALID)
+    std::string item = takeArrayItem(arrayInfo, index);
+    if (XXMAP_VALUE_INVALID != item){
+        setValue(_path._data, arrayInfo);
+    }
+    return item;
+}
+bool XXmapRef::removeArrayItem(unsigned int index){
+    RETURN_VALUE_IFNOT_ARRAY(mapIter, arrayInfo, false)
+    std::string item = takeArrayItem(arrayInfo, index);
     if (XXMAP_VALUE_INVALID == item){
         return false;
     }
 
-    // TODO
+    // 回写arrayInfo数据
+    setValue(_path._data, arrayInfo);
+
+    // 删除item节点数据
+    XXpath itemPath = _path;
+    itemPath << item;
+    cleanup(itemPath._data);
+    return true;
 }
 
-/// 私有函数 - <数组型值设置> <值写入(会检查路径节点)> <值读取(会检查路径节点)> <路径节点替换>
-void XXmapRef::deleteSub(const std::string &path){
-    auto iter = _map._data.find(path);
-    while (_map._data.end() != iter && XXstdStringExtend::hasPrefix(iter->second, path))
-    {
-        /* code */
+void XXmapRef::cleanup(){
+    cleanup(_path._data);
+}
+
+/// 私有函数 - <节点清除> <数组型值设置> <值写入(会检查路径节点)> <值读取(会检查路径节点)> <路径节点替换>
+void XXmapRef::cleanup(const std::string &path){
+    if("" == path){
+        _map._data.clear();
+        return;
     }
-    
+
+    std::string brunchPath = path + "/";
+    auto iter = _map._data.begin();
+    while (_map._data.end() != iter){
+        if(path == iter->first || XXstdStringExtend::hasPrefix(iter->first, brunchPath)){
+            iter = _map._data.erase(iter);
+        }
+        else{
+            ++iter;
+        }
+        
+    }
 }
 void XXmapRef::setValue(const std::string &path, const std::vector<std::string> &value){
     std::string valueString;
@@ -262,8 +318,9 @@ bool XXmapRef::isArrayNext(const std::vector<std::string> &arrayInfo, unsigned i
 std::string XXmapRef::takeArrayItem(std::vector<std::string> &arrayInfo, unsigned int index){
     auto iter = arrayInfo.begin();
     iter += VALUE_ARRAY_INDEX_ITEMSTART+index;
+    std::string item = *iter;
     arrayInfo.erase(iter);
-    return *iter;
+    return item;
 }
 std::string XXmapRef::getArrayItem(const std::vector<std::string> &arrayInfo, unsigned int index){
     return arrayInfo[VALUE_ARRAY_INDEX_ITEMSTART+index];

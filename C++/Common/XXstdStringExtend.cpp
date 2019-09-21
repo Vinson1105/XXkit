@@ -102,3 +102,10 @@ bool XXstdStringExtend::hasSuffix(const std::string &target, const std::string &
     int targetOffset = target.size() - suffix.size();
     return 0 == memcmp(target.data()+targetOffset, suffix.data(), suffix.size());
 }
+int XXstdStringExtend::count(const std::string &target, const char c){
+    int countOfC = 0;
+    for (auto iter = target.cbegin(); iter != target.cend(); iter++){
+       if (c == *iter){ ++countOfC; }
+    }
+    return countOfC;
+}

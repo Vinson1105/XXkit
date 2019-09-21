@@ -39,5 +39,6 @@ namespace XXstdStringExtend{
 
     bool hasPrefix(const std::string &target, const std::string &prefix);
     bool hasSuffix(const std::string &target, const std::string &suffix);
+    int count(const std::string &target, const char c);
 };
 #endif

@@ -4,15 +4,15 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "echo",
+            "label" : "debug",
             "type": "shell",
             "command": "clang++",
             "args": [
-                "./Common/XXstdStringExtend.h",
-                "./Common/XXstdStringExtend.cpp",
-                "./XXmap/XXmap.h",
-                "./XXmap/XXmap.cpp",
-                "main.cpp"
+                "-g", "./Common/XXstdStringExtend.h",
+                "-g", "./Common/XXstdStringExtend.cpp",
+                "-g", "./XXmap/XXmap.h",
+                "-g", "./XXmap/XXmap.cpp",
+                "-g", "main.cpp"
             ],
             "group": {
                 "kind":"build",

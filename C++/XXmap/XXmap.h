@@ -44,11 +44,11 @@ public:
 
     void operator=(const XXmap &xxmap){ _data = xxmap._data; }
     std::map<std::string,std::string> data() { return _data; }
+    const std::map<std::string,std::string>& dataCRef() {return _data;}
 
 private:
 	std::map<std::string,std::string> _data;
 };
-
 
 //
 // XXmapRef
@@ -60,7 +60,7 @@ public:
     virtual ~XXmapRef(){}
 
 public: /** 路径编辑运算符 */
-    XXmapRef operator[](const std::string &key);    /** 一般路径编辑 */
+    XXmapRef operator[](const std::string &key);    /** 一般路径编辑，不能空节点，不能以'.'开头 */
     XXmapRef operator()(unsigned int index);        /** 数组路径编辑 */
     
 public: /** 赋值运算符 */
@@ -77,16 +77,25 @@ public: /** 值转换 */
     double toDouble();      /** 路径有误时，或者没有对应的值时，返回0 */
     std::vector<std::string> toVector();    /** 路径有误时，或者没有对应的值时，空的列表 */
 
-public: /** 数组信息操作 */
-    bool isArray();
-    unsigned int arrayItemCount();
-    bool moveArrayItem(unsigned int from, unsigned int to);
+public: /** 数组信息操作，item为整型字符串 */
+    bool isArray();                                                 /** 判断当前路径是否对应一个数组信息结构 */
+    unsigned int arrayItemCount();                                  /** 获取数组信息中item数量 */
     bool swapArrayItem(unsigned int index1, unsigned int index2);
     std::string insertArrayItem(unsigned int index, bool toBack);
-    bool deleteArrayItem(unsigned int index);
+    bool insertArrayItem(unsigned int index, std::string &item, bool toBack);
 
-private: /** 值设置[内部]*/
-    void deleteSub(const std::string &path);
+    std::string addArrayItem();
+    std::string getArrayItem(unsigned int index);
+    std::string takeArrayItem(unsigned int index);
+    bool removeArrayItem(unsigned int index);
+
+public:
+    void cleanup(); /** 清除当前路径下的数据，包括子路径（_path和_path/...下的所有键值 */
+    XXmap& map(){return _map;}
+    bool isEmpty(){return 0 == _map._data.size();}
+
+private: /** 值设置[内部] */
+    void cleanup(const std::string &path);
     void setValue(const std::string &path, const std::vector<std::string> &value);
     void checkAndSetValue(const std::string &path, const std::string &value);
     std::string checkAndGetValue(const std::string &path);
