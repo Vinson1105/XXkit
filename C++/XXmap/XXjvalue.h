@@ -7,33 +7,38 @@ class XXjvalue
 {
 public:
     enum Type{
-        Path,
-        Value,
-        Array,
+        PathNode,
+        ValueItem,
+        ArrayInfo,
+        //ArrayItem,
     };
-    static XXjvalue create
+    static XXjvalue create(int deepness, Type type, const std::string &value);
+    static XXjvalue create(const std::string &jvalueString);
+
+    XXjvalue(){}
     XXjvalue(int deepness, Type type, const std::string &value);
     XXjvalue(const std::string &jvalueString);
     virtual ~XXjvalue(){}
 
-    Type type() const;
-    void type(Type type);
+public: /** Getter */
+    uint8_t deepness() const { return _deepness; }
+    Type type() const { return _type; }
+    std::string value() const { return _value; }
 
-    U8 deepness() const;
-    void deepness(U8 deepness);
+public: /** Setter */
+    void deepness(uint8_t deepness) {_deepness = deepness; }
+    void type(Type type) { _type = type;}
+    void value(const std::string &value) { _value = value; }
 
-    QString value() const;
-    void value(const QString &value);
-
-    QString toData() const;
-    JValue& fromData(const QString &string);
-
-    void operator=(const JValue &jvalue);
+public: /** ×ª»» */
+    std::string toData() const;
+    XXjvalue& fromData(const std::string &jvalueString);
+    void operator=(const XXjvalue &jvalue);
 
 private:
-    char type_;
-    QString value_;
-    U8 deepness_;
+    uint8_t _deepness;
+    Type _type;
+    std::string _value;
 };
 
 #endif

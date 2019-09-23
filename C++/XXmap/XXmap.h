@@ -43,8 +43,8 @@ public:
 	virtual ~XXmap() {}
 
     void operator=(const XXmap &xxmap){ _data = xxmap._data; }
-    std::map<std::string,std::string> data() { return _data; }
-    const std::map<std::string,std::string>& dataCRef() {return _data;}
+    std::map<std::string,std::string>& data() { return _data; }
+    const std::map<std::string,std::string>& constData() {return _data;}
 
 private:
 	std::map<std::string,std::string> _data;
@@ -91,7 +91,8 @@ public: /** 数组信息操作，item为整型字符串 */
 
 public:
     void cleanup(); /** 清除当前路径下的数据，包括子路径（_path和_path/...下的所有键值 */
-    XXmap& map(){return _map;}
+    XXmap& data(){return _map;}
+    const XXmap& constData() const { return _map;}
     bool isEmpty(){return 0 == _map._data.size();}
 
 private: /** 值设置[内部] */

@@ -24,12 +24,13 @@ _*/
     4.JSON文件, 必须以 { 开始, }结尾, 并且该开始{和结尾}要成一对;
 */
 
-#include "Json.h"
-#include <QStringList>
-#include <QFile>
-#include <QDir>
-#include <QFileInfo>
-#include <QRegExp>
+#include "XXjson.h"
+#include "XXjvalue.h"
+#include "../Common/XXstdStringExtend.h"
+
+#define VALUE_ARRAY_INFOCOUNT_MIN           2   // (来自XXmap)数组信息中项最小值：.,MAX(,编号) 
+#define VALUE_ARRAY_PREFIX                  "." // (来自XXmap)数组信息的标识，如：1/2/3 : .,MAX,0,1,2
+#define VALUE_ARRAY_DELIMITER               "," // (来自XXmap)数组节点/值的分隔符
 
 Fi JSon::loadToPaMap(PaMapRef ref, const QString &file)
 {
@@ -205,11 +206,10 @@ Fi JSon::fromString(const QString &json)
     }
     return 1;
 }
-Fi JSon::toString(QString &oJsonString, Mode mode)
-{
-    QMap<QString, QString> &map = jmap_.data();
+bool XXjson::toString(std::string &jsonString, bool isThin){
+    auto &map = _jmap.dataCRef();
     if (0 == map.size())
-        return 0;
+        return false;
 
     QTextStream textStream(&oJsonString);
     uint currDeepness = 0;
@@ -379,46 +379,65 @@ Fi JSon::toThinString(QString &oJsonString)
     return 1;
 }
 
-void JSon::fromPaMap(const PaMapRef paMapRef, const QString &relPath)
-{
-    PaMap paMap;
-    paMapRef.load(relPath, paMap);
-    const QMap<QString, QString> &dataMap = paMap.data();
+void XXjson::fromMap(const XXmapRef ref){
+    _jmap.data().clear();
+    auto &mapData = ref.constData().constData();
+    if(0 == mapData.size()){
+        return;
+    }
 
-    if (dataMap.size())
+    auto &jmapData = _jmap.data();
+    for (auto iter = mapData.constBegin(); iter != mapData.constEnd(); iter++)
     {
-        QMap<QString, QString> &jmap = jmap_.data();
-        for (QMap<QString, QString>::const_iterator iterM = dataMap.constBegin(); iterM != dataMap.constEnd(); iterM++)
+        // [1] 判断该键值对是普通的value还是arrayInfoValue
+        const std::string &workingKey = iter->first;
+        const std::string &workingValue = iter->second;
+
+        int deepness = XXstdStringExtend::count(workingKey, '/');   
+        int countOfArrayItem = 0;     
+        bool isArrayInfo = false;
+        if('.' == workingValue.at(0) && ',' == workingValue.at(1)){
+            auto arrayInfo = XXstdStringExtend::splitToVector(workingValue, ',');
+            countOfArrayItem = arrayInfo.size() - VALUE_ARRAY_INFOCOUNT_MIN;
+            isArrayInfo = true;
+        }
+
+        // [2] 保存value节点
+        XXjvalue jvalue;
+        if (isArrayInfo){
+            jvalue = XXjvalue::create(deepness, XXjvalue::Type::ArrayInfo, "");
+        }
+        else{
+            jvalue = XXjvalue::create(deepness, XXjvalue::Type::ValueItem, workingValue);
+        }
+        jmapData.insert(workingKey, );
+
+        // 先将文件处理
+        XXjvalue::create(deepness, XXjvalue::Type:, );
+        JValue newValue(deepness, 'F', iterM.value());
+        jmap.insert(workingKey, newValue.toData());
+
+        deepness--;
+        workingKey.resize(workingKey.lastIndexOf('/'));
+
+        // 获取整个Key,每次循环删除最后的"/+"节点
+        for (; deepness > 0; deepness--, workingKey.resize(workingKey.lastIndexOf('/')))
         {
-            QString workingKey = iterM.key();
-            U8 deepness = workingKey.count('/') + 1;
-
-            // 先将文件处理
-            JValue newValue(deepness, 'F', iterM.value());
-            jmap.insert(workingKey, newValue.toData());
-
-            deepness--;
-            workingKey.resize(workingKey.lastIndexOf('/'));
-
-            // 获取整个Key,每次循环删除最后的"/+"节点
-            for (; deepness > 0; deepness--, workingKey.resize(workingKey.lastIndexOf('/')))
+            // JMap中包含这个路径
+            QMap<QString, QString>::iterator workingIter = jmap.find(workingKey);
+            if (workingIter != jmap.end())
             {
-                // JMap中包含这个路径
-                QMap<QString, QString>::iterator workingIter = jmap.find(workingKey);
-                if (workingIter != jmap.end())
+                JValue jvalue(workingIter.value());
+                // 这个路径下的是一个文件
+                if ('F' == jvalue.type())
                 {
-                    JValue jvalue(workingIter.value());
-                    // 这个路径下的是一个文件
-                    if ('F' == jvalue.type())
-                    {
-                        jvalue.type('D');
-                        workingIter.value() = jvalue.toData();
-                    }
+                    jvalue.type('D');
+                    workingIter.value() = jvalue.toData();
                 }
-                else
-                {
-                    jmap.insert(workingKey, JValue(deepness, 'D').toData());
-                }
+            }
+            else
+            {
+                jmap.insert(workingKey, JValue(deepness, 'D').toData());
             }
         }
     }
