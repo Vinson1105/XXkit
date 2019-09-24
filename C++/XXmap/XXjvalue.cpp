@@ -1,13 +1,6 @@
 #include "XXjvalue.h"
 #include "../Common/XXstdStringExtend.h"
 
-XXjvalue XXjvalue::create(int deepness, Type type, const std::string &value){
-    return XXjvalue(deepness, type, value);
-}
-XXjvalue XXjvalue::create(const std::string &jvalueString){
-    return XXjvalue(jvalueString);
-}
-
 XXjvalue::XXjvalue(int deepness, Type type, const std::string &value)
     : _deepness(deepness)
     , _type(type)

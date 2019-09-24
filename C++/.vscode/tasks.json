@@ -12,6 +12,10 @@
                 "-g", "./Common/XXstdStringExtend.cpp",
                 "-g", "./XXmap/XXmap.h",
                 "-g", "./XXmap/XXmap.cpp",
+                "-g", "./XXmap/XXjvalue.h",
+                "-g", "./XXmap/XXjvalue.cpp",
+                "-g", "./XXmap/XXjson.h",
+                "-g", "./XXmap/XXjson.cpp",
                 "-g", "main.cpp"
             ],
             "group": {

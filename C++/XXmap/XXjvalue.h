@@ -12,11 +12,9 @@ public:
         ArrayInfo,
         //ArrayItem,
     };
-    static XXjvalue create(int deepness, Type type, const std::string &value);
-    static XXjvalue create(const std::string &jvalueString);
 
     XXjvalue(){}
-    XXjvalue(int deepness, Type type, const std::string &value);
+    XXjvalue(int deepness, Type type, const std::string &value = "");
     XXjvalue(const std::string &jvalueString);
     virtual ~XXjvalue(){}
 

@@ -2,6 +2,7 @@
 #include "./XXmap/XXmap.h"
 #include <map>
 #include <vector>
+#include "./XXmap/XXjson.h"
 
 typedef struct StructA{
     int a;
@@ -34,11 +35,17 @@ int main(){
     mapRef["Student"](3)["Name"]    = "D";
     mapRef["Student"](3)["ID"]      = 4;
 
-    auto data = map.data();
-    for (auto iter = data.begin(); iter != data.end(); iter++)
-    {
-        std::cout << iter->first << ":" << iter->second << std::endl;
+    XXjson json;
+    json.fromMap(mapRef);
+
+    cout << "XXmap" << endl;
+    for (auto iter = map.data().begin(); iter != map.data().end(); iter++){
+        std::cout << iter->first << " = " << iter->second << std::endl;
     }
     
+    cout << "Jmap" << endl;
+    for (auto iter = json.data().begin(); iter != json.data().end(); iter++){
+        std::cout << iter->first << " = " << iter->second << std::endl;
+    }
     return 0; 
 }

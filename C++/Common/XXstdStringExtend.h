@@ -35,10 +35,20 @@ namespace XXstdStringExtend{
      * @param   end     结束序号
      * @return  返回从起始序号到结束序号之后的字符串
     */
-    std::string section(const std::string &target, const std::string &sep, uint8_t start, int8_t end);
+    std::string section(const std::string &target, const std::string &sep, int8_t start, int8_t end);
 
+    /** 判断目标字符串<target>是否已指定字符串<prefix>开始 */
     bool hasPrefix(const std::string &target, const std::string &prefix);
+    /** 判断目标字符串<target>是否已指定字符串<suffix>结束 */
     bool hasSuffix(const std::string &target, const std::string &suffix);
+
     int count(const std::string &target, const char c);
+    int count(const std::string &target, const std::string &sep);
+
+    std::vector<int> indexVector(const std::string &target, const std::string sep);
+    int indexOf(const std::string &target, const char c, int index = 0);
+    int indexOf(const std::string &target, const std::string sep, int index = 0);
+    int lastIndexOf(const std::string &target, const char c, int index = 0);
+    int lastIndexOf(const std::string &target, const std::string sep, int index = 0);
 };
 #endif

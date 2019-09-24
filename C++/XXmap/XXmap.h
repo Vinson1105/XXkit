@@ -91,8 +91,7 @@ public: /** 数组信息操作，item为整型字符串 */
 
 public:
     void cleanup(); /** 清除当前路径下的数据，包括子路径（_path和_path/...下的所有键值 */
-    XXmap& data(){return _map;}
-    const XXmap& constData() const { return _map;}
+    XXmap& xxmap() {return _map;}
     bool isEmpty(){return 0 == _map._data.size();}
 
 private: /** 值设置[内部] */
