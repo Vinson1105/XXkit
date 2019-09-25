@@ -12,7 +12,8 @@ XXjvalue::XXjvalue(const std::string &jvalueString){
 
 std::string XXjvalue::toData() const{
     std::string jvalueString = std::to_string(_deepness);
-    jvalueString += "/" + std::to_string(_type);
+    jvalueString += "/";
+    jvalueString += _type;
     jvalueString += "/" + _value;
     return jvalueString;
 }
@@ -20,8 +21,8 @@ XXjvalue& XXjvalue::fromData(const std::string &string){
     const char *cData = string.c_str();
    if ('/' == cData[1] && '/' == cData[3]){
        _deepness    = std::stoi(string.substr(0,1));
-       _type        = (Type)std::stoi(string.substr(2,1));
-       _value       = std::string(string.c_str()+4);
+       _type        = (Type)cData[2];//(Type)std::stoi(string.substr(2,1));
+       _value       = std::string(cData+4);
     }
     return *this;
 }

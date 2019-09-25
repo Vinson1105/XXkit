@@ -31,10 +31,7 @@ public:
 
 private:
     void addPair(std::string &str, const std::string &key, const std::string &value = "");
-    void addNewline(std::string &str);
     void addTabSpacer(std::string &str, uint8_t deepness);
-    // void printTabSpacer(std::string &str, uint8_t newDeepness);
-    // std::string replace(const std::string &src);
 
 private:
     std::map<std::string,std::string> _jmap;

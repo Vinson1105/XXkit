@@ -7,9 +7,9 @@ class XXjvalue
 {
 public:
     enum Type{
-        PathNode,
-        ValueItem,
-        ArrayInfo,
+        PathNode = '{',
+        ValueItem = ':',
+        ArrayInfo =  '[',
         //ArrayItem,
     };
 

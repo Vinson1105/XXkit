@@ -83,33 +83,99 @@ std::string XXjson::toString(bool isThin){
     std::string jsonString;
     jsonString.reserve(512);
 
-    int currentDeepness = 0;
-    int arrayDeepness = -1;
+    int lastDeepness    = 0;
+    int arrayDeepness   = -1;
     for (auto iter = _jmap.cbegin(); iter != _jmap.cend(); iter++){
         XXjvalue jvalue(iter->second);
 
         // [2] 节点值deepness检测
-        if (currentDeepness > jvalue.deepness()){
-            
+        if (lastDeepness > jvalue.deepness()){
+            // [3.1] 比上一个路径深度少，需要添加足够的'}'或者']'
+            int diff = lastDeepness - jvalue.deepness();
+            for(int index = 1; index <= diff; index++){
+                if(!isThin) addTabSpacer(jsonString, lastDeepness-index);
+                if(arrayDeepness == lastDeepness-index){
+                    jsonString += isThin ? "]," : "],\n";
+                    arrayDeepness = -1;
+                }
+                else{
+                    jsonString += isThin ? "}," : "},\n";
+                }
+            }
+
+            // [3.2] 如果是数组的下级节点
+            if (arrayDeepness >= 0 && 1 == jvalue.deepness() - arrayDeepness){
+                lastDeepness = jvalue.deepness();
+                continue;
+            }
         }
-        else if (currentDeepness < jvalue.deepness()){
-            if(!isThin) addTabSpacer(jsonString, currentDeepness);
-            jsonString.append(isThin?"{\n":"{");
+        else if (lastDeepness < jvalue.deepness()){
+            int diff = jvalue.deepness() - arrayDeepness;
+            if (arrayDeepness >= 0 && 1 == diff ){
+                lastDeepness = jvalue.deepness();
+                if(XXjvalue::Type::ValueItem != jvalue.type()){
+                    continue;
+                }
+            }
+            else{
+                if(!isThin) addTabSpacer(jsonString, lastDeepness);
+                jsonString.append(isThin ? "{" : "{\n");
+            }
         }
         else{}
 
+        // [3] 值写入
         if(XXjvalue::Type::ValueItem == jvalue.type()){
             if(!isThin) addTabSpacer(jsonString, jvalue.deepness());
-            addPair();
+            if (arrayDeepness >= 0 && 1 == abs(arrayDeepness - jvalue.deepness())){
+                jsonString += '\"' + jvalue.value() + "\",";
+            }
+            else{
+                addPair(jsonString, XXstdStringExtend::section(iter->first, "/", -1), jvalue.value());
+            }
+            if(!isThin) jsonString += "\n";
+        }
+        else if(XXjvalue::Type::PathNode == jvalue.type()){
+            if(!isThin) addTabSpacer(jsonString, jvalue.deepness());
+            addPair(jsonString, XXstdStringExtend::section(iter->first, "/", -1));
+            if(!isThin) jsonString += "\n";
+        }
+        else if(XXjvalue::Type::ArrayInfo == jvalue.type()){
+            if(!isThin) addTabSpacer(jsonString, jvalue.deepness());
+            addPair(jsonString, XXstdStringExtend::section(iter->first, "/", -1));
+            jsonString += '[';
+            if(!isThin) jsonString += "\n";
+            arrayDeepness = jvalue.deepness();
+        }
+        else{
+
+        }
+
+        lastDeepness = jvalue.deepness();
+    }
+
+    for(int index = 1; index <= lastDeepness; index++){
+        if(!isThin) addTabSpacer(jsonString, lastDeepness-index);
+        if(arrayDeepness == lastDeepness-index){
+            jsonString += ']';
+            arrayDeepness = -1;
+        }
+        else{
+            jsonString += '}';
+        }
+
+        if(index != lastDeepness){
+            jsonString += isThin ? "," : ",\n";
         }
     }
     return jsonString;
 }
 
 void XXjson::addPair(std::string &str, const std::string &key, const std::string &value){
-    str += '\"' + key + '\"';
+    // 添加键值对："key":"value", 或者 "key":
+    str += '\"' + key + "\":";
     if ("" != value){
-        str += ":\"" + value + "\",";
+        str += '\"' + value + "\",";
     }
 }
 void XXjson::addTabSpacer(std::string &str, uint8_t deepness){

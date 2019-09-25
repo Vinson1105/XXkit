@@ -35,7 +35,7 @@ namespace XXstdStringExtend{
      * @param   end     结束序号
      * @return  返回从起始序号到结束序号之后的字符串
     */
-    std::string section(const std::string &target, const std::string &sep, int8_t start, int8_t end);
+    std::string section(const std::string &target, const std::string &sep, int8_t start, int8_t end = -1);
 
     /** 判断目标字符串<target>是否已指定字符串<prefix>开始 */
     bool hasPrefix(const std::string &target, const std::string &prefix);

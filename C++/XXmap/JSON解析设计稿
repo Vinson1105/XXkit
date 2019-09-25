@@ -1,8 +1,7 @@
 {
 	"AAA" : "AAA",
 
-	"Student":
-	[
+	"Student":[
 		{
 			"Name" : "A",
 			"ID" : 1,

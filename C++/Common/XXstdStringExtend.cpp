@@ -67,48 +67,34 @@ std::list<std::string> XXstdStringExtend::splitToList(const std::string &target,
 std::string XXstdStringExtend::section(const std::string &target, const std::string &sep, int8_t start, int8_t end){
     int targetSize = target.size();
     int sepSize = sep.size();
-    if(0 == targetSize || 0 == sepSize || start < end){
+    if(0 == targetSize || 0 == sepSize || start > end){
         return "";
     }
 
     std::string sectionString;
     sectionString.reserve(64);
 
-    auto indexs = indexVector(target, sep);
-    int startIndex;
-    auto iter; //indexs.cbegin() + start : indexs.crbegin()+ abs(start-1);
-    if(start > 0){
-        iter = (indexs.begin()+start);
-    }
-    else{
-        iter = (indexs.rbegin()+abs(start-1));
-    }
-    
-    if(0 == start) {
-        startIndex = 0;
-    }         
-    else if(start > 0){
-        startIndex = indexOf(target, sep);
-    }
-    else if(-1 == start){
-        startIndex = 0 == indexs.size() ? 0 : indexs.back()+sepSize;
-    }
-    else{
-        //auto iter   = indexs.crbegin()+ abs(start-1);
-        startIndex  = indexs.crend() == iter ? 0 : *iter+sepSize;
-    }
-
-    int endIndex;
-    if(0 == end){
-        endIndex = 0;
-    }
-
     auto stringVector =  XXstdStringExtend::splitToVector(target, sep);
     int size = stringVector.size();
+    start = start < 0 ? size + start : start;
+    end = end < 0 ? size + end : end;
+    if(0 == start && 0 == end){
+        return stringVector.size() >= 1 ? stringVector[0] : target;
+    }
+    else if(-1 == start && -1 == end){
+        return stringVector.size() >= 1 ? stringVector.back() : target;
+    }
+    else if(start < -1 && end < -1){
+        return "";
+    }
+    else{
+
+    }
+
     bool hasBegin = false;
-    for (int index = 0; index < size; index++)
+    for (int index = 0; index < size && (end < 0 || (end >= 0 && index <= end)); index++)
     {
-        if (start == index){
+        if (!hasBegin && start == index){
             sectionString.append(stringVector[index]);
             hasBegin = true;
         }
