@@ -13,49 +13,69 @@ void XXjson::fromMap(XXmapRef ref){
         return;
     }
 
+    std::map<std::string,int> arrayItemMap; // 用于保存数组item路径，如有arrayInfo路径为：Class/Array，则Class
     for (auto iter = mapData.begin(); iter != mapData.end(); iter++)
     {
         // [1] 判断该键值对是普通的value还是arrayInfoValue
         std::string workingKey = iter->first;
 
         int deepness = XXstdStringExtend::count(workingKey, '/') + 1;   
-        int countOfArrayItem = 0;     
         bool isArrayInfo = false;
         if('.' == iter->second.at(0) && ',' == iter->second.at(1)){
             auto arrayInfo = XXstdStringExtend::splitToVector(iter->second, ',');
-            countOfArrayItem = arrayInfo.size() - VALUE_ARRAY_INFOCOUNT_MIN;
+            std::string workingPath = workingKey + '/';
+
+            // [1.1] 将arrayItem全部列举，如有arrayInfo路径为：Class/Array，则需要列举Class/Array/0、Class/Array/1、Class/Array/2
+            for (auto iter = arrayInfo.begin() + VALUE_ARRAY_INFOCOUNT_MIN; iter != arrayInfo.end(); iter++){
+                arrayItemMap[workingPath + *iter] = 0;
+            }
             isArrayInfo = true;
         }
 
-        // [2] 保存value节点
-        XXjvalue jvalue;
+        // [2] 如果是<arrayInfo>则直接写入<arrayInfo>信息到本地<jmap>中，如果不是，则需要判断以下：
+        //     如果在<arrayItemMap>中找到对应的记录，则本条<value>是<arrayValue>
         if(isArrayInfo){
-            jvalue = XXjvalue(deepness, XXjvalue::Type::ArrayInfo);
+            _jmap[workingKey] = XXjvalue(deepness, XXjvalue::Type::ArrayInfo).toData();
         }
         else{
-            jvalue = XXjvalue(deepness, XXjvalue::Type::ValueItem, iter->second);
+            auto arrayItem = arrayItemMap.find(workingKey);
+            if(arrayItemMap.end() != arrayItem){
+                _jmap[workingKey] = XXjvalue(deepness, XXjvalue::Type::ArrayValue, iter->second).toData();
+                arrayItemMap.erase(arrayItem);
+            }
+            else{
+                _jmap[workingKey] = XXjvalue(deepness, XXjvalue::Type::PathValue, iter->second).toData();
+            }
         }
-        _jmap[workingKey] = jvalue.toData();
         if(--deepness <= 0){
             continue;
         }
 
-        // [3] 每次循环删除<workingKey>最后的"/+"路径，并将workingKey以Node方式写入本地jmap中
+        // [3] 每次循环删除<workingKey>最后的"/+"路径，并将workingKey以Node方式写入本地jmap中，
+        //     如有路径为：Class/Array/0，将路径依次最后一个"/xx"节点，即为Class/Array和Class，
+        //     并逐个判断是否在<arrayItemMap>有对应信息
         for(; deepness > 0; deepness--){
+            // [3.1] 去掉最后的</xxx>
             workingKey.resize(XXstdStringExtend::lastIndexOf(workingKey, '/') - 1);
 
-            auto jmapIter = _jmap.find(workingKey);
-            if (jmapIter != _jmap.end()){
-                XXjvalue tempJvalue(jmapIter->second);
-                if (XXjvalue::Type::ValueItem == tempJvalue.type())
-                {
-                    jvalue.type(XXjvalue::Type::PathNode);
-                    jmapIter->second = jvalue.toData();
+            // [3.2] 
+            auto jmapItem = _jmap.find(workingKey);
+            if(_jmap.end() == jmapItem){
+                // [3.2] 检查是否在<arrayItemMap>中是否有记录
+                auto arrayItem = arrayItemMap.find(workingKey);
+                if(arrayItemMap.end() !=  arrayItem){
+                    _jmap[workingKey] = XXjvalue(deepness, XXjvalue::Type::ArrayItem).toData();
+                    arrayItemMap.erase(arrayItem);
+                }
+                else{
+                    _jmap[workingKey] = XXjvalue(deepness, XXjvalue::Type::PathNode).toData();
                 }
             }
             else{
-                _jmap[workingKey] = XXjvalue(deepness, XXjvalue::Type::PathNode).toData();
+
             }
+
+            
         }
     }
 }
@@ -84,7 +104,8 @@ std::string XXjson::toString(bool isThin){
     jsonString.reserve(512);
 
     int lastDeepness    = 0;
-    int arrayDeepness   = -1;
+    //int arrayDeepness   = -1;
+    std::vector<int> arrayDeepness;
     for (auto iter = _jmap.cbegin(); iter != _jmap.cend(); iter++){
         XXjvalue jvalue(iter->second);
 
@@ -94,45 +115,25 @@ std::string XXjson::toString(bool isThin){
             int diff = lastDeepness - jvalue.deepness();
             for(int index = 1; index <= diff; index++){
                 if(!isThin) addTabSpacer(jsonString, lastDeepness-index);
-                if(arrayDeepness == lastDeepness-index){
+                if(!arrayDeepness.empty() && arrayDeepness.back() == lastDeepness-index){
                     jsonString += isThin ? "]," : "],\n";
-                    arrayDeepness = -1;
+                    arrayDeepness.pop_back();
                 }
                 else{
                     jsonString += isThin ? "}," : "},\n";
                 }
             }
-
-            // [3.2] 如果是数组的下级节点
-            if (arrayDeepness >= 0 && 1 == jvalue.deepness() - arrayDeepness){
-                lastDeepness = jvalue.deepness();
-                continue;
-            }
         }
-        else if (lastDeepness < jvalue.deepness()){
-            int diff = jvalue.deepness() - arrayDeepness;
-            if (arrayDeepness >= 0 && 1 == diff ){
-                lastDeepness = jvalue.deepness();
-                if(XXjvalue::Type::ValueItem != jvalue.type()){
-                    continue;
-                }
-            }
-            else{
-                if(!isThin) addTabSpacer(jsonString, lastDeepness);
-                jsonString.append(isThin ? "{" : "{\n");
-            }
+        else if (lastDeepness < jvalue.deepness() && (XXjvalue::Type::ArrayItem != jvalue.type() && XXjvalue::Type::ArrayValue != jvalue.type())){
+            if(!isThin) addTabSpacer(jsonString, lastDeepness);
+            jsonString.append(isThin ? "{" : "{\n");
         }
         else{}
 
         // [3] 值写入
-        if(XXjvalue::Type::ValueItem == jvalue.type()){
+        if(XXjvalue::Type::PathValue == jvalue.type()){
             if(!isThin) addTabSpacer(jsonString, jvalue.deepness());
-            if (arrayDeepness >= 0 && 1 == abs(arrayDeepness - jvalue.deepness())){
-                jsonString += '\"' + jvalue.value() + "\",";
-            }
-            else{
-                addPair(jsonString, XXstdStringExtend::section(iter->first, "/", -1), jvalue.value());
-            }
+            addPair(jsonString, XXstdStringExtend::section(iter->first, "/", -1), jvalue.value());
             if(!isThin) jsonString += "\n";
         }
         else if(XXjvalue::Type::PathNode == jvalue.type()){
@@ -145,7 +146,15 @@ std::string XXjson::toString(bool isThin){
             addPair(jsonString, XXstdStringExtend::section(iter->first, "/", -1));
             jsonString += '[';
             if(!isThin) jsonString += "\n";
-            arrayDeepness = jvalue.deepness();
+            arrayDeepness.push_back(jvalue.deepness());
+        }
+        else if(XXjvalue::Type::ArrayItem == jvalue.type()){
+
+        }
+        else if(XXjvalue::Type::ArrayValue == jvalue.type()){
+            if(!isThin) addTabSpacer(jsonString, jvalue.deepness());
+            jsonString += '\"' + jvalue.value() + "\",";
+            if(!isThin) jsonString += "\n";
         }
         else{
 
@@ -156,9 +165,9 @@ std::string XXjson::toString(bool isThin){
 
     for(int index = 1; index <= lastDeepness; index++){
         if(!isThin) addTabSpacer(jsonString, lastDeepness-index);
-        if(arrayDeepness == lastDeepness-index){
+        if(!arrayDeepness.empty() && arrayDeepness.back() == lastDeepness-index){
             jsonString += ']';
-            arrayDeepness = -1;
+            arrayDeepness.pop_back();
         }
         else{
             jsonString += '}';

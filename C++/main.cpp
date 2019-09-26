@@ -24,61 +24,50 @@ int main(){
     XXmap map;
     XXmapRef mapRef(map);
     mapRef["AAA"] = "AAA";
-    mapRef["Class"]["Student"](0)["Name"]    = "A";
-    mapRef["Class"]["Student"](0)["ID"]      = 1;
-
-    mapRef["Class"]["Student"](1)["Name"]    = "B";
-    mapRef["Class"]["Student"](1)["ID"]      = 2;
-
-    mapRef["Class"]["Student"](2)["Name"]    = "C";
-    mapRef["Class"]["Student"](2)["ID"]      = 3;
-
-    mapRef["Class"]["Student"](3)["Name"]    = "D";
-    mapRef["Class"]["Student"](3)["ID"]      = 4;
-
-    mapRef["Class"]["Student"](4)["Name"]    = "E";
-    mapRef["Class"]["Student"](4)["ID"]      = 5;
-    mapRef["Class"]["Student"](4)["Param"]["A"]  = "ParamA";
-    mapRef["Class"]["Student"](4)["Param"]["B"]  = "ParamB";
-    mapRef["Class"]["Student"](4)["Param"]["C"]  = "ParamC";
-
-    mapRef["Class"]["hahaha"] = "hahaha";
-
-    // mapRef["Student"](5)["Name"]    = "F";
-    // mapRef["Student"](5)["ID"]      = 6;
-    // mapRef["Student"](5)["Param"](0)  = "Param1";
-    // mapRef["Student"](5)["Param"](1)  = "Param2";
-    // mapRef["Student"](5)["Param"](2)  = "Param3";
-
-    mapRef["ZZZ"](0) = "Array1";
-    mapRef["ZZZ"](1) = "Array2";
-    mapRef["ZZZ"](2) = "Array3";
+    for(int i = 0; i < 500; i++){
+        mapRef["Class"]["Student"](i)["Name"]    = std::string("Name") + std::to_string(i);
+        mapRef["Class"]["Student"](i)["ID"]      = i;
+        mapRef["Class"]["Student"](i)["ParamDictionary"]["A"]   = "ParamA";
+        mapRef["Class"]["Student"](i)["ParamDictionary"]["B"]   = "ParamB";
+        mapRef["Class"]["Student"](i)["ParamDictionary"]["C"]   = "ParamC";
+        mapRef["Class"]["Student"](i)["ParamArray"](0)          = "ParamA";
+        mapRef["Class"]["Student"](i)["ParamArray"](1)          = "ParamB";
+        mapRef["Class"]["Student"](i)["ParamArray"](2)          = "ParamC";
+    }
+    mapRef["ZZZ"] = "ZZZ";
 
     XXmap map2;
     XXmapRef map2Ref(map2);
-    map2Ref["Array"](0) = "Array1";
-    map2Ref["Array"](1) = "Array2";
-    map2Ref["Array"](2) = "Array3";
+    map2Ref["Array"](0)["Name"] = "Name1";
+    map2Ref["Array"](0)["ID"] = "ID1";
+    map2Ref["Array"](0)["ParamDictionary"]["ParamA"] = "ParamA";
+    map2Ref["Array"](0)["ParamDictionary"]["ParamB"] = "ParamB";
+    map2Ref["Array"](0)["ParamArray"](0) = "ParamA";
+    map2Ref["Array"](0)["ParamArray"](1) = "ParamB";
+    map2Ref["Array"](1)["Name"] = "Name2";
+    map2Ref["Array"](1)["ID"] = "ID2";
+    map2Ref["Array"](2)["Name"] = "Name3";
+    map2Ref["Array"](2)["ID"] = "ID3";
 
     XXjson json;
     json.fromMap(mapRef);
 
-    cout << "XXmap:" << endl;
-    for (auto iter = map.data().begin(); iter != map.data().end(); iter++){
-        std::cout << iter->first << " = " << iter->second << std::endl;
-    }
+    // cout << "XXmap:" << endl;
+    // for (auto iter = map.data().begin(); iter != map.data().end(); iter++){
+    //     std::cout << iter->first << " = " << iter->second << std::endl;
+    // }
     
-    cout << "Jmap:" << endl;
-    for (auto iter = json.data().begin(); iter != json.data().end(); iter++){
-        std::cout << iter->first << " = " << iter->second << std::endl;
-    }
+    // cout << "Jmap:" << endl;
+    // for (auto iter = json.data().begin(); iter != json.data().end(); iter++){
+    //     std::cout << iter->first << " = " << iter->second << std::endl;
+    // }
 
-    cout << "JsonString:" << endl;
     std::string jsonString = json.toString();
+    cout << "JsonString:" << endl;
     cout << jsonString << endl;
 
-    cout << "JsonString(Thin):" << endl;
     jsonString = json.toString(true);
+    cout << "JsonString(Thin):" << endl;
     cout << jsonString << endl;
 
     // std::string csv = "forename,middlename,surname,phone";
