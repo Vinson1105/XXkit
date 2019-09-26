@@ -2,6 +2,7 @@
 #include "XXjvalue.h"
 #include "../Common/XXstdStringExtend.h"
 
+#define ERROR_LOG printf("[XXjson] LINE:%d error\n", __LINE__);
 #define VALUE_ARRAY_INFOCOUNT_MIN           2   // (来自XXmap)数组信息中项最小值：.,MAX(,编号) 
 #define VALUE_ARRAY_PREFIX                  "." // (来自XXmap)数组信息的标识，如：1/2/3 : .,MAX,0,1,2
 #define VALUE_ARRAY_DELIMITER               "," // (来自XXmap)数组节点/值的分隔符
@@ -73,30 +74,41 @@ void XXjson::fromMap(XXmapRef ref){
             }
             else{
 
-            }
-
-            
+            }            
         }
     }
 }
-// void JSon::toPaMap(PaMapRef paMapRef, const QString &relPath)
-// {
-//     QMap<QString, QString>& jmap = jmap_.data();
-//     QString path = relPath;
-//     if (!relPath.isEmpty() && '/' != relPath[relPath.size() - 1])
-//         path += '/';
+void XXjson::toMap(XXmapRef ref){
+    std::map<std::string, std::vector<int>*> arrayPathToItems;
 
-//     JValue jvalue;
-//     for (QMap<QString, QString>::iterator iter = jmap.begin(); iter != jmap.end(); iter++)
-//     {
-//         jvalue.fromData(iter.value());
-//         if (jvalue.value().isEmpty())
-//             continue;
+    auto &mapData = ref.xxmap().data();
+    for (auto iter = _jmap.cbegin(); _jmap.cend() != iter; iter++){
+        XXjvalue jvalue(iter->second);
 
-//         QString key = iter.key();
-//         paMapRef.set(path + key, jvalue.value());
-//     }
-// }
+        switch (jvalue.type()){
+        case XXjvalue::Type::PathNode:
+            break;
+        case XXjvalue::Type::PathValue:
+            mapData[iter->first] = jvalue.value();
+            break;
+        case XXjvalue::Type::ArrayInfo:{
+            auto items = arrayPathToItems.find(iter->first);
+            if(arrayPathToItems.end() != items){
+                ERROR_LOG
+            }
+            else{
+                
+            }   
+            break;
+        }
+        case XXjvalue::Type::ArrayItem:
+            break;
+        case XXjvalue::Type::ArrayValue:
+            mapData[iter->first] = jvalue.value();
+            break;
+        }
+    }
+}
 
 std::string XXjson::toString(bool isThin){
     // [1] 预分配空间

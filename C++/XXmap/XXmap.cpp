@@ -154,6 +154,12 @@ std::string XXmapRef::addArrayItem(){
     }
     return item;
 }
+void XXmapRef::addArrayItem(std::string &item){
+    RETURN_IFNOT_ARRAY(mapIter, arrayInfo);
+    if(addArrayItem(arrayInfo, item)){
+        setValue(_path._data, arrayInfo);
+    }
+}
 std::string XXmapRef::getArrayItem(unsigned int index){
     RETURN_VALUE_IFNOT_ARRAY(mapIter, arrayInfo, XXMAP_VALUE_INVALID)
     return getArrayItem(arrayInfo, index);
@@ -369,6 +375,22 @@ std::string XXmapRef::addArrayItem(std::vector<std::string> &arrayInfo){
     arrayInfo[VALUE_ARRAY_INDEX_MAX] = max;
     arrayInfo.push_back(max);
     return max;
+}
+bool XXmapRef::addArrayItem(std::vector<std::string> &arrayInfo, const std::string &item){
+    auto iter = arrayInfo.begin()+VALUE_ARRAY_INDEX_ITEMSTART;
+    while(iter != arrayInfo.end()){
+        if(*iter == item){
+            return false;
+        }
+    }
+
+    int itemIndex   = std::stoi(item);
+    int max         = std::stoi(arrayInfo[VALUE_ARRAY_INDEX_MAX]);
+    if(itemIndex > max){
+        arrayInfo[VALUE_ARRAY_INDEX_MAX] = item;
+    }
+    arrayInfo.push_back(item);
+    return true;
 }
 std::vector<std::string> XXmapRef::createArrayInfo(unsigned int count){
     std::vector<std::string> arrayInfo;

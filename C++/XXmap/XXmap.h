@@ -1,3 +1,9 @@
+/**
+ * V0.1 20190926
+ *      1 定位为数据量小，扁平化，提供便捷并有限的类json数据读写；
+ *      2 非线程安全，性能方面有待提升，优化点：getRealPath、std::string预分配、容器类key/value指针化；
+ *      3 [key]中的key不允许为'.'，(index)中的index为数组下标；
+*/
 #ifndef XXmap_h
 #define XXmap_h
 
@@ -39,7 +45,7 @@ class XXmap{
 public:
     XXmap(){}
 	XXmap(const XXmap &xxmap) { *this = xxmap; }
-    XXmap(std::map< std::string,std::string > map) :_data(map){}
+    XXmap(const std::map< std::string,std::string > &map) :_data(map){}
 	virtual ~XXmap() {}
 
     void operator=(const XXmap &xxmap){ _data = xxmap._data; }
@@ -80,11 +86,12 @@ public: /** 值转换 */
 public: /** 数组信息操作，item为整型字符串 */
     bool isArray();                                                 /** 判断当前路径是否对应一个数组信息结构 */
     unsigned int arrayItemCount();                                  /** 获取数组信息中item数量 */
-    bool swapArrayItem(unsigned int index1, unsigned int index2);
-    std::string insertArrayItem(unsigned int index, bool toBack);
-    bool insertArrayItem(unsigned int index, std::string &item, bool toBack);
+    bool swapArrayItem(unsigned int index1, unsigned int index2);   /** 交换index1和index2对应的item */
+    std::string insertArrayItem(unsigned int index, bool toBack);   /** 在指定的index中，进行前插入或者后插入，并返回对应的item */
+    bool insertArrayItem(unsigned int index, std::string &item, bool toBack);   /** 在指定的index中，进行前插入或者后插入指定在item，注意：需要保证item在array中的唯一性 */
 
     std::string addArrayItem();
+    void addArrayItem(std::string &item);
     std::string getArrayItem(unsigned int index);
     std::string takeArrayItem(unsigned int index);
     bool removeArrayItem(unsigned int index);
@@ -114,9 +121,9 @@ private: /** 数组信息操作[内部]，注意：arrayValue!=arrayInfo，array
     bool insertArrayItem(std::vector<std::string> &arrayInfo, unsigned int index, std::string &item, bool toBack);  /** 在数组信息arrayInfo中，往指定的编号[前/后]插入指定的item (toBack?前插入:后插入) */
     std::string insertArrayItem(std::vector<std::string> &arrayInfo, unsigned int index, bool toBack);              /** 在数组信息arrayInfo中，往指定的编号[前/后]插入由内部生成item，并返回 (toBack?前插入:后插入) */              
 
-    std::string addArrayItem(std::vector<std::string> &arrayInfo);              /** 在数组信息arrayInfo中追加一个item，并返回item值 */
-    bool addArrayItem(std::vector<std::string> &arrayInfo, std::string &item);  /** 在数组信息中追加一个指定的item，如有重复的item值则返回false */
-    std::vector<std::string> createArrayInfo(unsigned int count);               /** 创建一个新的数组信息，并分配好指定数量count的item */
+    std::string addArrayItem(std::vector<std::string> &arrayInfo);                      /** 在数组信息arrayInfo中追加一个item，并返回item值 */
+    bool addArrayItem(std::vector<std::string> &arrayInfo, const std::string &item);    /** 在数组信息中追加一个指定的item，如有重复的item值则返回false */
+    std::vector<std::string> createArrayInfo(unsigned int count);                       /** 创建一个新的数组信息，并分配好指定数量count的item */
 
 private:
     XXpath _path;

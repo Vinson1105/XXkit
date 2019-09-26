@@ -24,7 +24,7 @@ int main(){
     XXmap map;
     XXmapRef mapRef(map);
     mapRef["AAA"] = "AAA";
-    for(int i = 0; i < 500; i++){
+    for(int i = 0; i < 2; i++){
         mapRef["Class"]["Student"](i)["Name"]    = std::string("Name") + std::to_string(i);
         mapRef["Class"]["Student"](i)["ID"]      = i;
         mapRef["Class"]["Student"](i)["ParamDictionary"]["A"]   = "ParamA";
@@ -52,23 +52,27 @@ int main(){
     XXjson json;
     json.fromMap(mapRef);
 
-    // cout << "XXmap:" << endl;
-    // for (auto iter = map.data().begin(); iter != map.data().end(); iter++){
-    //     std::cout << iter->first << " = " << iter->second << std::endl;
-    // }
+    cout << "XXmap:" << endl;
+    for (auto iter = map.data().begin(); iter != map.data().end(); iter++){
+        std::cout << iter->first << " = " << iter->second << std::endl;
+    }
+    cout << endl;
     
-    // cout << "Jmap:" << endl;
-    // for (auto iter = json.data().begin(); iter != json.data().end(); iter++){
-    //     std::cout << iter->first << " = " << iter->second << std::endl;
-    // }
+    cout << "Jmap:" << endl;
+    for (auto iter = json.data().begin(); iter != json.data().end(); iter++){
+        std::cout << iter->first << " = " << iter->second << std::endl;
+    }
+    cout << endl;
 
     std::string jsonString = json.toString();
     cout << "JsonString:" << endl;
     cout << jsonString << endl;
+    cout << endl;
 
     jsonString = json.toString(true);
     cout << "JsonString(Thin):" << endl;
     cout << jsonString << endl;
+    cout << endl;
 
     // std::string csv = "forename,middlename,surname,phone";
     // std::string path = "/usr/local/bin/myapp"; // First field is empty

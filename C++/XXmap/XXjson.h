@@ -23,7 +23,7 @@ public:
     // bool toThinString(std::string &jsonString);
 
     void fromMap(XXmapRef ref);   /** 将指定的XXmap转换为本地的格式数据 */  
-    //void toMap(XXmapRef ref);           // 将本地JMap转到指定PaMap
+    void toMap(XXmapRef ref);     /** 将本地JMap转到指定XXmap */
 
     std::string toString(bool isThin = false);
 
