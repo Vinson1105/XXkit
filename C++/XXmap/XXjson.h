@@ -26,12 +26,14 @@ public:
     void toMap(XXmapRef ref);     /** 将本地JMap转到指定XXmap */
 
     std::string toString(bool isThin = false);
+    bool fromString(const std::string &jsonString);
 
     std::map<std::string,std::string>& data() { return _jmap; }
 
 private:
     void addPair(std::string &str, const std::string &key, const std::string &value = "");
     void addTabSpacer(std::string &str, uint8_t deepness);
+    void getPair(std::string &key, std::string &value, const char *data, int keyStart, int keyEnd, int valStrStart, int valStrEnd, int valIntStart, int valIntEnd);
 
 private:
     std::map<std::string,std::string> _jmap;

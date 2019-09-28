@@ -1,5 +1,4 @@
 #include "XXmap.h"
-#include "../Common/XXstdStringExtend.h"
 
 /** 异常、错误标志 */
 #define ERROR_LOG printf("[XXmap] LINE:%d error\n", __LINE__);
@@ -119,6 +118,19 @@ unsigned int XXmapRef::arrayItemCount(){
         return 0;
     }
     return arrayValue.size()-VALUE_ARRAY_INFOCOUNT_MIN;
+}
+
+void XXmapRef::createArray(const std::vector<int> &items){
+    if(items.empty())
+        return;
+
+    std::vector<std::string> arrayInfo;
+    arrayInfo.push_back(VALUE_ARRAY_PREFIX);
+    arrayInfo.push_back(std::to_string(items.back()));
+    for (int index = 0; index < items.size(); index++){
+        arrayInfo.push_back(std::to_string(items[index]));
+    }
+    setValue(_path._data, arrayInfo);
 }
 bool XXmapRef::swapArrayItem(unsigned int index1, unsigned int index2){
     RETURN_VALUE_IFNOT_ARRAY(mapIter, arrayInfo, false)

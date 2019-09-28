@@ -1,15 +1,10 @@
-/**
- * V0.1 20190926
- *      1 定位为数据量小，扁平化，提供便捷并有限的类json数据读写；
- *      2 非线程安全，性能方面有待提升，优化点：getRealPath、std::string预分配、容器类key/value指针化；
- *      3 [key]中的key不允许为'.'，(index)中的index为数组下标；
-*/
 #ifndef XXmap_h
 #define XXmap_h
 
 #include <list>
 #include <string>
 #include <map>
+#include "../Common/XXstdStringExtend.h"
 
 #define XXMAP_VALUE_INVALID ""  // 无效值
 
@@ -25,13 +20,31 @@ public:
 	XXpath(const XXpath &xxpath) {*this = xxpath;}
 	virtual ~XXpath(){}
 
-	const std::string& path() const{ return _data; }
+    void removeLast(){
+        int size = _data.size();
+        for (auto iter = _data.crbegin(); iter != _data.crend(); iter++,size--){
+            if('/' == *iter){
+                size--;
+                break;
+            }
+        }
+        _data.resize(size);
+    }
+	const std::string& data() const{ return _data; }
+    std::string& data(){return _data;}
 
     operator std::string()                      {return _data;}
 	void operator=(const XXpath &xxpath)        { _data = xxpath._data;}
-	void operator<<(const char *node)           { 0 == _data.size() ? _data = node : _data += "/"+std::string(node);}
-	void operator<<(const std::string &node)    { 0 == _data.size() ? _data = node : _data += "/"+node;}
-	void operator<<(int node)                   { 0 == _data.size() ? _data = node : _data += "/"+std::to_string(node);}
+
+	XXpath& operator<<(const char *node)        { _data.empty() ? _data = node : _data += "/"+std::string(node); return *this;}
+	XXpath& operator<<(const std::string &node) { _data.empty() ? _data = node : _data += "/"+node; return *this;}
+	XXpath& operator<<(int node)                { _data.empty() ? _data = node : _data += "/"+std::to_string(node); return *this;}
+    XXpath& operator>>(std::string &node)       { _data.empty() ? node="" : node=XXstdStringExtend::section(_data, "/", -1); return *this;}
+
+    XXpath operator<(const char *node)          { XXpath path = *this; path<<node; return path; }
+    XXpath operator<(const std::string &node)   { XXpath path = *this; path<<node; return path; }
+    XXpath operator<(int node)                  { XXpath path = *this; path<<node; return path; }
+
 
 private:
     std::string _data;
@@ -86,6 +99,8 @@ public: /** 值转换 */
 public: /** 数组信息操作，item为整型字符串 */
     bool isArray();                                                 /** 判断当前路径是否对应一个数组信息结构 */
     unsigned int arrayItemCount();                                  /** 获取数组信息中item数量 */
+
+    void createArray(const std::vector<int> &items);
     bool swapArrayItem(unsigned int index1, unsigned int index2);   /** 交换index1和index2对应的item */
     std::string insertArrayItem(unsigned int index, bool toBack);   /** 在指定的index中，进行前插入或者后插入，并返回对应的item */
     bool insertArrayItem(unsigned int index, std::string &item, bool toBack);   /** 在指定的index中，进行前插入或者后插入指定在item，注意：需要保证item在array中的唯一性 */

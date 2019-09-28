@@ -76,6 +76,7 @@
         "thread": "cpp",
         "unordered_map": "cpp",
         "__memory": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "__functional_03": "cpp"
     }
 }

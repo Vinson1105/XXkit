@@ -226,7 +226,7 @@ int XXstdStringExtend::lastIndexOf(const std::string &target, const char c, int 
     const char *targetPtr   = target.data();
     const char *sepPtr      = sep.data();
     for (int offset = targetSize - sepSize; offset >= 0;){
-        if(0 == memcmp(targetPtr, sepPtr, sepSize)){
+        if(0 == memcmp(targetPtr+offset, sepPtr, sepSize)){
             if(--index < 0) return offset;
             offset -= sepSize;
         }
