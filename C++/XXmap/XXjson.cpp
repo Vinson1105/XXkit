@@ -29,7 +29,7 @@ void XXjson::fromMap(XXmapRef ref){
         // [1] 判断该键值对是普通的value还是arrayInfoValue
         std::string workingKey = iter->first;
 
-        int deepness = XXstdStringExtend::count(workingKey, '/') + 1;   
+        int deepness = XXstdStringExtend::count(workingKey, '/')-1;   
         bool isArrayInfo = false;
         if('.' == iter->second.at(0) && ',' == iter->second.at(1)){
             auto arrayInfo = XXstdStringExtend::splitToVector(iter->second, ',');
@@ -67,6 +67,9 @@ void XXjson::fromMap(XXmapRef ref){
         for(; deepness > 0; deepness--){
             // [3.1] 去掉最后的</xxx>
             workingKey.resize(XXstdStringExtend::lastIndexOf(workingKey, '/') - 1);
+            if(workingKey.empty()){
+                break;
+            }
 
             // [3.2] 
             auto jmapItem = _jmap.find(workingKey);
@@ -155,7 +158,7 @@ void XXjson::toMap(XXmapRef ref){
         for(auto itemIter = iter->second.begin(); itemIter != iter->second.end(); itemIter++){
             info.push_back(std::to_string(*itemIter));
         }
-        ref[iter->first] = info;
+        ref.set(iter->first, info);
     }
 }
 
@@ -362,9 +365,9 @@ bool XXjson::fromString(const std::string &jsonString){
         }
         else if('[' == *offsetData){
             // [4.1] 字符'['标志着数组的开始，需要构建一个arrayInfo的对象，前提需要有一个完整key，当没有key时说明出现了语法错误
-            if(!IS_ON_INDEX(keyBeginIndex, keyEndIndex)){
-                ERROR_LOG   _jmap.clear();  return false;
-            }
+            // if(!IS_ON_INDEX(keyBeginIndex, keyEndIndex)){
+            //     ERROR_LOG   _jmap.clear();  return false;
+            // }
 
             // [4.2] 暂时保存到arrayPathToCount中，待收集好对应的数组item的数量，并出现对应']'时再回写arrayInfo数据
             std::string key;
@@ -480,6 +483,9 @@ bool XXjson::fromString(const std::string &jsonString){
 
 void XXjson::adaptSpecialChar(char *buffer, int bufferSize, const std::string &str){
     bzero(buffer, bufferSize);
+    if(str.empty()) 
+        return;
+
     char *bufferPtr = buffer;
     for (auto iter = str.cbegin(); iter != str.cend(); ++iter, ++bufferPtr){
         if('\"' == *iter){

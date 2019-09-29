@@ -79,6 +79,14 @@ void XXmapRef::operator=(const std::vector<std::string> &value){
     checkAndSetValue(_path._data, valueString);
 }
 
+/// 公共函数 - 直接赋值(不作任何路径处理)
+void XXmapRef::set(const std::string &path, const std::vector<std::string> &value){
+    XXmapRef ref    = *this;
+    ref._path       = XXpath(path);
+    ref             = value;
+    return ;
+}
+
 /// 公共函数 - 取值函数
 XXmapRef::operator std::string(){
     return this->toString();
@@ -254,14 +262,15 @@ bool XXmapRef::getRealPath(const std::string &path, std::string &realPath, bool 
     XXpath xxRealPath;
 
     // [1] 路径拆分并遍历
-    auto nodes = XXstdStringExtend::splitToList(path, PATH_DELIMITER);
-    for (auto nodeIter = nodes.begin(); nodeIter != nodes.end(); nodeIter++)
+    auto nodes = XXstdStringExtend::splitToList(path, PATH_DELIMITER);  
+    nodes.pop_front();
+    for (auto nodeIter = nodes.begin(); nodeIter != nodes.end(); nodeIter++)  
     {
         // [2.1] 空节点，不作处理，直接跳过
-        // if (0 == nodeIter->length()){
-        //     xxRealPath << *nodeIter;
-        //     continue;
-        // }
+        if (0 == nodeIter->length()){
+            xxRealPath << *nodeIter;
+            continue;
+        }
 
         // [2.2] 具有.index的节点
         if (nodeIter->substr(0,1) == VALUE_ARRAY_PREFIX){

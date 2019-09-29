@@ -9,6 +9,7 @@ std::vector<std::string> XXstdStringExtend::splitToVector(const std::string &tar
     int targetLength    = target.length();
     int nodeBeginPos    = 0;  
 
+    if(hasPrefix(target, sep)) stringVector.push_back("");
     for(int pos = 0; pos < targetLength - seqLength; pos++)
     {
         if(0 == target.compare(pos, seqLength, sep)){
@@ -24,6 +25,7 @@ std::vector<std::string> XXstdStringExtend::splitToVector(const std::string &tar
     }
 
     stringVector.push_back(target.substr(nodeBeginPos));
+    if(hasSuffix(target, sep)) stringVector.push_back("");
     return stringVector;
 }
 std::vector<std::string> XXstdStringExtend::splitToVector(const std::string &target, const char *sep){
@@ -75,9 +77,10 @@ std::string XXstdStringExtend::section(const std::string &target, const std::str
     sectionString.reserve(64);
 
     auto stringVector =  XXstdStringExtend::splitToVector(target, sep);
-    int size = stringVector.size();
-    start = start < 0 ? size + start : start;
-    end = end < 0 ? size + end : end;
+    int size    = stringVector.size();
+    start       = start < 0 ? size + start : start;
+    end         = end < 0 ? size + end : end;
+
     if(0 == start && 0 == end){
         return stringVector.size() >= 1 ? stringVector[0] : target;
     }

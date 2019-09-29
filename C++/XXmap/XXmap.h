@@ -36,9 +36,9 @@ public:
     operator std::string()                      {return _data;}
 	void operator=(const XXpath &xxpath)        { _data = xxpath._data;}
 
-	XXpath& operator<<(const char *node)        { _data.empty()&&'.'!=node[0] ? _data = node : _data += "/"+std::string(node); return *this;}
-	XXpath& operator<<(const std::string &node) { _data.empty()&&'.'!=node[0] ? _data = node : _data += "/"+node; return *this;}
-	XXpath& operator<<(int node)                { _data.empty() ? _data = node : _data += "/"+std::to_string(node); return *this;}
+	XXpath& operator<<(const char *node)        { _data += "/"+std::string(node); return *this;}
+	XXpath& operator<<(const std::string &node) { _data += "/"+node; return *this;}
+	XXpath& operator<<(int node)                { _data += "/"+std::to_string(node); return *this;}
     XXpath& operator>>(std::string &node)       { _data.empty() ? node="" : node=XXstdStringExtend::section(_data, "/", -1); return *this;}
 
     XXpath operator<(const char *node)          { XXpath path = *this; path<<node; return path; }
@@ -88,6 +88,9 @@ public: /** 赋值运算符 */
     void operator=(int value);
     void operator=(double value);
     void operator=(const std::vector<std::string> &value);  /** 会将数组内容转换成item1,item2,item3,...,itemN */
+
+public:
+    void set(const std::string &path, const std::vector<std::string> &value);
 
 public: /** 值转换 */
     operator std::string(); /** 省缺类型转换 */
