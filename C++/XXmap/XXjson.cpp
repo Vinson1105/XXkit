@@ -159,10 +159,11 @@ void XXjson::toMap(XXmapRef ref){
     }
 }
 
-std::string XXjson::toString(bool isThin){
+std::string XXjson::toString(bool isThin, unsigned int kvSizeMax){
     // [1] 预分配空间
     std::string jsonString;
     jsonString.reserve(512);
+    char *kvBuffer = (char*)malloc(kvSizeMax);  // 用于key、value中的特殊字符转换，注意
 
     int lastDeepness    = 0;
     //int arrayDeepness   = -1;
@@ -192,19 +193,21 @@ std::string XXjson::toString(bool isThin){
         else{}
 
         // [3] 值写入
+        adaptSpecialChar(kvBuffer, kvSizeMax, XXstdStringExtend::section(iter->first, "/", -1));
+
         if(XXjvalue::Type::PathValue == jvalue.type()){
             if(!isThin) addTabSpacer(jsonString, jvalue.deepness());
-            addPair(jsonString, XXstdStringExtend::section(iter->first, "/", -1), jvalue.value());
+            addPair(jsonString, std::string(kvBuffer), jvalue.value());
             if(!isThin) jsonString += "\n";
         }
         else if(XXjvalue::Type::PathNode == jvalue.type()){
             if(!isThin) addTabSpacer(jsonString, jvalue.deepness());
-            addPair(jsonString, XXstdStringExtend::section(iter->first, "/", -1));
+            addPair(jsonString, std::string(kvBuffer));
             if(!isThin) jsonString += "\n";
         }
         else if(XXjvalue::Type::ArrayInfo == jvalue.type()){
             if(!isThin) addTabSpacer(jsonString, jvalue.deepness());
-            addPair(jsonString, XXstdStringExtend::section(iter->first, "/", -1));
+            addPair(jsonString, std::string(kvBuffer));
             jsonString += '[';
             if(!isThin) jsonString += "\n";
             arrayDeepness.push_back(jvalue.deepness());
@@ -214,7 +217,8 @@ std::string XXjson::toString(bool isThin){
         }
         else if(XXjvalue::Type::ArrayValue == jvalue.type()){
             if(!isThin) addTabSpacer(jsonString, jvalue.deepness());
-            jsonString += '\"' + jvalue.value() + "\",";
+            //addPair(jsonString, "", jvalue.value()); //jsonString += '\"' + jvalue.value() + "\",";
+            addPair(jsonString, "", jvalue.value());
             if(!isThin) jsonString += "\n";
         }
         else{
@@ -238,10 +242,11 @@ std::string XXjson::toString(bool isThin){
             jsonString += isThin ? "," : ",\n";
         }
     }
+    free(kvBuffer);
     return jsonString;
 }
 bool XXjson::fromString(const std::string &jsonString){
-    //std::string workingPath;
+    _jmap.clear();
     XXpath workingPath;
     workingPath.data().reserve(128);
 
@@ -301,7 +306,8 @@ bool XXjson::fromString(const std::string &jsonString){
 
             if(IS_ON_INDEX(keyBeginIndex,keyEndIndex)){
                 // [2.3] 已经有key，即可认为为PathNode类型节点
-                std::string key = std::string(jsonString.data()+keyBeginIndex, keyEndIndex-keyBeginIndex);
+                std::string key;
+                getFixString(key, jsonString.data(), keyBeginIndex, keyEndIndex);
                 workingPath<<key;
                 _jmap[workingPath.data()] = XXjvalue(currentDeepness, XXjvalue::Type::PathNode).toData();
             }
@@ -335,18 +341,19 @@ bool XXjson::fromString(const std::string &jsonString){
             // [3.3] 有可能当前深度最后一对键值结尾没有','，则需要在'}'判断有没有存在可能的key、value
             std::string key, value;
             if(IS_ON_INDEX(keyBeginIndex, keyEndIndex)) {
-                std::string key(jsonString.data()+keyBeginIndex, keyEndIndex-keyBeginIndex);
                 std::string value;
                 if(IS_ON_INDEX(valueStrBeginIndex,valueStrEndIndex)){
-                    value = std::string(jsonString.data()+valueStrBeginIndex, valueStrEndIndex-valueStrBeginIndex);
+                    getFixString(value, jsonString.data(), valueStrBeginIndex, valueStrEndIndex);
                 }
-                else if(IS_ON_INDEX(valueIntBeginIndex,valueStrEndIndex)){
-                    value = std::string(jsonString.data()+valueIntBeginIndex, valueStrEndIndex-valueIntBeginIndex);
+                else if(IS_ON_INDEX(valueIntBeginIndex,valueIntEndIndex)){
+                    getFixString(value, jsonString.data(), valueIntBeginIndex, valueIntEndIndex);
                 }
                 else{
                     // 当有可用的key时，value不可用是不符合语法
                     ERROR_LOG   _jmap.clear();  return false;
                 }
+                std::string key;
+                getFixString(key, jsonString.data(), keyBeginIndex, keyEndIndex);
                 _jmap[(workingPath<key).data()] = XXjvalue(currentDeepness, XXjvalue::Type::PathValue, value).toData();
             }
             workingPath.removeLast();
@@ -360,7 +367,8 @@ bool XXjson::fromString(const std::string &jsonString){
             }
 
             // [4.2] 暂时保存到arrayPathToCount中，待收集好对应的数组item的数量，并出现对应']'时再回写arrayInfo数据
-            std::string key(jsonString.data()+keyBeginIndex, keyEndIndex-keyBeginIndex);
+            std::string key;
+            getFixString(key, jsonString.data(), keyBeginIndex, keyEndIndex);
             workingPath << key;
             arrayPathToCount[workingPath] = 0;
 
@@ -404,13 +412,13 @@ bool XXjson::fromString(const std::string &jsonString){
             // [6.2] 获取对应的key、value
             std::string key, value;
             if(IS_ON_INDEX(keyBeginIndex,keyEndIndex)){
-                key = std::string(jsonString.data()+keyBeginIndex, keyEndIndex-keyBeginIndex);
+                getFixString(key, jsonString.data(), keyBeginIndex, keyEndIndex);
             }
             if(IS_ON_INDEX(valueStrBeginIndex,valueStrEndIndex)){
-                value = std::string(jsonString.data()+valueStrBeginIndex, valueStrEndIndex-valueStrBeginIndex);
+                getFixString(value, jsonString.data(), valueStrBeginIndex, valueStrEndIndex);
             }
             else if(IS_ON_INDEX(valueIntBeginIndex,valueIntEndIndex)){
-                value = std::string(jsonString.data()+valueIntBeginIndex, valueIntEndIndex-valueIntBeginIndex);
+                getFixString(value, jsonString.data(), valueIntBeginIndex, valueIntEndIndex);
             }
             else{}
 
@@ -433,9 +441,6 @@ bool XXjson::fromString(const std::string &jsonString){
             isNeedResetIndex = true;
         }
         else if('\"' == *offsetData){
-            /**
-             * 可能是key、valueStr的起始或者结束字符
-            */
             if(keyBeginIndex < 0)           keyBeginIndex = offset+1;
             else if(keyEndIndex < 0)        keyEndIndex = offset;
             else if(valueStrBeginIndex < 0) valueStrBeginIndex = offset+1;
@@ -473,10 +478,26 @@ bool XXjson::fromString(const std::string &jsonString){
     return true;
 }
 
+void XXjson::adaptSpecialChar(char *buffer, int bufferSize, const std::string &str){
+    bzero(buffer, bufferSize);
+    char *bufferPtr = buffer;
+    for (auto iter = str.cbegin(); iter != str.cend(); ++iter, ++bufferPtr){
+        if('\"' == *iter){
+            *bufferPtr = '\\';
+            ++bufferPtr;
+        }
+        *bufferPtr = *iter;
+    }
+}
 void XXjson::addPair(std::string &str, const std::string &key, const std::string &value){
+    if(key.empty() && value.empty())    return;
+
     // 添加键值对："key":"value", 或者 "key":
-    str += '\"' + key + "\":";
-    if ("" != value){
+    if(!key.empty()){
+        str += '\"' + key + "\":";
+    }
+    
+    if (!value.empty()){
         str += '\"' + value + "\",";
     }
 }
@@ -486,22 +507,22 @@ void XXjson::addTabSpacer(std::string &str, uint8_t deepness){
         --deepness;
     }
 }
-void XXjson::getPair(std::string &key, std::string &value, const char *data, int keyStart, int keyEnd, int valStrStart, int valStrEnd, int valIntStart, int valIntEnd){
-    if(keyStart > 0 && keyEnd > 0){
-        key = std::string(data+keyStart+1, keyEnd-keyStart-1);
+void XXjson::getFixString(std::string &fixString, const char *data, int start, int end){
+    if(start >= end){
+        return;
     }
-    else{
-        key = "";
-    }
-    
-    if(valStrStart > 0 && valStrEnd > 0){
-        value = std::string(data+valStrStart+1, valStrEnd-valStrStart-1);
-    }
-    else if(valIntStart > 0 && valIntEnd > 0){
-        value = std::string(data+valIntStart, valIntEnd-valIntStart);
-    }
-    else{
-        value = "";
+    int size = end-start;
+    fixString.reserve(size);
+    bool isTransferredBegin = false;
+    for(int index = start; index < end; index++){
+        if('\\' == data[index]){
+            if(isTransferredBegin){
+                isTransferredBegin = false;
+                continue;
+            }
+            isTransferredBegin = true;
+        }
+        fixString += data[index];
     }
 }
 

@@ -25,15 +25,16 @@ public:
     void fromMap(XXmapRef ref);   /** 将指定的XXmap转换为本地的格式数据 */  
     void toMap(XXmapRef ref);     /** 将本地JMap转到指定XXmap */
 
-    std::string toString(bool isThin = false);
+    std::string toString(bool isThin = false, unsigned int kvSizeMax = 512);
     bool fromString(const std::string &jsonString);
 
     std::map<std::string,std::string>& data() { return _jmap; }
 
 private:
+    void adaptSpecialChar(char *buffer, int bufferSize, const std::string &str);
     void addPair(std::string &str, const std::string &key, const std::string &value = "");
     void addTabSpacer(std::string &str, uint8_t deepness);
-    void getPair(std::string &key, std::string &value, const char *data, int keyStart, int keyEnd, int valStrStart, int valStrEnd, int valIntStart, int valIntEnd);
+    void getFixString(std::string &fixString, const char *data, int start, int end);
 
 private:
     std::map<std::string,std::string> _jmap;

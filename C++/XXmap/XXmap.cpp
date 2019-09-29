@@ -258,10 +258,10 @@ bool XXmapRef::getRealPath(const std::string &path, std::string &realPath, bool 
     for (auto nodeIter = nodes.begin(); nodeIter != nodes.end(); nodeIter++)
     {
         // [2.1] 空节点，不作处理，直接跳过
-        if (0 == nodeIter->length()){
-            xxRealPath << *nodeIter;
-            continue;
-        }
+        // if (0 == nodeIter->length()){
+        //     xxRealPath << *nodeIter;
+        //     continue;
+        // }
 
         // [2.2] 具有.index的节点
         if (nodeIter->substr(0,1) == VALUE_ARRAY_PREFIX){

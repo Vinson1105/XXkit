@@ -36,8 +36,8 @@ public:
     operator std::string()                      {return _data;}
 	void operator=(const XXpath &xxpath)        { _data = xxpath._data;}
 
-	XXpath& operator<<(const char *node)        { _data.empty() ? _data = node : _data += "/"+std::string(node); return *this;}
-	XXpath& operator<<(const std::string &node) { _data.empty() ? _data = node : _data += "/"+node; return *this;}
+	XXpath& operator<<(const char *node)        { _data.empty()&&'.'!=node[0] ? _data = node : _data += "/"+std::string(node); return *this;}
+	XXpath& operator<<(const std::string &node) { _data.empty()&&'.'!=node[0] ? _data = node : _data += "/"+node; return *this;}
 	XXpath& operator<<(int node)                { _data.empty() ? _data = node : _data += "/"+std::to_string(node); return *this;}
     XXpath& operator>>(std::string &node)       { _data.empty() ? node="" : node=XXstdStringExtend::section(_data, "/", -1); return *this;}
 

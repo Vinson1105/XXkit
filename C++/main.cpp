@@ -23,26 +23,29 @@ int main(){
 
     XXmap map;
     XXmapRef mapRef(map);
-    mapRef["AAA"] = "AAA";
-    for(int i = 0; i < 2; i++){
-        mapRef["Class"]["Student"](i)["Name"]    = std::string("Name") + std::to_string(i);
-        mapRef["Class"]["Student"](i)["ID"]      = i;
+    mapRef(0) = 0;
+    mapRef(1) = 1;
+    mapRef(2) = 2;
+    mapRef(3) = 3;
+    // for(int i = 0; i < 2; i++){
+    //     mapRef["Class"]["Student"](i)["Name"]    = std::string("Name") + std::to_string(i);
+    //     mapRef["Class"]["Student"](i)["ID"]      = i;
 
-        mapRef["Class"]["Student"](i)["ParamDict\"STR\""]["A"] = "ParamA";
-        mapRef["Class"]["Student"](i)["ParamDict\"STR\""]["B"] = "ParamB";
-        mapRef["Class"]["Student"](i)["ParamDict\"STR\""]["C"] = "ParamC";
-        mapRef["Class"]["Student"](i)["ParamArr\"STR\""](0)    = "ParamA";
-        mapRef["Class"]["Student"](i)["ParamArr\"STR\""](1)    = "ParamB";
-        mapRef["Class"]["Student"](i)["ParamArr\"STR\""](2)    = "ParamC";
+    //     mapRef["Class"]["Student"](i)["ParamDict\"STR\""]["A"] = "ParamA";
+    //     mapRef["Class"]["Student"](i)["ParamDict\"STR\""]["B"] = "ParamB";
+    //     mapRef["Class"]["Student"](i)["ParamDict\"STR\""]["C"] = "ParamC";
+    //     mapRef["Class"]["Student"](i)["ParamArr\"STR\""](0)    = "ParamA";
+    //     mapRef["Class"]["Student"](i)["ParamArr\"STR\""](1)    = "ParamB";
+    //     mapRef["Class"]["Student"](i)["ParamArr\"STR\""](2)    = "ParamC";
 
-        mapRef["Class"]["Student"](i)["ParamDict\"INT\""]["A"] = 1;
-        mapRef["Class"]["Student"](i)["ParamDict\"INT\""]["B"] = 2;
-        mapRef["Class"]["Student"](i)["ParamDict\"INT\""]["C"] = 3;
-        mapRef["Class"]["Student"](i)["ParamArr\"INT\""](0)    = 11;
-        mapRef["Class"]["Student"](i)["ParamArr\"INT\""](1)    = 22;
-        mapRef["Class"]["Student"](i)["ParamArr\"INT\""](2)    = 33;
-    }
-    mapRef["ZZZ"] = "ZZZ";
+    //     mapRef["Class"]["Student"](i)["ParamDict\"INT\""]["A"] = 1;
+    //     mapRef["Class"]["Student"](i)["ParamDict\"INT\""]["B"] = 2;
+    //     mapRef["Class"]["Student"](i)["ParamDict\"INT\""]["C"] = 3;
+    //     mapRef["Class"]["Student"](i)["ParamArr\"INT\""](0)    = 11;
+    //     mapRef["Class"]["Student"](i)["ParamArr\"INT\""](1)    = 22;
+    //     mapRef["Class"]["Student"](i)["ParamArr\"INT\""](2)    = 33;
+    // }
+    // mapRef["ZZZ"] = "ZZZ";
 
     XXmap map2;
     XXmapRef map2Ref(map2);
