@@ -265,76 +265,51 @@ std::string XXjson::toString(bool usingThin, bool usingTransferred, unsigned int
     free(valueBuffer);
     return jsonString;
 }
-bool XXjson::fromString(const std::string &jsonString, bool hasTransferred){
+bool XXjson::fromString(const std::string &jsonString){
     _jmap.clear();
     XXpath workingPath;
     workingPath.data().reserve(128);
     int length = jsonString.length();
 
     int currentDeepness     = 0;    // 当前深度
-    int keyBeginIndex       = -1;   // 标记一个key的开始
-    int keyEndIndex         = -1;   // 标记一个key的结束
+    int lastQuotation       = -1;   // 上一个非转义的引号偏移
+    int lastDeepness        = -1;   // 上一个非转义的引号对应的深度
 
-    int valueStrBeginIndex  = -1;   // 标记一个valueString的开始
-    int valueStrEndIndex    = -1;   // 标记一个valueString的结束
-    int valueIntBeginIndex  = -1;   // 标记一个valueInt的开始
-    int valueIntEndIndex    = -1;   // 标记一个valueInt的结束
+    int keyBegin    = -1;   // 标记一个key的开始偏移
+    int keyEnd      = -1;   // 标记一个key的结束偏移
+    int valBegin    = -1;   // 标记一个val的开始偏移
+    int valEnd      = -1;   // 标记一个val的结束偏移
+    bool isIntVal   = false;
 
     bool isTransferredBegin = false;            // 是否开始转义
-    bool isNeedResetIndex = false;
+    bool isNeedResetIndex   = false;
     std::map<std::string,int> arrayPathToCount; // 数组路径对应的数组元素个数
 
+    const char *data        = jsonString.data();
     const char *offsetData  = jsonString.data();
     unsigned int jsonLength = jsonString.length();
 
     for (int offset = 0; offset < jsonLength; ++offset,++offsetData){
+        // [0] 重置标记
         if(isNeedResetIndex){
-            // [0] 重置index标记
-            keyBeginIndex       = keyEndIndex = -1;   
-            valueStrBeginIndex  = valueStrEndIndex = -1;   
-            valueIntBeginIndex  = valueIntEndIndex = -1;  
-            isNeedResetIndex    = false;
+            lastQuotation = keyBegin = keyEnd = valBegin = valEnd = -1;   
+            isIntVal = isTransferredBegin = isNeedResetIndex = false;
         }
 
-        if(isTransferredBegin){
-            // [1.1] 16进制或者8进制转义，还需要2个字符数据进行转义（16进制：\x[0-F][0-F]，8进制：\[0-9][0-9][0-9]）
-            if('x' == *offsetData || (*offsetData >= '0' && *offsetData <= '9')){
-                ++++offset;
-                ++++offsetData;
-            }
-
-            // [1.2] 无论是进制转义还是字符转义，都已经有足够的数据，直接清空标记进行下一个循环
-            isTransferredBegin = false;
-            continue;
-        }
-
+        // [1] 仅对"\""进行转义的兼容
         if('\\' == *offsetData){
-            // [1.3] 设置转义开始
-            isTransferredBegin = true;
-            continue;
+            ++offset;   ++offsetData;   continue;
         }
         else if('{' == *offsetData){
             // [2.1] '{'为key、value中的字符，直接进行下一次循环
-            if(IS_WAIT_INDEX(keyBeginIndex,keyEndIndex) || IS_WAIT_INDEX(valueStrBeginIndex,valueStrEndIndex)){
-                continue;
-            }
+            if(IS_WAIT_INDEX(keyBegin,keyEnd) || IS_WAIT_INDEX(valBegin,valEnd)){ continue; }
             
             // [2.2] '{'为第一个'{'，即为json结构的边界，直接增加深度后进行下一次循环
-            if(currentDeepness==0){
-                ++currentDeepness;
-                continue;
-            }
+            if(currentDeepness==0){ ++currentDeepness; continue; }
 
-            if(IS_ON_INDEX(keyBeginIndex,keyEndIndex)){
+            if(IS_ON_INDEX(keyBegin,keyEnd)){
                 // [2.3] 已经有key，即可认为为PathNode类型节点
-                std::string key;
-                if(hasTransferred){
-                    fromTransferred(key, jsonString.data()+keyBeginIndex, keyEndIndex-keyBeginIndex);
-                }
-                else{
-                    key.append(jsonString.data()+keyBeginIndex, keyEndIndex-keyBeginIndex);
-                }   
-                workingPath<<key;             
+                workingPath<< fromTransferred(data+keyBegin, keyEnd-keyBegin);             
                 _jmap[workingPath.data()] = XXjvalue(currentDeepness, XXjvalue::Type::PathNode).toData();
             }
             else{
@@ -354,32 +329,25 @@ bool XXjson::fromString(const std::string &jsonString, bool hasTransferred){
         }
         else if('}' == *offsetData){
             // [3.1] '}'为key、value中的字符，直接进行下一次循环
-            if(IS_WAIT_INDEX(keyBeginIndex,keyEndIndex) || IS_WAIT_INDEX(valueStrBeginIndex,valueStrEndIndex)){
-                continue;
+            if(IS_OFF_INDEX(keyBegin,keyEnd)) { 
+                ERROR_LOG   _jmap.clear();  return false; 
+            }  
+            if(IS_WAIT_INDEX(keyBegin,keyEnd) || IS_WAIT_INDEX(valBegin,valEnd)){ 
+                continue; 
             }
 
-            // [3.2] '}'为第一个'}'，即为json结构的边界，直接减少深度后进行下一次循环
-            if(currentDeepness==1){
-                --currentDeepness;
-                continue;
-            }
+            // [3.2] '}'为最后个'}'，即为json结构的边界，直接减少深度后进行下一次循环
+            if(currentDeepness==1){ --currentDeepness; continue; }
 
             // [3.3] 有可能当前深度最后一对键值结尾没有','，则需要在'}'判断有没有存在可能的key、value
-            std::string key, value;
-            if(IS_ON_INDEX(keyBeginIndex, keyEndIndex)) {
-                std::string value;
-                if(IS_ON_INDEX(valueStrBeginIndex,valueStrEndIndex)){
-                    fromTransferred(value, jsonString.data()+valueStrBeginIndex, valueStrEndIndex-valueStrBeginIndex);
-                }
-                else if(IS_ON_INDEX(valueIntBeginIndex,valueIntEndIndex)){
-                    fromTransferred(value, jsonString.data()+valueIntBeginIndex, valueIntEndIndex-valueIntBeginIndex);
-                }
-                else{
+            if(IS_ON_INDEX(keyBegin, keyEnd)) {
+                if(!IS_ON_INDEX(valBegin, valEnd)){
                     // 当有可用的key时，value不可用是不符合语法
                     ERROR_LOG   _jmap.clear();  return false;
                 }
-                std::string key;
-                fromTransferred(key, jsonString.data()+keyBeginIndex, keyEndIndex-keyBeginIndex);
+
+                std::string key     = fromTransferred(data+keyBegin, keyEnd-keyBegin);
+                std::string value   = fromTransferred(data+valBegin, valEnd-valBegin);
                 _jmap[(workingPath<key).data()] = XXjvalue(currentDeepness, XXjvalue::Type::PathValue, value).toData();
             }
             workingPath.removeLast();
@@ -393,29 +361,23 @@ bool XXjson::fromString(const std::string &jsonString, bool hasTransferred){
             // }
 
             // [4.2] 暂时保存到arrayPathToCount中，待收集好对应的数组item的数量，并出现对应']'时再回写arrayInfo数据
-            std::string key;
-            fromTransferred(key, jsonString.data()+keyBeginIndex, keyEndIndex-keyBeginIndex);
-            workingPath << key;
+            workingPath << fromTransferred(data+keyBegin, keyEnd-keyBegin);
             arrayPathToCount[workingPath] = 0;
 
             ++currentDeepness;
             isNeedResetIndex = true;
         }
         else if(']' == *offsetData){
-            // [5.1] 字符']'标志着数组的结束，有可能当前深度最后一对键值结尾没有','，则需要在'}'判断有没有存在可能的key、value
+            // [5.1] 字符']'标志着数组的结束，有可能当前深度最后一对键值结尾没有','，则需要在']'判断有没有存在可能的key、value
             std::string itemValue = "";
-            if(IS_ON_INDEX(keyBeginIndex, keyEndIndex)){
-                itemValue = std::string(jsonString.data()+keyBeginIndex, keyEndIndex-keyBeginIndex);
+            if(IS_ON_INDEX(valBegin, valEnd)){
+                itemValue = fromTransferred(data+valBegin, valEnd-valBegin);
             }
-            else if(IS_ON_INDEX(valueIntBeginIndex, valueIntEndIndex)){
-                itemValue = std::string(jsonString.data()+valueIntBeginIndex, valueIntEndIndex-valueIntBeginIndex);
-            }
-            else{}
 
             // [5.2] 检查一下路径有没有对应的信息数量信息
             auto iter = arrayPathToCount.find(workingPath.data());
-            if(arrayPathToCount.end() == iter){
-                ERROR_LOG   _jmap.clear();  return false;
+            if(arrayPathToCount.end() == iter){ 
+                ERROR_LOG   _jmap.clear();  return false; 
             }
 
             // [5.3] 写入值
@@ -431,22 +393,11 @@ bool XXjson::fromString(const std::string &jsonString, bool hasTransferred){
         }
         else if(',' == *offsetData){
             // [6.1] ','为key、value中的字符，直接进行下一次循环
-            if(IS_OFF_INDEX(keyBeginIndex,keyEndIndex) || IS_WAIT_INDEX(keyBeginIndex,keyEndIndex) || IS_WAIT_INDEX(valueStrBeginIndex,valueStrEndIndex)){
-                continue;
-            }
+            if(IS_OFF_INDEX(keyBegin,keyEnd) || IS_WAIT_INDEX(keyBegin,keyEnd) || IS_WAIT_INDEX(valBegin,valEnd)){ continue; }
 
             // [6.2] 获取对应的key、value
-            std::string key, value;
-            if(IS_ON_INDEX(keyBeginIndex,keyEndIndex)){
-                fromTransferred(key, jsonString.data()+keyBeginIndex, keyEndIndex-keyBeginIndex);
-            }
-            if(IS_ON_INDEX(valueStrBeginIndex,valueStrEndIndex)){
-                fromTransferred(value, jsonString.data()+valueStrBeginIndex, valueStrEndIndex-valueStrBeginIndex);
-            }
-            else if(IS_ON_INDEX(valueIntBeginIndex,valueIntEndIndex)){
-                fromTransferred(value, jsonString.data()+valueIntBeginIndex, valueIntEndIndex-valueIntBeginIndex);
-            }
-            else{}
+            std::string key     = IS_ON_INDEX(keyBegin,keyEnd) ? fromTransferred(data+keyBegin, keyEnd-keyBegin) : "";
+            std::string value   = IS_ON_INDEX(valBegin,valEnd) ? fromTransferred(data+valBegin, valEnd-valBegin) : "";
 
             // [6.3] 如果只有key，则可以认为是数组中的数据，需要判断该路径有没有对应的数组元素数量数据
             if(key.empty()){
@@ -467,15 +418,10 @@ bool XXjson::fromString(const std::string &jsonString, bool hasTransferred){
             isNeedResetIndex = true;
         }
         else if('\"' == *offsetData){
-            if(keyBeginIndex < 0)                               
-                keyBeginIndex = offset+1;       // 无论是否使用转义，第一个"都可以认为是key的开始
-            else if(keyEndIndex < 0 && hasTransferred)          
-                keyEndIndex = offset;           // 在使用转义的情况下，需要判断\:；在不使用转义时，key已经开始后下一个\"为key的结束
-            else if(keyEndIndex > 0 || (valueStrBeginIndex < 0 && hasTransferred))   
-                valueStrBeginIndex = offset+1;  // 在使用转义的情况下，并key已经结束了，则下一个\"是value的开始；
-            else if(hasTransferred)                             
-                valueStrEndIndex = offset;      // 在使用转义的情况下，并value已经开始，需要判断}、]、,；在不使用转义时，
-            else{}
+            if(keyBegin < 0)        keyBegin    = offset+1;  
+            else if(keyEnd < 0)     keyEnd      = offset;        
+            else if(valBegin < 0 )  valBegin    = offset+1;  
+            else                    valEnd      = offset;   
         }
         else if(*offsetData >= '0' && *offsetData <= '9'){
             /**
@@ -484,9 +430,9 @@ bool XXjson::fromString(const std::string &jsonString, bool hasTransferred){
              * 当key完整时，还需要判断是valueStr还是valueInt，
              * 所以如果此时没有valueStr的起始'\"'（valueStrStartIndex<0），即为valueInt
             */
-            if(keyBeginIndex < 0 || keyEndIndex < 0)    
+            if(IS_ON_INDEX keyBegin < 0 || keyEnd < 0)    
                 continue;
-            if(valueIntBeginIndex < 0 && valueIntEndIndex < 0) {
+            if(valBegin < 0 && valEnd < 0) {
                 valueIntBeginIndex = offset;
                 valueIntEndIndex = offset+1;
             }  
@@ -533,10 +479,11 @@ void XXjson::toTransferred(char *buffer, int bufferSize, const std::string &str)
         *bufferPtr = strPtr[index];
     }
 }
-void XXjson::fromTransferred(std::string &str, const char *data, int length){
+std::string XXjson::fromTransferred(std::string &str, const char *data, int length){
     if(length <= 0){
         return;
     }
+    std::string str;
     str.reserve(length);
     bool isTransferredBegin = false;
     for(int index = 0; index < length; index++,data++){
@@ -551,6 +498,7 @@ void XXjson::fromTransferred(std::string &str, const char *data, int length){
         }
         str += *data;
     }
+    return str;
 }
 void XXjson::addPair(std::string &str, const std::string &key, const std::string &value){
     if(key.empty() && value.empty())    return;
