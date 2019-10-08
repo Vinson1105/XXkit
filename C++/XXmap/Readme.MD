@@ -1,3 +1,6 @@
+# 20191008
+## XXjson
+
 # 20190926
 ## XXmap、XXmapRef
 1. 一个以路径key存放value的Map<String,String>，定位为数据量小，扁平化，提供便捷并有限的类json数据读写；

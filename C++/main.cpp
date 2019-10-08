@@ -61,8 +61,15 @@ int main(){
     map2Ref["Array"](2)["Name"] = "Name3";
     map2Ref["Array"](2)["ID"] = "ID3";
 
+    XXmap map3;
+    XXmapRef map3Ref(map3);
+    map3Ref["\"a\""] = "a";
+    //map3Ref["b"] = "bbbb";
+
+    XXmapRef target = map3;
+
     XXjson json;
-    json.fromMap(mapRef);
+    json.fromMap(target);
 
     cout << "XXmap(Source):" << endl;
     for (auto iter = map.data().begin(); iter != map.data().end(); iter++){
@@ -76,12 +83,12 @@ int main(){
     }
     cout << endl;
 
-    std::string jsonString = json.toString();
+    std::string jsonString = json.toString(false, false);
     cout << "JsonString:" << endl;
     cout << jsonString << endl;
     cout << endl;
 
-    jsonString = json.toString(true);
+    jsonString = json.toString(true, false);
     cout << "JsonString(Thin):" << endl;
     cout << jsonString << endl;
     cout << endl;
@@ -95,7 +102,7 @@ int main(){
     }
     cout << endl;
 
-    json.fromString(jsonString);
+    json.fromString(jsonString, false);
     cout << "Jmap(FromString):" << endl;
     for (auto iter = json.data().begin(); iter != json.data().end(); iter++){
         std::cout << iter->first << " = " << iter->second << std::endl;
