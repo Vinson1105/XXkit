@@ -99,11 +99,11 @@ public: /** 值转换 */
     double toDouble();      /** 路径有误时，或者没有对应的值时，返回0 */
     std::vector<std::string> toVector();    /** 路径有误时，或者没有对应的值时，空的列表 */
 
-public: /** 数组信息操作，item为整型字符串 */
+public: /** 数组信息操作，item是数组元素下标标识，不一定是连续，一般为内部生成，为整型字符串 */
     bool isArray();                                                 /** 判断当前路径是否对应一个数组信息结构 */
     unsigned int arrayItemCount();                                  /** 获取数组信息中item数量 */
 
-    void createArray(const std::vector<int> &items);
+    void createArray(const std::vector<int> &items);                /** 创建数组，并使用指定的items初始化数组，若items为空，则创建一个空数组*/
     bool swapArrayItem(unsigned int index1, unsigned int index2);   /** 交换index1和index2对应的item */
     std::string insertArrayItem(unsigned int index, bool toBack);   /** 在指定的index中，进行前插入或者后插入，并返回对应的item */
     bool insertArrayItem(unsigned int index, std::string &item, bool toBack);   /** 在指定的index中，进行前插入或者后插入指定在item，注意：需要保证item在array中的唯一性 */

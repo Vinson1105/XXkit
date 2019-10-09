@@ -5,13 +5,13 @@
 #include <string>
 
 #define ERROR_LOG printf("[XXjson] LINE:%d error\n", __LINE__);
-#define VALUE_ARRAY_INFOCOUNT_MIN           2   // (À´×ÔXXmap)Êı×éĞÅÏ¢ÖĞÏî×îĞ¡Öµ£º.,MAX(,±àºÅ) 
-#define VALUE_ARRAY_PREFIX                  "." // (À´×ÔXXmap)Êı×éĞÅÏ¢µÄ±êÊ¶£¬Èç£º1/2/3 : .,MAX,0,1,2
-#define VALUE_ARRAY_DELIMITER               "," // (À´×ÔXXmap)Êı×é½Úµã/ÖµµÄ·Ö¸ô·û
+#define VALUE_ARRAY_INFOCOUNT_MIN           2   // (æ¥è‡ªXXmap)æ•°ç»„ä¿¡æ¯ä¸­é¡¹æœ€å°å€¼ï¼š.,MAX(,ç¼–å·) 
+#define VALUE_ARRAY_PREFIX                  "." // (æ¥è‡ªXXmap)æ•°ç»„ä¿¡æ¯çš„æ ‡è¯†ï¼Œå¦‚ï¼š1/2/3 : .,MAX,0,1,2
+#define VALUE_ARRAY_DELIMITER               "," // (æ¥è‡ªXXmap)æ•°ç»„èŠ‚ç‚¹/å€¼çš„åˆ†éš”ç¬¦
 
-#define IS_ON_INDEX(index1,index2)      (index1>=0&&index2>=0)  // ÊÇ·ñÎª±ÕÇøÓò
-#define IS_WAIT_INDEX(index1,index2)    (index1>=0&&index2<0)   // ÊÇ·ñÎª°ë±ÕÇøÓò
-#define IS_OFF_INDEX(index1,index2)     (index1<0&&index2<0)    // ÊÇ·ñÎª¿ªÇøÓò
+#define IS_ON_INDEX(index1,index2)      (index1>=0&&index2>=0)  // æ˜¯å¦ä¸ºé—­åŒºåŸŸ
+#define IS_WAIT_INDEX(index1,index2)    (index1>=0&&index2<0)   // æ˜¯å¦ä¸ºåŠé—­åŒºåŸŸ
+#define IS_OFF_INDEX(index1,index2)     (index1<0&&index2<0)    // æ˜¯å¦ä¸ºå¼€åŒºåŸŸ
 
 // #define IS_ALPHABET(c)  ((c>='A'&&c<='Z') || (c>='a'&&c<='z'))  
 // #define IS_NUMBER(n)    (n>='0' && n<=9)
@@ -28,10 +28,10 @@ void XXjson::fromMap(XXmapRef ref){
         return;
     }
 
-    std::map<std::string,int> arrayItemMap; // ÓÃÓÚ±£´æÊı×éitemÂ·¾¶£¬ÈçÓĞarrayInfoÂ·¾¶Îª£ºClass/Array£¬ÔòClass
+    std::map<std::string,int> arrayItemMap; // ç”¨äºä¿å­˜æ•°ç»„itemè·¯å¾„ï¼Œå¦‚æœ‰arrayInfoè·¯å¾„ä¸ºï¼šClass/Arrayï¼Œåˆ™Class
     for (auto iter = mapData.begin(); iter != mapData.end(); iter++)
     {
-        // [1] ÅĞ¶Ï¸Ã¼üÖµ¶ÔÊÇÆÕÍ¨µÄvalue»¹ÊÇarrayInfoValue
+        // [1] åˆ¤æ–­è¯¥é”®å€¼å¯¹æ˜¯æ™®é€šçš„valueè¿˜æ˜¯arrayInfoValue
         std::string workingKey = iter->first;
 
         int deepness = XXstdStringExtend::count(workingKey, '/');//-1;   
@@ -40,15 +40,15 @@ void XXjson::fromMap(XXmapRef ref){
             auto arrayInfo = XXstdStringExtend::splitToVector(iter->second, ',');
             std::string workingPath = workingKey + '/';
 
-            // [1.1] ½«arrayItemÈ«²¿ÁĞ¾Ù£¬ÈçÓĞarrayInfoÂ·¾¶Îª£ºClass/Array£¬ÔòĞèÒªÁĞ¾ÙClass/Array/0¡¢Class/Array/1¡¢Class/Array/2
+            // [1.1] å°†arrayItemå…¨éƒ¨åˆ—ä¸¾ï¼Œå¦‚æœ‰arrayInfoè·¯å¾„ä¸ºï¼šClass/Arrayï¼Œåˆ™éœ€è¦åˆ—ä¸¾Class/Array/0ã€Class/Array/1ã€Class/Array/2
             for (auto iter = arrayInfo.begin() + VALUE_ARRAY_INFOCOUNT_MIN; iter != arrayInfo.end(); iter++){
                 arrayItemMap[workingPath + *iter] = 0;
             }
             isArrayInfo = true;
         }
 
-        // [2] Èç¹ûÊÇ<arrayInfo>ÔòÖ±½ÓĞ´Èë<arrayInfo>ĞÅÏ¢µ½±¾µØ<jmap>ÖĞ£¬Èç¹û²»ÊÇ£¬ÔòĞèÒªÅĞ¶ÏÒÔÏÂ£º
-        //     Èç¹ûÔÚ<arrayItemMap>ÖĞÕÒµ½¶ÔÓ¦µÄ¼ÇÂ¼£¬Ôò±¾Ìõ<value>ÊÇ<arrayValue>
+        // [2] å¦‚æœæ˜¯<arrayInfo>åˆ™ç›´æ¥å†™å…¥<arrayInfo>ä¿¡æ¯åˆ°æœ¬åœ°<jmap>ä¸­ï¼Œå¦‚æœä¸æ˜¯ï¼Œåˆ™éœ€è¦åˆ¤æ–­ä»¥ä¸‹ï¼š
+        //     å¦‚æœåœ¨<arrayItemMap>ä¸­æ‰¾åˆ°å¯¹åº”çš„è®°å½•ï¼Œåˆ™æœ¬æ¡<value>æ˜¯<arrayValue>
         if(isArrayInfo){
             _jmap[workingKey] = XXjvalue(deepness, XXjvalue::Type::ArrayInfo).toData();
         }
@@ -66,11 +66,11 @@ void XXjson::fromMap(XXmapRef ref){
             continue;
         }
 
-        // [3] Ã¿´ÎÑ­»·É¾³ı<workingKey>×îºóµÄ"/+"Â·¾¶£¬²¢½«workingKeyÒÔNode·½Ê½Ğ´Èë±¾µØjmapÖĞ£¬
-        //     ÈçÓĞÂ·¾¶Îª£ºClass/Array/0£¬½«Â·¾¶ÒÀ´Î×îºóÒ»¸ö"/xx"½Úµã£¬¼´ÎªClass/ArrayºÍClass£¬
-        //     ²¢Öğ¸öÅĞ¶ÏÊÇ·ñÔÚ<arrayItemMap>ÓĞ¶ÔÓ¦ĞÅÏ¢
+        // [3] æ¯æ¬¡å¾ªç¯åˆ é™¤<workingKey>æœ€åçš„"/+"è·¯å¾„ï¼Œå¹¶å°†workingKeyä»¥Nodeæ–¹å¼å†™å…¥æœ¬åœ°jmapä¸­ï¼Œ
+        //     å¦‚æœ‰è·¯å¾„ä¸ºï¼šClass/Array/0ï¼Œå°†è·¯å¾„ä¾æ¬¡æœ€åä¸€ä¸ª"/xx"èŠ‚ç‚¹ï¼Œå³ä¸ºClass/Arrayå’ŒClassï¼Œ
+        //     å¹¶é€ä¸ªåˆ¤æ–­æ˜¯å¦åœ¨<arrayItemMap>æœ‰å¯¹åº”ä¿¡æ¯
         for(; deepness > 0; deepness--){
-            // [3.1] È¥µô×îºóµÄ</xxx>
+            // [3.1] å»æ‰æœ€åçš„</xxx>
             workingKey.resize(XXstdStringExtend::lastIndexOf(workingKey, '/') - 1);
             if(workingKey.empty()){
                 break;
@@ -79,7 +79,7 @@ void XXjson::fromMap(XXmapRef ref){
             // [3.2] 
             auto jmapItem = _jmap.find(workingKey);
             if(_jmap.end() == jmapItem){
-                // [3.2] ¼ì²éÊÇ·ñÔÚ<arrayItemMap>ÖĞÊÇ·ñÓĞ¼ÇÂ¼
+                // [3.2] æ£€æŸ¥æ˜¯å¦åœ¨<arrayItemMap>ä¸­æ˜¯å¦æœ‰è®°å½•
                 auto arrayItem = arrayItemMap.find(workingKey);
                 if(arrayItemMap.end() !=  arrayItem){
                     _jmap[workingKey] = XXjvalue(deepness, XXjvalue::Type::ArrayItem).toData();
@@ -168,20 +168,20 @@ void XXjson::toMap(XXmapRef ref){
 }
 
 std::string XXjson::toString(bool usingThin, bool usingTransferred, unsigned int kvSizeMax){
-    // [1] Ô¤·ÖÅä¿Õ¼ä
+    // [1] é¢„åˆ†é…ç©ºé—´
     std::string jsonString;
     jsonString.reserve(512);
-    char *keyBuffer = (char*)malloc(kvSizeMax);     // ÓÃÓÚkey¡¢valueÖĞµÄÌØÊâ×Ö·û×ª»»
-    char *valueBuffer = (char*)malloc(kvSizeMax);   // ÓÃÓÚkey¡¢valueÖĞµÄÌØÊâ×Ö·û×ª»»
+    char *keyBuffer = (char*)malloc(kvSizeMax);     // ç”¨äºkeyã€valueä¸­çš„ç‰¹æ®Šå­—ç¬¦è½¬æ¢
+    char *valueBuffer = (char*)malloc(kvSizeMax);   // ç”¨äºkeyã€valueä¸­çš„ç‰¹æ®Šå­—ç¬¦è½¬æ¢
 
     int lastDeepness    = 0;
     std::vector<int> arrayDeepness;
     for (auto iter = _jmap.cbegin(); iter != _jmap.cend(); iter++){
         XXjvalue jvalue(iter->second);
 
-        // [2] ½ÚµãÖµdeepness¼ì²â
+        // [2] èŠ‚ç‚¹å€¼deepnessæ£€æµ‹
         if (lastDeepness > jvalue.deepness()){
-            // [3.1] ±ÈÉÏÒ»¸öÂ·¾¶Éî¶ÈÉÙ£¬ĞèÒªÌí¼Ó×ã¹»µÄ'}'»òÕß']'
+            // [3.1] æ¯”ä¸Šä¸€ä¸ªè·¯å¾„æ·±åº¦å°‘ï¼Œéœ€è¦æ·»åŠ è¶³å¤Ÿçš„'}'æˆ–è€…']'
             int diff = lastDeepness - jvalue.deepness();
             for(int index = 1; index <= diff; index++){
                 if(!usingThin) addTabSpacer(jsonString, lastDeepness-index);
@@ -200,7 +200,7 @@ std::string XXjson::toString(bool usingThin, bool usingTransferred, unsigned int
         }
         else{}
 
-        // [3] ÖµĞ´Èë
+        // [3] å€¼å†™å…¥
         if(usingTransferred){
             toTransferred(keyBuffer, kvSizeMax, XXstdStringExtend::section(iter->first, "/", -1));
             toTransferred(valueBuffer, kvSizeMax, jvalue.value());
@@ -271,49 +271,49 @@ bool XXjson::fromString(const std::string &jsonString){
     workingPath.data().reserve(128);
     int length = jsonString.length();
 
-    int currentDeepness     = 0;    // µ±Ç°Éî¶È
-    int lastQuotation       = -1;   // ÉÏÒ»¸ö·Ç×ªÒåµÄÒıºÅÆ«ÒÆ
-    int lastDeepness        = -1;   // ÉÏÒ»¸ö·Ç×ªÒåµÄÒıºÅ¶ÔÓ¦µÄÉî¶È
+    int currentDeepness     = 0;    // å½“å‰æ·±åº¦
+    int lastQuotation       = -1;   // ä¸Šä¸€ä¸ªéè½¬ä¹‰çš„å¼•å·åç§»
+    int lastDeepness        = -1;   // ä¸Šä¸€ä¸ªéè½¬ä¹‰çš„å¼•å·å¯¹åº”çš„æ·±åº¦
 
-    int keyBegin    = -1;   // ±ê¼ÇÒ»¸ökeyµÄ¿ªÊ¼Æ«ÒÆ
-    int keyEnd      = -1;   // ±ê¼ÇÒ»¸ökeyµÄ½áÊøÆ«ÒÆ
-    int valBegin    = -1;   // ±ê¼ÇÒ»¸övalµÄ¿ªÊ¼Æ«ÒÆ
-    int valEnd      = -1;   // ±ê¼ÇÒ»¸övalµÄ½áÊøÆ«ÒÆ
+    int keyBegin    = -1;   // æ ‡è®°ä¸€ä¸ªkeyçš„å¼€å§‹åç§»
+    int keyEnd      = -1;   // æ ‡è®°ä¸€ä¸ªkeyçš„ç»“æŸåç§»
+    int valBegin    = -1;   // æ ‡è®°ä¸€ä¸ªvalçš„å¼€å§‹åç§»
+    int valEnd      = -1;   // æ ‡è®°ä¸€ä¸ªvalçš„ç»“æŸåç§»
     bool isIntVal   = false;
 
-    bool isTransferredBegin = false;            // ÊÇ·ñ¿ªÊ¼×ªÒå
+    bool isTransferredBegin = false;            // æ˜¯å¦å¼€å§‹è½¬ä¹‰
     bool isNeedResetIndex   = false;
-    std::map<std::string,int> arrayPathToCount; // Êı×éÂ·¾¶¶ÔÓ¦µÄÊı×éÔªËØ¸öÊı
+    std::map<std::string,int> arrayPathToCount; // æ•°ç»„è·¯å¾„å¯¹åº”çš„æ•°ç»„å…ƒç´ ä¸ªæ•°
 
     const char *data        = jsonString.data();
     const char *offsetData  = jsonString.data();
     unsigned int jsonLength = jsonString.length();
 
     for (int offset = 0; offset < jsonLength; ++offset,++offsetData){
-        // [0] ÖØÖÃ±ê¼Ç
+        // [0] é‡ç½®æ ‡è®°
         if(isNeedResetIndex){
             lastQuotation = keyBegin = keyEnd = valBegin = valEnd = -1;   
             isIntVal = isTransferredBegin = isNeedResetIndex = false;
         }
 
-        // [1] ½ö¶Ô"\""½øĞĞ×ªÒåµÄ¼æÈİ
+        // [1] ä»…å¯¹"\""è¿›è¡Œè½¬ä¹‰çš„å…¼å®¹
         if('\\' == *offsetData){
             ++offset;   ++offsetData;   continue;
         }
         else if('{' == *offsetData){
-            // [2.1] '{'Îªkey¡¢valueÖĞµÄ×Ö·û£¬Ö±½Ó½øĞĞÏÂÒ»´ÎÑ­»·
+            // [2.1] '{'ä¸ºkeyã€valueä¸­çš„å­—ç¬¦ï¼Œç›´æ¥è¿›è¡Œä¸‹ä¸€æ¬¡å¾ªç¯
             if(IS_WAIT_INDEX(keyBegin,keyEnd) || IS_WAIT_INDEX(valBegin,valEnd)){ continue; }
             
-            // [2.2] '{'ÎªµÚÒ»¸ö'{'£¬¼´Îªjson½á¹¹µÄ±ß½ç£¬Ö±½ÓÔö¼ÓÉî¶Èºó½øĞĞÏÂÒ»´ÎÑ­»·
+            // [2.2] '{'ä¸ºç¬¬ä¸€ä¸ª'{'ï¼Œå³ä¸ºjsonç»“æ„çš„è¾¹ç•Œï¼Œç›´æ¥å¢åŠ æ·±åº¦åè¿›è¡Œä¸‹ä¸€æ¬¡å¾ªç¯
             if(currentDeepness==0){ ++currentDeepness; continue; }
 
             if(IS_ON_INDEX(keyBegin,keyEnd)){
-                // [2.3] ÒÑ¾­ÓĞkey£¬¼´¿ÉÈÏÎªÎªPathNodeÀàĞÍ½Úµã
+                // [2.3] å·²ç»æœ‰keyï¼Œå³å¯è®¤ä¸ºä¸ºPathNodeç±»å‹èŠ‚ç‚¹
                 workingPath<< fromTransferred(data+keyBegin, keyEnd-keyBegin);             
                 _jmap[workingPath.data()] = XXjvalue(currentDeepness, XXjvalue::Type::PathNode).toData();
             }
             else{
-                // [2.4] Ã»ÓĞkey£¬ArrayItemÀàĞÍ½Úµã£¬ĞèÒªÍ¨¹ıarrayPathToCount±íÖĞ»ñÈ¡µ±Ç°ÏîÊıÁ¿
+                // [2.4] æ²¡æœ‰keyï¼ŒArrayItemç±»å‹èŠ‚ç‚¹ï¼Œéœ€è¦é€šè¿‡arrayPathToCountè¡¨ä¸­è·å–å½“å‰é¡¹æ•°é‡
                 auto iter = arrayPathToCount.find(workingPath);
                 if(arrayPathToCount.end() == iter){
                     ERROR_LOG   _jmap.clear();  return false;
@@ -328,18 +328,18 @@ bool XXjson::fromString(const std::string &jsonString){
             isNeedResetIndex = true;
         }
         else if('}' == *offsetData){
-            // [3.1] '}'Îªkey¡¢valueÖĞµÄ×Ö·û£¬Ö±½Ó½øĞĞÏÂÒ»´ÎÑ­»· 
+            // [3.1] '}'ä¸ºkeyã€valueä¸­çš„å­—ç¬¦ï¼Œç›´æ¥è¿›è¡Œä¸‹ä¸€æ¬¡å¾ªç¯ 
             if(IS_WAIT_INDEX(keyBegin,keyEnd) || IS_WAIT_INDEX(valBegin,valEnd)){ 
                 continue; 
             }
 
-            // [3.2] '}'Îª×îºó¸ö'}'£¬¼´Îªjson½á¹¹µÄ±ß½ç£¬Ö±½Ó¼õÉÙÉî¶Èºó½øĞĞÏÂÒ»´ÎÑ­»·
+            // [3.2] '}'ä¸ºæœ€åä¸ª'}'ï¼Œå³ä¸ºjsonç»“æ„çš„è¾¹ç•Œï¼Œç›´æ¥å‡å°‘æ·±åº¦åè¿›è¡Œä¸‹ä¸€æ¬¡å¾ªç¯
             if(currentDeepness==1){ --currentDeepness; continue; }
 
-            // [3.3] ÓĞ¿ÉÄÜµ±Ç°Éî¶È×îºóÒ»¶Ô¼üÖµ½áÎ²Ã»ÓĞ','£¬ÔòĞèÒªÔÚ'}'ÅĞ¶ÏÓĞÃ»ÓĞ´æÔÚ¿ÉÄÜµÄkey¡¢value
+            // [3.3] æœ‰å¯èƒ½å½“å‰æ·±åº¦æœ€åä¸€å¯¹é”®å€¼ç»“å°¾æ²¡æœ‰','ï¼Œåˆ™éœ€è¦åœ¨'}'åˆ¤æ–­æœ‰æ²¡æœ‰å­˜åœ¨å¯èƒ½çš„keyã€value
             if(IS_ON_INDEX(keyBegin, keyEnd)) {
                 if(!IS_ON_INDEX(valBegin, valEnd)){
-                    // µ±ÓĞ¿ÉÓÃµÄkeyÊ±£¬value²»¿ÉÓÃÊÇ²»·ûºÏÓï·¨
+                    // å½“æœ‰å¯ç”¨çš„keyæ—¶ï¼Œvalueä¸å¯ç”¨æ˜¯ä¸ç¬¦åˆè¯­æ³•
                     ERROR_LOG   _jmap.clear();  return false;
                 }
 
@@ -352,12 +352,12 @@ bool XXjson::fromString(const std::string &jsonString){
             isNeedResetIndex = true;
         }
         else if('[' == *offsetData){
-            // [4.1] ×Ö·û'['±êÖ¾×ÅÊı×éµÄ¿ªÊ¼£¬ĞèÒª¹¹½¨Ò»¸öarrayInfoµÄ¶ÔÏó£¬Ç°ÌáĞèÒªÓĞÒ»¸öÍêÕûkey£¬µ±Ã»ÓĞkeyÊ±ËµÃ÷³öÏÖÁËÓï·¨´íÎó
+            // [4.1] å­—ç¬¦'['æ ‡å¿—ç€æ•°ç»„çš„å¼€å§‹ï¼Œéœ€è¦æ„å»ºä¸€ä¸ªarrayInfoçš„å¯¹è±¡ï¼Œå‰æéœ€è¦æœ‰ä¸€ä¸ªå®Œæ•´keyï¼Œå½“æ²¡æœ‰keyæ—¶è¯´æ˜å‡ºç°äº†è¯­æ³•é”™è¯¯
             // if(!IS_ON_INDEX(keyBeginIndex, keyEndIndex)){
             //     ERROR_LOG   _jmap.clear();  return false;
             // }
 
-            // [4.2] ÔİÊ±±£´æµ½arrayPathToCountÖĞ£¬´ıÊÕ¼¯ºÃ¶ÔÓ¦µÄÊı×éitemµÄÊıÁ¿£¬²¢³öÏÖ¶ÔÓ¦']'Ê±ÔÙ»ØĞ´arrayInfoÊı¾İ
+            // [4.2] æš‚æ—¶ä¿å­˜åˆ°arrayPathToCountä¸­ï¼Œå¾…æ”¶é›†å¥½å¯¹åº”çš„æ•°ç»„itemçš„æ•°é‡ï¼Œå¹¶å‡ºç°å¯¹åº”']'æ—¶å†å›å†™arrayInfoæ•°æ®
             workingPath << fromTransferred(data+keyBegin, keyEnd-keyBegin);
             arrayPathToCount[workingPath] = 0;
 
@@ -365,19 +365,19 @@ bool XXjson::fromString(const std::string &jsonString){
             isNeedResetIndex = true;
         }
         else if(']' == *offsetData){
-            // [5.1] ×Ö·û']'±êÖ¾×ÅÊı×éµÄ½áÊø£¬ÓĞ¿ÉÄÜµ±Ç°Éî¶È×îºóÒ»¶Ô¼üÖµ½áÎ²Ã»ÓĞ','£¬ÔòĞèÒªÔÚ']'ÅĞ¶ÏÓĞÃ»ÓĞ´æÔÚ¿ÉÄÜµÄkey¡¢value
+            // [5.1] å­—ç¬¦']'æ ‡å¿—ç€æ•°ç»„çš„ç»“æŸï¼Œæœ‰å¯èƒ½å½“å‰æ·±åº¦æœ€åä¸€å¯¹é”®å€¼ç»“å°¾æ²¡æœ‰','ï¼Œåˆ™éœ€è¦åœ¨']'åˆ¤æ–­æœ‰æ²¡æœ‰å­˜åœ¨å¯èƒ½çš„keyã€value
             std::string itemValue = "";
             if(IS_ON_INDEX(valBegin, valEnd)){
                 itemValue = fromTransferred(data+valBegin, valEnd-valBegin);
             }
 
-            // [5.2] ¼ì²éÒ»ÏÂÂ·¾¶ÓĞÃ»ÓĞ¶ÔÓ¦µÄĞÅÏ¢ÊıÁ¿ĞÅÏ¢
+            // [5.2] æ£€æŸ¥ä¸€ä¸‹è·¯å¾„æœ‰æ²¡æœ‰å¯¹åº”çš„ä¿¡æ¯æ•°é‡ä¿¡æ¯
             auto iter = arrayPathToCount.find(workingPath.data());
             if(arrayPathToCount.end() == iter){ 
                 ERROR_LOG   _jmap.clear();  return false; 
             }
 
-            // [5.3] Ğ´ÈëÖµ
+            // [5.3] å†™å…¥å€¼
             if(!itemValue.empty()){
                 std::string item = std::to_string(iter->second);
                 iter->second++;
@@ -389,14 +389,14 @@ bool XXjson::fromString(const std::string &jsonString){
             isNeedResetIndex = true;
         }
         else if(',' == *offsetData){
-            // [6.1] ','Îªkey¡¢valueÖĞµÄ×Ö·û£¬Ö±½Ó½øĞĞÏÂÒ»´ÎÑ­»·
+            // [6.1] ','ä¸ºkeyã€valueä¸­çš„å­—ç¬¦ï¼Œç›´æ¥è¿›è¡Œä¸‹ä¸€æ¬¡å¾ªç¯
             if(IS_OFF_INDEX(keyBegin,keyEnd) || IS_WAIT_INDEX(keyBegin,keyEnd) || IS_WAIT_INDEX(valBegin,valEnd)){ continue; }
 
-            // [6.2] »ñÈ¡¶ÔÓ¦µÄkey¡¢value
+            // [6.2] è·å–å¯¹åº”çš„keyã€value
             std::string key     = IS_ON_INDEX(keyBegin,keyEnd) ? fromTransferred(data+keyBegin, keyEnd-keyBegin) : "";
             std::string value   = IS_ON_INDEX(valBegin,valEnd) ? fromTransferred(data+valBegin, valEnd-valBegin) : "";
 
-            // [6.3] Èç¹ûÖ»ÓĞkey£¬Ôò¿ÉÒÔÈÏÎªÊÇÊı×éÖĞµÄÊı¾İ£¬ĞèÒªÅĞ¶Ï¸ÃÂ·¾¶ÓĞÃ»ÓĞ¶ÔÓ¦µÄÊı×éÔªËØÊıÁ¿Êı¾İ
+            // [6.3] å¦‚æœåªæœ‰keyï¼Œåˆ™å¯ä»¥è®¤ä¸ºæ˜¯æ•°ç»„ä¸­çš„æ•°æ®ï¼Œéœ€è¦åˆ¤æ–­è¯¥è·¯å¾„æœ‰æ²¡æœ‰å¯¹åº”çš„æ•°ç»„å…ƒç´ æ•°é‡æ•°æ®
             if(key.empty()){
                 ERROR_LOG   _jmap.clear();  return false;
             }
@@ -422,10 +422,10 @@ bool XXjson::fromString(const std::string &jsonString){
         }
         else if(*offsetData >= '0' && *offsetData <= '9'){
             /**
-             * ¿ÉÄÜÊÇkeyÖĞµÄ×Ö·û£¬Òà¿ÉÄÜÊÇvalueÖĞ×Ö·û£¬µ«ÊÇÊÇvalueµÄ×Ö·ûÇ°ÌáÊÇ£ºÒÑ¾­ÓĞÒ»¸öÍêÕûµÄkey£»
-             * ËùÒÔµ±key²»ÍêÕûÊ±£¬Ö»ĞèÒª²»¶Ïcontinue¼´¿É£»
-             * µ±keyÍêÕûÊ±£¬»¹ĞèÒªÅĞ¶ÏÊÇvalueStr»¹ÊÇvalueInt£¬
-             * ËùÒÔÈç¹û´ËÊ±Ã»ÓĞvalueStrµÄÆğÊ¼'\"'£¨valueStrStartIndex<0£©£¬¼´ÎªvalueInt
+             * å¯èƒ½æ˜¯keyä¸­çš„å­—ç¬¦ï¼Œäº¦å¯èƒ½æ˜¯valueä¸­å­—ç¬¦ï¼Œä½†æ˜¯æ˜¯valueçš„å­—ç¬¦å‰ææ˜¯ï¼šå·²ç»æœ‰ä¸€ä¸ªå®Œæ•´çš„keyï¼›
+             * æ‰€ä»¥å½“keyä¸å®Œæ•´æ—¶ï¼Œåªéœ€è¦ä¸æ–­continueå³å¯ï¼›
+             * å½“keyå®Œæ•´æ—¶ï¼Œè¿˜éœ€è¦åˆ¤æ–­æ˜¯valueStrè¿˜æ˜¯valueIntï¼Œ
+             * æ‰€ä»¥å¦‚æœæ­¤æ—¶æ²¡æœ‰valueStrçš„èµ·å§‹'\"'ï¼ˆvalueStrStartIndex<0ï¼‰ï¼Œå³ä¸ºvalueInt
             */
             if(!IS_ON_INDEX(keyBegin,keyEnd))    
                 continue;
@@ -496,7 +496,7 @@ std::string XXjson::fromTransferred(const char *data, int length){
 void XXjson::addPair(std::string &str, const std::string &key, const std::string &value){
     if(key.empty() && value.empty())    return;
 
-    // Ìí¼Ó¼üÖµ¶Ô£º"key":"value", »òÕß "key":
+    // æ·»åŠ é”®å€¼å¯¹ï¼š"key":"value", æˆ–è€… "key":
     if(!key.empty()){
         str += '\"' + key + "\":";
     }
@@ -512,7 +512,7 @@ void XXjson::addTabSpacer(std::string &str, uint8_t deepness){
     }
 }
 
-// ¼¦Î²¾ÆÅÅĞò
+// é¸¡å°¾é…’æ’åº
 static void cocktailSort(std::vector<int> &arr){
     if (arr.empty())
         return;

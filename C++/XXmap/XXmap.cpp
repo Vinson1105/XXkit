@@ -129,9 +129,6 @@ unsigned int XXmapRef::arrayItemCount(){
 }
 
 void XXmapRef::createArray(const std::vector<int> &items){
-    if(items.empty())
-        return;
-
     std::vector<std::string> arrayInfo;
     arrayInfo.push_back(VALUE_ARRAY_PREFIX);
     arrayInfo.push_back(std::to_string(items.back()));
