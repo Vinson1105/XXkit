@@ -1,3 +1,8 @@
+/**
+ * XXjson - ä¸€ä¸ªåŸºäºXXmapæ•°æ®ç»“æ„ä¸JSONæ•°æ®ç»“æ„çš„ç›¸äº’è½¬æ¢
+ * 
+*/
+
 #ifndef XXjson_h
 #define XXjson_h
 
@@ -15,15 +20,11 @@ public:
     XXjson(){}
     virtual ~XXjson(){}
 
-    // bool fromFile(const std::string &path);
-    // bool toFile(const std::string &path, Mode mode = J);
-
-    // bool fromString(const std::string &json);
-    // bool toString(std::string &jsonString, bool isThin);
-    // bool toThinString(std::string &jsonString);
-
-    void fromMap(XXmapRef ref);   /** ½«Ö¸¶¨µÄXXmap×ª»»Îª±¾µØµÄ¸ñÊ½Êı¾İ */  
-    void toMap(XXmapRef ref);     /** ½«±¾µØJMap×ªµ½Ö¸¶¨XXmap */
+    /**
+     * @t
+    */
+    void fromMap(XXmapRef ref);   /** å°†æŒ‡å®šçš„XXmapè½¬æ¢ä¸ºæœ¬åœ°çš„æ ¼å¼æ•°æ® */  
+    void toMap(XXmapRef ref);     /** å°†æœ¬åœ°JMapè½¬åˆ°æŒ‡å®šXXmap */
 
     std::string toString(bool usingThin = false, bool usingTransferred = false, unsigned int kvSizeMax = 512);
     bool fromString(const std::string &jsonString);
@@ -31,14 +32,14 @@ public:
     std::map<std::string,std::string>& data() { return _jmap; }
 
 private:
-    void toTransferred(char *buffer, int bufferSize, const std::string &str);   /** ×ªÒå£º½«\ºÍ"×ª»»µ½\\ºÍ\"£¨\ºóÒ»×Ö½ÚÎªx»òÕß[0-9]²»×÷×ª»»£© */
-    std::string fromTransferred(const char *data, int length);                  /** È¥×ªÒå£º½«\\ºÍ\"×ª»»µ½\ºÍ" \ºóÒ»×Ö½ÚÎªx»òÕß[0-9]²»×÷×ª»»£©*/
+    void toTransferred(char *buffer, int bufferSize, const std::string &str);   /** è½¬ä¹‰ï¼šå°†\å’Œ"è½¬æ¢åˆ°\\å’Œ\"ï¼ˆ\åä¸€å­—èŠ‚ä¸ºxæˆ–è€…[0-9]ä¸ä½œè½¬æ¢ï¼‰ */
+    std::string fromTransferred(const char *data, int length);                  /** å»è½¬ä¹‰ï¼šå°†\\å’Œ\"è½¬æ¢åˆ°\å’Œ" \åä¸€å­—èŠ‚ä¸ºxæˆ–è€…[0-9]ä¸ä½œè½¬æ¢ï¼‰*/
     void addPair(std::string &str, const std::string &key, const std::string &value = "");
     void addTabSpacer(std::string &str, uint8_t deepness);
 
 private:
     std::map<std::string,std::string> _jmap;
-    std::string _lastTabSpacer;  //ÔÚ´òÓ¡Ê±,¼ÇÂ¼Ç°Ò»Éî¶È
+    std::string _lastTabSpacer;  //åœ¨æ‰“å°æ—¶,è®°å½•å‰ä¸€æ·±åº¦
 };
 
 #endif //XXjson_h

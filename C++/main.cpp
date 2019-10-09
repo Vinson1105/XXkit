@@ -22,31 +22,31 @@ int main(){
     int size = sizeof(structB);
 
     XXmap map;
-    XXmapRef mapRef(map);
+    XXmapRef map1Ref(map);
     // mapRef(0) = 0;
     // mapRef(1) = 1;
     // mapRef(2) = 2;
     // mapRef(3) = 3;
-    mapRef["AAA"] = "aaa";
+    map1Ref["AAA"] = "aaa";
     for(int i = 0; i < 2; i++){
-        mapRef["Class"]["Student"](i)["Name"]    = std::string("Name") + std::to_string(i);
-        mapRef["Class"]["Student"](i)["ID"]      = i;
+        map1Ref["Class"]["Student"](i)["Name"]    = std::string("Name") + std::to_string(i);
+        map1Ref["Class"]["Student"](i)["ID"]      = i;
 
-        mapRef["Class"]["Student"](i)["ParamDict\"STR\""]["A"] = "ParamA";
-        mapRef["Class"]["Student"](i)["ParamDict\"STR\""]["B"] = "ParamB";
-        mapRef["Class"]["Student"](i)["ParamDict\"STR\""]["C"] = "ParamC";
-        mapRef["Class"]["Student"](i)["ParamArr\"STR\""](0)    = "ParamA";
-        mapRef["Class"]["Student"](i)["ParamArr\"STR\""](1)    = "ParamB";
-        mapRef["Class"]["Student"](i)["ParamArr\"STR\""](2)    = "ParamC";
+        map1Ref["Class"]["Student"](i)["ParamDict\"STR\""]["A"] = "ParamA";
+        map1Ref["Class"]["Student"](i)["ParamDict\"STR\""]["B"] = "ParamB";
+        map1Ref["Class"]["Student"](i)["ParamDict\"STR\""]["C"] = "ParamC";
+        map1Ref["Class"]["Student"](i)["ParamArr\"STR\""](0)    = "ParamA";
+        map1Ref["Class"]["Student"](i)["ParamArr\"STR\""](1)    = "ParamB";
+        map1Ref["Class"]["Student"](i)["ParamArr\"STR\""](2)    = "ParamC";
 
-        mapRef["Class"]["Student"](i)["ParamDict\"INT\""]["A"] = 1;
-        mapRef["Class"]["Student"](i)["ParamDict\"INT\""]["B"] = 2;
-        mapRef["Class"]["Student"](i)["ParamDict\"INT\""]["C"] = 3;
-        mapRef["Class"]["Student"](i)["ParamArr\"INT\""](0)    = 11;
-        mapRef["Class"]["Student"](i)["ParamArr\"INT\""](1)    = 22;
-        mapRef["Class"]["Student"](i)["ParamArr\"INT\""](2)    = 33;
+        map1Ref["Class"]["Student"](i)["ParamDict\"INT\""]["A"] = 1;
+        map1Ref["Class"]["Student"](i)["ParamDict\"INT\""]["B"] = 2;
+        map1Ref["Class"]["Student"](i)["ParamDict\"INT\""]["C"] = 3;
+        map1Ref["Class"]["Student"](i)["ParamArr\"INT\""](0)    = 11;
+        map1Ref["Class"]["Student"](i)["ParamArr\"INT\""](1)    = 22;
+        map1Ref["Class"]["Student"](i)["ParamArr\"INT\""](2)    = 33;
     }
-    mapRef["ZZZ"] = "ZZZ";
+    map1Ref["ZZZ"] = "ZZZ";
 
     XXmap map2;
     XXmapRef map2Ref(map2);
@@ -66,13 +66,13 @@ int main(){
     map3Ref["\"a\""] = "a";
     //map3Ref["b"] = "bbbb";
 
-    XXmapRef target = map3;
+    XXmapRef target = map2Ref;
 
     XXjson json;
     json.fromMap(target);
 
     cout << "XXmap(Source):" << endl;
-    for (auto iter = map.data().begin(); iter != map.data().end(); iter++){
+    for (auto iter = target.xxmap().data().begin(); iter != target.xxmap().data().end(); iter++){
         std::cout << iter->first << " = " << iter->second << std::endl;
     }
     cout << endl;
@@ -83,12 +83,12 @@ int main(){
     }
     cout << endl;
 
-    std::string jsonString = json.toString(false, false);
+    std::string jsonString = json.toString(false, true);
     cout << "JsonString:" << endl;
     cout << jsonString << endl;
     cout << endl;
 
-    jsonString = json.toString(true, false);
+    jsonString = json.toString(true, true);
     cout << "JsonString(Thin):" << endl;
     cout << jsonString << endl;
     cout << endl;
@@ -102,7 +102,7 @@ int main(){
     }
     cout << endl;
 
-    json.fromString(jsonString, false);
+    json.fromString(jsonString);
     cout << "Jmap(FromString):" << endl;
     for (auto iter = json.data().begin(); iter != json.data().end(); iter++){
         std::cout << iter->first << " = " << iter->second << std::endl;

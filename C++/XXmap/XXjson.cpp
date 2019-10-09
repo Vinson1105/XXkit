@@ -328,10 +328,7 @@ bool XXjson::fromString(const std::string &jsonString){
             isNeedResetIndex = true;
         }
         else if('}' == *offsetData){
-            // [3.1] '}'为key、value中的字符，直接进行下一次循环
-            if(IS_OFF_INDEX(keyBegin,keyEnd)) { 
-                ERROR_LOG   _jmap.clear();  return false; 
-            }  
+            // [3.1] '}'为key、value中的字符，直接进行下一次循环 
             if(IS_WAIT_INDEX(keyBegin,keyEnd) || IS_WAIT_INDEX(valBegin,valEnd)){ 
                 continue; 
             }
@@ -430,14 +427,13 @@ bool XXjson::fromString(const std::string &jsonString){
              * 当key完整时，还需要判断是valueStr还是valueInt，
              * 所以如果此时没有valueStr的起始'\"'（valueStrStartIndex<0），即为valueInt
             */
-            if(IS_ON_INDEX keyBegin < 0 || keyEnd < 0)    
+            if(!IS_ON_INDEX(keyBegin,keyEnd))    
                 continue;
             if(valBegin < 0 && valEnd < 0) {
-                valueIntBeginIndex = offset;
-                valueIntEndIndex = offset+1;
+                valBegin = offset;  valEnd = offset+1;  isIntVal = true;
             }  
-            else if(valueIntBeginIndex >= 0){
-                valueIntEndIndex = offset+1;
+            else if(valBegin >= 0 && isIntVal){
+                valEnd = offset+1;
             }    
             else{}
         }
@@ -450,7 +446,7 @@ bool XXjson::fromString(const std::string &jsonString){
     }
 
     for (auto iter = arrayPathToCount.begin(); iter != arrayPathToCount.end(); iter++){
-        _jmap[iter->first] = XXjvalue(XXstdStringExtend::count(iter->first, '/')+1, XXjvalue::Type::ArrayInfo).toData();   
+        _jmap[iter->first] = XXjvalue(XXstdStringExtend::count(iter->first, '/'), XXjvalue::Type::ArrayInfo).toData();   
     }
     return true;
 }
@@ -479,10 +475,7 @@ void XXjson::toTransferred(char *buffer, int bufferSize, const std::string &str)
         *bufferPtr = strPtr[index];
     }
 }
-std::string XXjson::fromTransferred(std::string &str, const char *data, int length){
-    if(length <= 0){
-        return;
-    }
+std::string XXjson::fromTransferred(const char *data, int length){
     std::string str;
     str.reserve(length);
     bool isTransferredBegin = false;
