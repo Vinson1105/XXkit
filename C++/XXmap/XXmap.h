@@ -4,7 +4,7 @@
 #include <list>
 #include <string>
 #include <map>
-#include "../Common/XXstdStringExtend.h"
+#include "../Extend/XXstdStringExtend.h"
 
 #define XXMAP_VALUE_INVALID ""  // 无效值
 

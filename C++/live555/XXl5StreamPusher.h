@@ -5,7 +5,7 @@
 #include <mutex>
 #include <thread>
 
-#include "../../XXutility.h"
+#include "../../XXdefine.h"
 #include "../../C/XXavUtility.h"
 #include "../../C/XXqueue.h"
 

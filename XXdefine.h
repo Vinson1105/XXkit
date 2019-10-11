@@ -1,19 +1,10 @@
-/*
- * @author: GWX
- * @date: 20190412
- * @descirption: XX库通用模块
- * @history:
- *        1.author:
- *          date:
- *          modification:
- */
-
-#ifndef XXutility_h
-#define XXutility_h
+#ifndef XXdefine_h
+#define XXdefine_h
 
 #include <stdint.h>
 #include <stdbool.h>
 
+// 一些buffer的定义
 typedef struct XXdata{
     int8_t *data; uint64_t length;
 }XXdata;
@@ -42,8 +33,8 @@ typedef struct XXbuffer{
     #define XX_LIKELY(expr)         __builtin_expect(!!(expr), 1)
     #define XX_UNLIKELY(expr)       __builtin_expect(!!(expr), 0)
 #else
-    #define XX_UNLIKELY(expr)       (expr)
     #define XX_LIKELY(expr,value)   (expr)
+    #define XX_UNLIKELY(expr)       (expr)
 #endif
 
 #endif
