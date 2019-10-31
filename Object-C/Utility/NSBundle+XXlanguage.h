@@ -11,13 +11,18 @@
 
 @interface NSBundle(XXlanguage)
 /**
- * @brief    返回当前app语言
- * @return   nil:跟随系统
+ * 返回当前可用的语言列表
+ */
++ (nullable NSArray*) avaliableLanguages;
+
+/**
+ * 返回当前app内设置的语言,返回nil则为跟随系统
  */
 + (nullable NSString*) currentLanguage;
 
 /**
- * @brief    设置app语言,注意需要跟'.lproj'文件名称一致
+ * 设置app语言,注意需要跟'.lproj'文件名称一致
+ *
  * @param    language 语言缩写,nil即为跟随系统
  * @param    refreshable YES:自动刷新View,否则不自动刷新,注意自动刷新只是兼容了一部分的情况,如有特殊情况需要手动刷新UI
  */
