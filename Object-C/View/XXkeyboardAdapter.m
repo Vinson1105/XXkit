@@ -8,8 +8,8 @@ static XXkeyboardAdapter *_instance = nil;
 
 @implementation XXkeyboardAdapter
 #pragma mark - 公共接口: <注册> <删除>
-+ (BOOL) registerMainView:(UIView*)mainView View:(UIView*)view Name:(NSString*)name;
-+ (void) remove:(NSString*)name;
+//+ (BOOL) registerMainView:(UIView*)mainView View:(UIView*)view Name:(NSString*)name;
+//+ (void) remove:(NSString*)name;
 
 #pragma mark - 构建析构
 + (XXkeyboardAdapter*) sharedInstance{

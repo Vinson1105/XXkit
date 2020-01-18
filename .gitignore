@@ -3,3 +3,5 @@
 *.out
 *.gch
 *.out
+.DS_Store
+C++/.DS_Store
