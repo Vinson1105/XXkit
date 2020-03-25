@@ -6,112 +6,124 @@
 //  Copyright © 2019 macrovideo. All rights reserved.
 //
 
-#define QUEUE_BUFFER_SIZE 4
-#define MIN_SIZE_PER_FRAME 2048
+#define kBufferCountMax     4
+#define kBufferSizeMax      2048
+#define kBufferAvailabled   0
+#define kBufferBusy         1
 
 #import "XXaudioPlayer.h"
-@interface XXaudioPlayer(){
-    AudioQueueBufferRef _audioQueueBufferRefArray[QUEUE_BUFFER_SIZE];
-    BOOL _audioQueueBufferRefUsedArray[QUEUE_BUFFER_SIZE];
+
+static XXaudioPlayer *_instance = nil;
+static void AudioPlayerAQInputCallback(void* inUserData, AudioQueueRef audioQueueRef, AudioQueueBufferRef audioQueueBufferRef) {
+    // 回调回来把buffer状态设为未使用
+    *(int8_t*)(audioQueueBufferRef->mUserData) = kBufferAvailabled;
 }
-@property (nonatomic,assign) AudioQueueRef audioQueueRef;
-@property (nonatomic,assign) AudioStreamBasicDescription audioStreamBasicDesctiption;
-@property (nonatomic,strong) NSCondition *queueCondition;
-@property (nonatomic,assign) BOOL isInterruptRequested;
-@property (nonatomic,assign) BOOL isRunning;
+
+@interface XXaudioPlayer(){
+    AudioQueueBufferRef _audioQueueBufferRefs[kBufferCountMax];
+}
+@property (nonatomic,assign) AudioQueueRef audioQueueRef;               // 音频队列引用
+@property (nonatomic,assign) AudioStreamBasicDescription audioStreamBasicDesctiption;   // 音频格式
+@property (nonatomic,strong) NSCondition *queueCondition;               // 队列同步锁
 @property (nonatomic,strong) NSOperationQueue *dataQueue;
 
-//    AudioQueueRef audioQueue;                                 //音频播放队列
-//    AudioStreamBasicDescription _audioDescription;
-//    AudioQueueBufferRef audioQueueBuffers[QUEUE_BUFFER_SIZE]; //音频缓存
-//    BOOL audioQueueBufferUsed[QUEUE_BUFFER_SIZE];             //判断音频缓存是否在使用
-//    NSLock *sysnLock;
-//    NSMutableData *tempData;
-//    OSStatus osState;
+@property (nonatomic,assign) BOOL isInterruptRequested;
+@property (nonatomic,strong) XXaudioFormat *format;
+@property (nonatomic,assign) CGFloat volume; // 0.0 - 1.0
 @end
 
 @implementation XXaudioPlayer
-- (void) toDescrption:(AudioStreamBasicDescription*)descrption
-           SampleRate:(int)sampleRate
-           FormatFlag:(AudioFormatFlags)formatFlag
-      ChannelPerFrame:(int)channelPerFrame
-      FramesPerPacket:(int)framesPerPacket
-       BitsPerChannel:(int)bitsPerChannel
-       BytesPerPacket:(int)bytesPerPacket{
-    
++(XXaudioPlayer*) sharedInstance{
+    if (nil == _instance) {
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            _instance = [XXaudioPlayer new];
+        });
+    }
+    return _instance;
 }
-- (instancetype)init
-{
+- (instancetype)init{
     self = [super init];
     if (self) {
-        _queueCondition         = [[NSCondition alloc] init];
-        _dataQueue = [[NSOperationQueue alloc] init];
+        _queueCondition = [[NSCondition alloc] init];
+        _dataQueue      = [[NSOperationQueue alloc] init];
         _dataQueue.maxConcurrentOperationCount = 1;
         
-        _isInterruptRequested = NO;
-        _isRunning = NO;
+        _isInterruptRequested   = NO;
+        _isRunning              = NO;
+        _mute                   = NO;
+        _volume                 = 1.0;
         
-        // 播放PCM使用
-        if (_audioStreamBasicDesctiption.mSampleRate <= 0) {
-            //设置音频参数
-            _audioStreamBasicDesctiption.mSampleRate = 8000.0;//采样率
-            _audioStreamBasicDesctiption.mFormatID = kAudioFormatLinearPCM;
-            // 下面这个是保存音频数据的方式的说明，如可以根据大端字节序或小端字节序，浮点数或整数以及不同体位去保存数据
-            _audioStreamBasicDesctiption.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
-            //1单声道 2双声道
-            _audioStreamBasicDesctiption.mChannelsPerFrame = 1;
-            //每一个packet一侦数据,每个数据包下的桢数，即每个数据包里面有多少桢
-            _audioStreamBasicDesctiption.mFramesPerPacket = 1;
-            //每个采样点16bit量化 语音每采样点占用位数
-            _audioStreamBasicDesctiption.mBitsPerChannel = 16;
-            _audioStreamBasicDesctiption.mBytesPerFrame = (_audioStreamBasicDesctiption.mBitsPerChannel / 8) * _audioStreamBasicDesctiption.mChannelsPerFrame;
-            //每个数据包的bytes总数，每桢的bytes数*每个数据包的桢数
-            _audioStreamBasicDesctiption.mBytesPerPacket = _audioStreamBasicDesctiption.mBytesPerFrame * _audioStreamBasicDesctiption.mFramesPerPacket;
-        }
+        _format = [XXaudioFormat new];
+        _format.sampleRate = 8000;
+        _format.channels = 1;
+        _format.sampleBitSize = 16;
+        _format.formatID = kAudioFormatLinearPCM;
+        _format.formatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
         
-        // 使用player的内部线程播放 新建输出
-        AudioQueueNewOutput(&_audioStreamBasicDesctiption, AudioPlayerAQInputCallback, (__bridge void * _Nullable)(self), nil, 0, 0, &_audioQueueRef);
-        
-        // 设置音量
-        AudioQueueSetParameter(_audioQueueRef, kAudioQueueParam_Volume, 1.0);
-        
-        // 初始化需要的缓冲区
-        for (int i = 0; i < QUEUE_BUFFER_SIZE; i++) {
-            _audioQueueBufferRefUsedArray[i] = NO;
-            AudioQueueAllocateBuffer(_audioQueueRef, MIN_SIZE_PER_FRAME, &(_audioQueueBufferRefArray[i]));
-        }
+        [self initFormat];
     }
     return self;
 }
-
-
-
-// 回调回来把buffer状态设为未使用
-static void AudioPlayerAQInputCallback(void* inUserData,AudioQueueRef audioQueueRef, AudioQueueBufferRef audioQueueBufferRef) {
+-(void)initFormat{
+    //设置音频参数
+    _audioStreamBasicDesctiption.mSampleRate = _format.sampleRate;
+    _audioStreamBasicDesctiption.mFormatID = kAudioFormatLinearPCM;
+    // 音频格式
+    _audioStreamBasicDesctiption.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+    // 每一帧数据的通道数量，即音频的通道数，1单声道 2双声道
+    _audioStreamBasicDesctiption.mChannelsPerFrame = _format.channels;
+    //每一个packet一侦数据,每个数据包下的桢数，即每个数据包里面有多少桢
+    _audioStreamBasicDesctiption.mFramesPerPacket = 1;
+    //每个采样点16bit量化 语音每采样点占用位数
+    _audioStreamBasicDesctiption.mBitsPerChannel = _format.sampleBitSize;
+    _audioStreamBasicDesctiption.mBytesPerFrame = (_audioStreamBasicDesctiption.mBitsPerChannel / 8) * _audioStreamBasicDesctiption.mChannelsPerFrame;
+    //每个数据包的bytes总数，每桢的bytes数*每个数据包的桢数
+    _audioStreamBasicDesctiption.mBytesPerPacket = _audioStreamBasicDesctiption.mBytesPerFrame * _audioStreamBasicDesctiption.mFramesPerPacket;
     
-    XXaudioPlayer* player = (__bridge XXaudioPlayer*)inUserData;
-    [player resetBufferState:audioQueueRef and:audioQueueBufferRef];
-}
-
-- (void)resetBufferState:(AudioQueueRef)audioQueueRef and:(AudioQueueBufferRef)audioQueueBufferRef {
-    for (int i = 0; i < QUEUE_BUFFER_SIZE; i++) {
-        if (audioQueueBufferRef == _audioQueueBufferRefArray[i]) {
-            _audioQueueBufferRefUsedArray[i] = NO;
-        }
+    // 使用player的内部线程播放 新建输出
+    AudioQueueNewOutput(&_audioStreamBasicDesctiption, AudioPlayerAQInputCallback, (__bridge void * _Nullable)(self), nil, 0, 0, &_audioQueueRef);
+    
+    // 设置音量
+    AudioQueueSetParameter(_audioQueueRef, kAudioQueueParam_Volume, _volume);
+    
+    // 初始化需要的缓冲区
+    for (int index = 0; index < kBufferCountMax; index++) {
+        AudioQueueAllocateBuffer(_audioQueueRef, kBufferSizeMax, &(_audioQueueBufferRefs[index]));
+        _audioQueueBufferRefs[index]->mUserData = malloc(1);
+        *(int8_t*)(_audioQueueBufferRefs[index]->mUserData) = kBufferAvailabled;
     }
 }
-
-// ************************** 内存回收 **********************************
-
-- (void)dealloc {
+- (void)uninit{
     if (_audioQueueRef != nil) {
         AudioQueueStop(_audioQueueRef, true);
+        AudioQueueDispose(_audioQueueRef, YES);
     }
     _audioQueueRef = nil;
     
-    for (int i = 0; i < QUEUE_BUFFER_SIZE; i++) {
-        AudioQueueFreeBuffer(_audioQueueRef, _audioQueueBufferRefArray[i]);
+    for (int index = 0; index < kBufferCountMax; index++) {
+        free(_audioQueueBufferRefs[index]->mUserData);
+        AudioQueueFreeBuffer(_audioQueueRef, _audioQueueBufferRefs[index]);
     }
+}
+- (void)dealloc {
+    [self uninit];
+}
+
+- (void)setMute:(BOOL)mute{
+    if(_mute == mute) return;
+    _mute = mute;
+    AudioQueueSetParameter(_audioQueueRef, kAudioQueueParam_Volume, _mute?0:_volume);
+}
+
+- (void)config:(XXaudioFormat *)format{
+    if(_isRunning){
+        NSLog(@"[XXaudioPlayer] can not config when playing.");
+        return;
+    }
+    _format = [format copy];
+    [self uninit];
+    [self initFormat];
 }
 - (void) start{
     if (_isRunning) {
@@ -131,40 +143,57 @@ static void AudioPlayerAQInputCallback(void* inUserData,AudioQueueRef audioQueue
     AudioQueueStop(_audioQueueRef, YES);
     AudioQueueReset(_audioQueueRef);
 }
-- (void) reset{
+- (void)resetData{
     [_dataQueue cancelAllOperations];
     AudioQueueReset(_audioQueueRef);
-    [_dataQueue addOperationWithBlock:^{
-        for (int i = 0; i < QUEUE_BUFFER_SIZE; i++) {
-            self->_audioQueueBufferRefUsedArray[i] = NO;
-        }
-    }];
+    for (int index = 0; index < kBufferCountMax; index++) {
+        int8_t *userData = _audioQueueBufferRefs[index]->mUserData;
+        *userData = kBufferAvailabled;
+    }
 }
-- (void) data:(NSData*)data{
-    [_dataQueue addOperationWithBlock:^{
-        int i = 0;
-        while (self.isRunning && !self.isInterruptRequested) {
-            if (!self->_audioQueueBufferRefUsedArray[i]) {
-                self->_audioQueueBufferRefUsedArray[i] = YES;
-                break;
-            }
-            else {
-                i++;
-                if (i >= QUEUE_BUFFER_SIZE) {
-                    i = 0;
-                }
-            }
-            [NSThread sleepForTimeInterval:0.005];
+- (BOOL)pushData:(NSData*)data{
+    if(nil == data){
+        NSLog(@"[XXaudioPlayer] it is unavailable that data is nil.");
+        return NO;
+    }
+    if(!_isRunning || _isInterruptRequested) {
+        NSLog(@"[XXaudioPlayer] can not push data when player was stopped.");
+        return NO;
+    }
+    if(data.length > kBufferSizeMax){
+        NSLog(@"[XXaudioPlayer] can not push data when data size(%d) > buffer size(%d).", (int)data.length, kBufferSizeMax);
+        return NO;
+    }
+    
+    AudioQueueBufferRef targetBufferRef = NULL;
+    for (int index = 0; index < kBufferCountMax; index++) {
+        int8_t *userData = _audioQueueBufferRefs[index]->mUserData;
+        if(0 == *userData){
+            *userData = kBufferBusy;
+            targetBufferRef = _audioQueueBufferRefs[index];
+            break;
         }
-        if (!self.isRunning || self.isInterruptRequested) {
-            [self.queueCondition unlock];
+    }
+    if(NULL == targetBufferRef){
+        NSLog(@"[XXaudioPlayer] not avaliable buffer");
+        return NO;
+    }
+    
+    __weak typeof(self) weakSelf = self;
+    [_dataQueue addOperationWithBlock:^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf.isRunning || strongSelf.isInterruptRequested) {
+            if(NULL != targetBufferRef){
+                int8_t *userData = targetBufferRef->mUserData;
+                *userData = kBufferAvailabled;
+            }
             return;
         }
         
-        AudioQueueBufferRef audioQueueBufferRef = self->_audioQueueBufferRefArray[i];
-        audioQueueBufferRef->mAudioDataByteSize = (unsigned int)data.length;
-        memcpy(audioQueueBufferRef->mAudioData, data.bytes, data.length);
-        AudioQueueEnqueueBuffer(self.audioQueueRef, audioQueueBufferRef, 0, NULL);
+        targetBufferRef->mAudioDataByteSize = (unsigned int)data.length;
+        memcpy(targetBufferRef->mAudioData, data.bytes, data.length);
+        AudioQueueEnqueueBuffer(strongSelf.audioQueueRef, targetBufferRef, 0, NULL);
     }];
+    return YES;
 }
 @end
