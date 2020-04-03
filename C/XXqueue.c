@@ -1,11 +1,3 @@
-//
-//  XXqueue.c
-//  XXapp
-//
-//  Created by VINSON on 2019/5/27.
-//  Copyright © 2019 VINSON. All rights reserved.
-//
-
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -63,6 +55,7 @@ int xxqueue_enqueue(XXqueueHandle handle, void *data, int length){
             xxqueue_removeOne(handle, 0);
         }
         else if (2 == context->maxHandle){
+            // FIXME: 2是删除最有一个
             return XXQUEUE_IS_FULL;
         }
         else{
