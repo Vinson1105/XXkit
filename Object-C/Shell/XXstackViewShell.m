@@ -1,25 +1,10 @@
-//
-//  StackViewShell.m
-//  iCamSee
-//
-//  Created by VINSON on 2019/11/19.
-//  Copyright © 2019 Macrovideo. All rights reserved.
-//
+#import "XXstackViewShell.h"
 
-#import "StackViewShell.h"
-
-NSString * const kSigButtonClicked = @"sigButtonClicked";
-
-
-@interface StackViewShell()
+@interface XXstackViewShell()
 @property (nonatomic,strong) NSMutableDictionary<NSString*,UIView*> *nameToView;
 @end
 
-@implementation StackViewShell
-+(NSString*)sigButtonClicked{
-    return kSigButtonClicked;
-}
-
+@implementation XXstackViewShell
 - (instancetype)init{
     self = [super init];
     if (self) {
@@ -33,15 +18,15 @@ NSString * const kSigButtonClicked = @"sigButtonClicked";
     _target = target;
     [_nameToView removeAllObjects];
 }
--(void)add:(NSString*)name view:(UIView*)view{
-    if(nil == self.target) return;
+-(void)addView:(UIView*)view forName:(NSString*)name{
+    if(nil == _target) return;
     if(nil != _nameToView[name]) return;
     
     [_target addArrangedSubview:view];
     _nameToView[name] = view;
 }
--(void)add:(NSString*)name size:(CGSize)size view:(UIView*)view{
-    if(nil == self.target) return;
+-(void)addView:(UIView*)view size:(CGSize)size forName:(NSString*)name{
+    if(nil == _target) return;
     if(nil != _nameToView[name]) return;
     
     view.translatesAutoresizingMaskIntoConstraints = NO;
@@ -50,14 +35,16 @@ NSString * const kSigButtonClicked = @"sigButtonClicked";
     [_target addArrangedSubview:view];
     _nameToView[name] = view;
 }
--(void)remove:(NSString*)name{
-    if(nil == self.target) return;
+-(void)removeViewForName:(NSString*)name{
+    if(nil == _target) return;
     if(nil == _nameToView[name]) return;
     
     [_target removeArrangedSubview:_nameToView[name]];
     [_nameToView removeObjectForKey:name];
 }
--(void)removeAll{
+-(void)removeViewAll{
+    if(nil == _target) return;
+    
     NSArray *views = _nameToView.allValues;
     for (UIView *view in views) {
         [_target removeArrangedSubview:view];
@@ -65,15 +52,15 @@ NSString * const kSigButtonClicked = @"sigButtonClicked";
     }
     [_nameToView removeAllObjects];
 }
--(void)insert:(NSString*)name view:(UIView*)view atIndex:(int)index{
-    if(nil == self.target) return;
+-(void)insertView:(UIView*)view forName:(NSString*)name atIndex:(int)index{
+    if(nil == _target) return;
     if(nil != _nameToView[name]) return;
     
     [_target insertArrangedSubview:view atIndex:index];
     _nameToView[name] = view;
 }
-- (void)insert:(NSString *)name size:(CGSize)size view:(UIView *)view atIndex:(int)index{
-    if(nil == self.target) return;
+-(void)insertView:(UIView*)view size:(CGSize)size forName:(NSString*)name atIndex:(int)index{
+    if(nil == _target) return;
     if(nil != _nameToView[name]) return;
     
     view.translatesAutoresizingMaskIntoConstraints = NO;
@@ -83,11 +70,19 @@ NSString * const kSigButtonClicked = @"sigButtonClicked";
     _nameToView[name] = view;
 }
 
--(void)hide:(BOOL)hide Name:(NSString*)name{
+-(void)hidden:(BOOL)hidden forName:(NSString*)name{
+    if(nil == _target) return;
     if(nil == _nameToView[name]) return;
+    
     _nameToView[name].hidden = hide;
 }
--(nullable UIView*)view:(NSString *)name{
+-(void)enableUserInterface:(BOOL)enable forName:(NSString*)name{
+    if(nil == _target) return;
+    if(nil == _nameToView[name]) return;
+    
+    [_nameToView[name] setUserInteractionEnabled:enable];
+}
+-(nullable UIView*)viewForName:(NSString*)name{
     return _nameToView[name];
 }
 @end
