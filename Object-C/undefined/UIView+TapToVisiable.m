@@ -82,7 +82,6 @@
     
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        GWXLog(@"[TapToVisiable] show:%d", show);
         __strong typeof(weakSelf) strongSelf = self;
         NSEnumerator *enumer = strongSelf.views.objectEnumerator;
         UIView *view = nil;
@@ -94,7 +93,6 @@
     });
     if(show){
         if(!self.timer.isRunning){
-            GWXLog(@"[TapToVisiable] timer start");
             [self.timer start];
         }
     }

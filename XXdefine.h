@@ -28,7 +28,7 @@ typedef struct XXbuffer{
   #define XX_CLANG_BUILTIN(x) 0
 #endif
 
-// 条件分支优化宏，XX_LIKELY：很大可能为真；XX_LIKELY：很大可能为假；
+// 条件分支优化宏，XX_LIKELY：很大可能为真；XX_UNLIKELY：很大可能为假；
 #if XX_GCC_VERSION(3,1) || XX_CLANG_BUILTIN(__builtin_expect)
     #define XX_LIKELY(expr)         __builtin_expect(!!(expr), 1)
     #define XX_UNLIKELY(expr)       __builtin_expect(!!(expr), 0)

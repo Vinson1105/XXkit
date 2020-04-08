@@ -74,7 +74,7 @@
     if(nil == _target) return;
     if(nil == _nameToView[name]) return;
     
-    _nameToView[name].hidden = hide;
+    _nameToView[name].hidden = hidden;
 }
 -(void)enableUserInterface:(BOOL)enable forName:(NSString*)name{
     if(nil == _target) return;

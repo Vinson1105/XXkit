@@ -1,5 +1,5 @@
 #import "XXh26xDecoder.h"
-#include "XXnaluSpliter.h"
+#import "../../C/XXnaluSpliter.h"
 
 //#define USING_DECODETIME_MARKET
 #define DEFAULT_FRAME_BUFFER_SIZE   512*1024
