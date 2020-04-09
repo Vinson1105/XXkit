@@ -3,24 +3,38 @@
  * UITableView的封装（第三版），集成以下功能
  * 1、内部管理cell（header、row、footer）
  * 2、动态增删section
+ * 注意：在使用自定义cell时，需要实现[cell reset:(id)data]
  */
 
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef enum : NSUInteger {
+    XXtableViewShellRowLoadTypeNib,
+    XXtableViewShellRowLoadTypeCode,
+} XXtableViewShellRowLoadType;
+
 @interface XXtableViewShell : NSObject<UITableViewDelegate,UITableViewDataSource>
 @property (nonatomic,weak,readonly) UITableView *target;
 @property (nonatomic,copy,nullable) NSString *rowType;      // 元素类型，为nil
-@property (nonatomic,copy,nullable) NSString *headerType;   // 页头类型
-@property (nonatomic,copy,nullable) NSString *footerType;   // 页脚类型
-@property (nonatomic,assign) int rowHeight;                 // 设置行高，默认是自适应
+@property (nonatomic,assign) XXtableViewShellRowLoadType rowLoadType;
+@property (nonatomic,assign) UITableViewCellStyle rowSystemStyle;
+//@property (nonatomic,assign) int rowHeight;                 // 设置行高，默认是自适应
 
 /**
  * @brief 设置shell的目标TableView
  * @param target 目标的TableView
  */
 - (void)shell:(UITableView*)target;
+
+/**
+ * @brief 配置TableView的row（cell）参数
+ * @param rowType TableView的row（cell）的类型，自定义则传入自定义的类名；系统则传入nil
+ * @param rowLoadType TableView的row（cell）的自定义方式，有【xib、code】两种类型，使用系统类型该参数传入无效
+ * @param rowSystemStyle 使用系统的row（cell）时，可以指定系统样式，使用自定义类型该参数传入无效
+ */
+- (void)configRowType:(nullable NSString*)rowType rowLoadType:(XXtableViewShellRowLoadType)rowLoadType rowSystemStyle:(UITableViewCellStyle)rowSystemStyle;
 
 /**
  * @brief 配置TableView的所有section的数据，调用后会触发TableView的刷新
