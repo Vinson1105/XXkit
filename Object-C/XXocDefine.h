@@ -26,7 +26,7 @@
 #define XXOC_IS_STRING(obj)     XXOC_IS_KINDOF(obj,NSString)
 #define XXOC_IS_DICTIONARY(obj) XXOC_IS_KINDOF(obj,NSDictionary)
 
-#define XXOC_ADD_NAVIGATION_CONTROLLER  UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:_window.rootViewController]; \
+#define XXOC_ADD_NAVIGATION_CONTROLLER UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:_window.rootViewController]; \
                                         _window.rootViewController = nav;
 
 
