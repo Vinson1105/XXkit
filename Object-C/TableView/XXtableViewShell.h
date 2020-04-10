@@ -16,11 +16,13 @@ typedef enum : NSUInteger {
 } XXtableViewShellRowLoadType;
 
 @interface XXtableViewShell : NSObject<UITableViewDelegate,UITableViewDataSource>
-@property (nonatomic,weak,readonly) UITableView *target;
-@property (nonatomic,copy,nullable) NSString *rowType;      // 元素类型，为nil
-@property (nonatomic,assign) XXtableViewShellRowLoadType rowLoadType;
-@property (nonatomic,assign) UITableViewCellStyle rowSystemStyle;
-//@property (nonatomic,assign) int rowHeight;                 // 设置行高，默认是自适应
+@property (nonatomic,weak,readonly) UITableView *target;                // 目标UITableView
+@property (nonatomic,strong,readonly) NSMutableArray *sectionDatas;     // TableView数据
+@property (nonatomic,copy,nullable) NSString *rowType;                  // row（cell）的类型，nil为使用系统组件
+@property (nonatomic,assign) XXtableViewShellRowLoadType rowLoadType;   // 自定义row（cell）的加载方式
+@property (nonatomic,assign) UITableViewCellStyle rowSystemStyle;       // 系统row（cell）的样式
+
+@property (nonatomic,copy,nullable) void(^onRowClicked)(NSIndexPath *indexPath, id data);   // row点击回调
 
 /**
  * @brief 设置shell的目标TableView
@@ -30,11 +32,12 @@ typedef enum : NSUInteger {
 
 /**
  * @brief 配置TableView的row（cell）参数
- * @param rowType TableView的row（cell）的类型，自定义则传入自定义的类名；系统则传入nil
- * @param rowLoadType TableView的row（cell）的自定义方式，有【xib、code】两种类型，使用系统类型该参数传入无效
- * @param rowSystemStyle 使用系统的row（cell）时，可以指定系统样式，使用自定义类型该参数传入无效
+ * @param type TableView的row（cell）的类型，自定义则传入自定义的类名；系统则传入nil
+ * @param loadType TableView的row（cell）的自定义方式，有【xib、code】两种类型，使用系统类型该参数传入无效
+ * @param systemStyle 使用系统的row（cell）时，可以指定系统样式，使用自定义类型该参数传入无效
+ * @param height row（cell）的高度，0：自适应，否则指定该高度
  */
-- (void)configRowType:(nullable NSString*)rowType rowLoadType:(XXtableViewShellRowLoadType)rowLoadType rowSystemStyle:(UITableViewCellStyle)rowSystemStyle;
+- (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellRowLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height;
 
 /**
  * @brief 配置TableView的所有section的数据，调用后会触发TableView的刷新

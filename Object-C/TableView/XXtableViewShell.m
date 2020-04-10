@@ -14,7 +14,6 @@
 #define kAccessoryType @"AccessoryType"
 
 @interface XXtableViewShell()
-@property (nonatomic,strong) NSMutableArray *sectionDatas;
 @end
 
 @implementation XXtableViewShell
@@ -37,21 +36,28 @@
     _target.dataSource = self;
     _target.estimatedRowHeight = 30;//_rowHeight;
 }
-- (void)configRowType:(nullable NSString*)rowType rowLoadType:(XXtableViewShellRowLoadType)rowLoadType rowSystemStyle:(UITableViewCellStyle)rowSystemStyle{
-    _rowType = rowType;
-    _rowLoadType = rowLoadType;
-    _rowSystemStyle = rowSystemStyle;
+- (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellRowLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height{
+    _rowType = type;
+    _rowLoadType = loadType;
+    _rowSystemStyle = systemStyle;
     
-    if(nil != rowType){
-        if(XXtableViewShellRowLoadTypeNib == rowLoadType){
+    if(nil != type){
+        if(XXtableViewShellRowLoadTypeNib == loadType){
             [_target registerNib:[UINib nibWithNibName:_rowType bundle:nil] forCellReuseIdentifier:_rowType];
         }
-        else if(XXtableViewShellRowLoadTypeCode == rowLoadType){
+        else if(XXtableViewShellRowLoadTypeCode == loadType){
             [_target registerClass:NSClassFromString(_rowType) forCellReuseIdentifier:_rowType];
         }
         else{
             
         }
+    }
+    
+    if(height <= 0){
+        _target.estimatedRowHeight = 30;
+    }
+    else{
+        _target.rowHeight = height;
     }
 }
 - (void)configSectionWithHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers{
@@ -200,7 +206,11 @@
 
 #pragma mark - <UITableViewDelegate>
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    
+    if(_onRowClicked){
+        NSMutableArray *rowsData    = [[_sectionDatas objectAtIndex:indexPath.section] objectForKey:kRow];
+        id rowData                  = [rowsData objectAtIndex:indexPath.row];
+        _onRowClicked(indexPath, rowData);
+    }
 }
 @end
 
