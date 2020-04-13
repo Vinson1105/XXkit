@@ -44,6 +44,17 @@
         return isLocked;
     }
 }
+- (void)createNavigationWithRootViewController:(UIViewController*)root{
+    self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:root];
+    self.window.rootViewController = nav;
+    [self.window makeKeyAndVisible];
+}
+
+#pragma mark - APP加载完成
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary<UIApplicationLaunchOptionsKey,id> *)launchOptions{
+    return YES;
+}
 
 #pragma mark - APP状态
 - (void)applicationWillResignActive:(UIApplication *)application{
