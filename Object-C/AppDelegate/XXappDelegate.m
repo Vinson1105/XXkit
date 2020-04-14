@@ -50,6 +50,9 @@
     self.window.rootViewController = nav;
     [self.window makeKeyAndVisible];
 }
+- (void)createNavigationWithRootViewController:(NSString*)root type:(NSString*)type bundle:(nullable NSBundle*)bundle{
+    if(type isEqualToString:@"")
+}
 
 #pragma mark - APP加载完成
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary<UIApplicationLaunchOptionsKey,id> *)launchOptions{
