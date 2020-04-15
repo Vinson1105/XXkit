@@ -1,14 +1,17 @@
 /**
  * XX库下的Object-C一些常用宏
  *
+ * 2020-04-15
+ * 本文件内容从单纯的宏定义更改为一些常用工具类
+ *
  * 2020-04-11
  * 本文件将会被废弃
  *
  * 创建于2019-01-09
  */
 
-#ifndef __XXocDefine_h
-#define __XXocDefine_h
+#ifndef __XXocUtility_h
+#define __XXocUtility_h
 
 //// 调试信息输出(注意：由于__FILE__并不是输出文件名称而是路径，调试信息输出可能过长，需要再添加部分处理以输出文件名称)（废弃）
 //#ifdef XX_DEBUG
@@ -48,3 +51,9 @@
 //#define XXSTYLE_BACKGROUND_COLOR    @"_BackgroundColor_"
 //#define XXSTYLE_BACKGROUND_IMAGE    @"_BackgroundImage_"
 #endif
+
+@import <UIKit/UIKit.h>
+
+@interface XXocUtility
++ (UIViewController*)viewController:(NSString*)vc WithUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle;
+@end
