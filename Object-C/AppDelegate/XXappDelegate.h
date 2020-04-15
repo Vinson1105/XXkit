@@ -1,6 +1,6 @@
 /**
  * 2020-04-14
- * 1、新增内部创建根视图接口
+ * 1、新增创建根视图接口
  *
  * 2020-04-11
  * 1、新增创建导航栏接口
@@ -39,10 +39,23 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * @brief 创建一个导航栏，并以指定的类名创建根视图
  * @param root 导航栏的根视图类名
- * @param type 视图的加载方式，有Storyboard和Nib两种
+ * @param type 视图的加载方式，有UIStoryboard和Xib两种
  * @param bundle 文件对应的包
  */
 - (void)createNavigationWithRootViewController:(NSString*)root type:(NSString*)type bundle:(nullable NSBundle*)bundle;
+
+/**
+ * @brief 创建一个导航栏，并指定使用UIStoryboard的初始化初始化入口作为根视图
+ * @param storyboard 使用的UIStoryboard的文件名
+ * @param bundle 文件对应的包
+ */
+- (void)createNavigationWithUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle;
+
+/**
+ * @brief 创建一个导航栏，并指定使用nib文件作为根视图
+ * @param bundle 文件对应的包
+ */
+- (void)createNavigationWithNibClass:(NSString*)nib bundle:(nullable NSBundle*)bundle;
 @end
 
 NS_ASSUME_NONNULL_END

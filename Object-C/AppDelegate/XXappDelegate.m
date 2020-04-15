@@ -13,6 +13,9 @@
 #define kSigApplicationDidBecomeActive      @"sigApplicationDidBecomeActive"
 #define kSigApplicationWillEnterForeground  @"sigApplicationWillEnterForeground"
 
+#define kUIStoryboard   @"UIStoryboard"
+#define kXib            @"Xib"
+
 @interface XXappDelegate()
 @property (nonatomic,assign) BOOL rotationLock;
 @end
@@ -50,8 +53,13 @@
     self.window.rootViewController = nav;
     [self.window makeKeyAndVisible];
 }
-- (void)createNavigationWithRootViewController:(NSString*)root type:(NSString*)type bundle:(nullable NSBundle*)bundle{
-    if(type isEqualToString:@"")
+- (void)createNavigationWithUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle{
+    UIViewController *rootVC = [[UIStoryboard storyboardWithName:storyboard bundle:bundle] instantiateInitialViewController];
+    [self createNavigationWithRootViewController:rootVC];
+}
+- (void)createNavigationWithNibClass:(NSString*)nib bundle:(nullable NSBundle*)bundle{
+    UIViewController *rootVC = [[NSClassFromString(nib) alloc] initWithNibName:nib bundle:bundle];
+    [self createNavigationWithRootViewController:rootVC];
 }
 
 #pragma mark - APP加载完成
