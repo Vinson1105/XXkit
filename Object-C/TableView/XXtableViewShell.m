@@ -23,6 +23,7 @@
     if (self) {
         _sectionDatas = [NSMutableArray new];
         _rowSystemStyle = UITableViewCellStyleDefault;
+        _rowType = nil;
         //_rowHeight = -1;
     }
     return self;
@@ -131,7 +132,7 @@
     
     /// 获取重用cell
     if (isSystem) {
-        cell = [tableView dequeueReusableCellWithIdentifier:_rowType];
+        cell = [tableView dequeueReusableCellWithIdentifier:kReuseRowDefault];
     }
     else{
         cell = [tableView dequeueReusableCellWithIdentifier:_rowType forIndexPath:indexPath];
@@ -160,11 +161,10 @@
     
     /// 设置数据
     if(isSystem){
-        NSString *type = NSStringFromClass([rowData class]);
-        if([type isEqualToString:@"NSString"]){
-            cell.textLabel.text = type;
+        if([rowData isKindOfClass:[NSString class]]){
+            cell.textLabel.text = rowData;
         }
-        else if([type isEqualToString:@"NSDictionary"]){
+        else if([rowData isKindOfClass:[NSDictionary class]]){
             NSDictionary *dict = rowData;
             if(nil != [dict objectForKey:kTitle]){
                 cell.textLabel.text = dict[kTitle];
@@ -180,7 +180,7 @@
             }
         }
         else{
-            NSLog(@"[XXtableViewShell] Unknown type(%@) of row data(%@).", type, rowData);
+            NSLog(@"[XXtableViewShell] Unknown type(%@) of row data(%@).", NSStringFromClass([rowData class]), rowData);
         }
     }
     else{
