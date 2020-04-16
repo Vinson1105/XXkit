@@ -9,7 +9,7 @@
 #import "XXocUtility.h"
 
 @implementation XXocUtility
-+ (UIViewController*)viewController:(NSString*)vc WithUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle{
++ (UIViewController*)viewController:(NSString*)vc withUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle{
     return [[UIStoryboard storyboardWithName:storyboard bundle:bundle] instantiateViewControllerWithIdentifier:vc];
 }
 

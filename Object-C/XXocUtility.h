@@ -20,8 +20,8 @@
 //#define XXNSLog(...) {}
 //#endif
 
-#define XXOC_WS     __weak typeof(self) ws = self
-#define XXOC_SS     __strong typeof(ws) ss = ws;
+#define XXOC_WS             __weak typeof(self) ws = self;
+#define XXOC_SS             __strong typeof(ws) ss = ws;
 #define XXOC_SCREEN_WIDTH   ([[UIScreen mainScreen] bounds].size.width)     // 屏幕宽度
 #define XXOC_SCREEN_HEIGHT  ([[UIScreen mainScreen] bounds].size.height)    // 屏幕高度
 
@@ -52,8 +52,12 @@
 //#define XXSTYLE_BACKGROUND_IMAGE    @"_BackgroundImage_"
 #endif
 
-@import <UIKit/UIKit.h>
+#import <UIKit/UIKit.h>
 
-@interface XXocUtility
-+ (UIViewController*)viewController:(NSString*)vc WithUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle;
+NS_ASSUME_NONNULL_BEGIN
+
+@interface XXocUtility : NSObject
++ (UIViewController*)viewController:(NSString*)vc withUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle;
 @end
+
+NS_ASSUME_NONNULL_END
