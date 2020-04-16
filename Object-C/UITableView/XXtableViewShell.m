@@ -21,9 +21,9 @@
 - (instancetype)init{
     self = [super init];
     if (self) {
-        _sectionDatas = [NSMutableArray new];
+        _sectionDatas   = [NSMutableArray new];
         _rowSystemStyle = UITableViewCellStyleDefault;
-        _rowType = nil;
+        _rowType        = nil;
         //_rowHeight = -1;
     }
     return self;
@@ -184,9 +184,43 @@
         }
     }
     else{
-        [cell performSelector:@selector(reset:) withObject:rowData];
+        if([cell respondsToSelector:@selector(reset:)]){
+            [cell performSelector:@selector(reset:) withObject:rowData];
+        }
     }
     return cell;
+}
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
+    NSDictionary *sectionData = _sectionDatas[section];
+    id headerData = [sectionData objectForKey:kHeader];
+    if(nil == headerData){
+        return nil;
+    }
+    else if([headerData isKindOfClass:[NSString class]]){
+        return headerData;
+    }
+    else if([headerData isKindOfClass:[NSDictionary class]]){
+        return [headerData objectForKey:kTitle];
+    }
+    else{
+        return nil;
+    }
+}
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section{
+    NSDictionary *sectionData = _sectionDatas[section];
+    id headerData = [sectionData objectForKey:kFooter];
+    if(nil == headerData){
+        return nil;
+    }
+    else if([headerData isKindOfClass:[NSString class]]){
+        return headerData;
+    }
+    else if([headerData isKindOfClass:[NSDictionary class]]){
+        return [headerData objectForKey:kTitle];
+    }
+    else{
+        return nil;
+    }
 }
 
 - (NSInteger)tableView:(nonnull UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
