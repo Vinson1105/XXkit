@@ -1,9 +1,17 @@
 /**
+ * 2020-04-20
+ * 1、新增<XXtableViewCellDelegate>，主要是规范自定义cell的接口
+ * 2、对于[cell reset:data]中的data，如果是需要在cell中对数据进行修改，则这个data需要是Mutable，这可能跟原生的设计有点出入（原生在数据修改是由Table这层控制的，但是XXtable可能是偏向的cell中管理自己的数据）
+ *
  * 2020-04-08
  * UITableView的封装（第三版），集成以下功能
  * 1、内部管理cell（header、row、footer）
  * 2、动态增删section
- * 注意：在使用自定义cell时，需要实现[cell reset:(id)data]
+ *
+ * 注意：
+ *  在使用自定义cell时，需要实现遵循协议<XXtableViewCellDelegate>
+ *  nib自定义时，[awakeFromNib]中初始化
+ *  code自定义时，[initWithStyle: reuseIdentifier:]中初始化
  */
 
 #import <UIKit/UIKit.h>
@@ -93,4 +101,11 @@ typedef enum : NSUInteger {
 - (void)resetRow:(nullable NSArray*)row atSection:(int)section;
 @end
 
+
+@protocol XXtableViewCellDelegate
+@required
+@property (nonatomic,weak) XXtableViewShell *tableViewShell;
+@property (nonatomic,strong) NSIndexPath *indexPath;
+- (void)reset:(id)data;
+@end
 NS_ASSUME_NONNULL_END

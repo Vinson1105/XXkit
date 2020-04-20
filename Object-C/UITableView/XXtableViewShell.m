@@ -127,15 +127,18 @@
 
 #pragma mark - <UITableViewDataSource>
 - (nonnull UITableViewCell *)tableView:(nonnull UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
-    UITableViewCell *cell   = nil;
-    BOOL isSystem           = nil == _rowType;
+    UITableViewCell *cell       = nil;
+    BOOL isSystem               = nil == _rowType;
     
     /// 获取重用cell
     if (isSystem) {
         cell = [tableView dequeueReusableCellWithIdentifier:kReuseRowDefault];
     }
     else{
-        cell = [tableView dequeueReusableCellWithIdentifier:_rowType forIndexPath:indexPath];
+        id<XXtableViewCellDelegate> xxcell  = [tableView dequeueReusableCellWithIdentifier:_rowType forIndexPath:indexPath];
+        xxcell.tableViewShell       = self;
+        xxcell.indexPath            = indexPath;
+        cell                        = (UITableViewCell*)xxcell;
     }
     
     /// 无可重用的cell
@@ -144,7 +147,10 @@
             cell = [[UITableViewCell alloc] initWithStyle:_rowSystemStyle reuseIdentifier:kReuseRowDefault];
         }
         else{
-            cell = [[NSClassFromString(_rowType) alloc] initWithReuseIdentifier:_rowType];
+            id<XXtableViewCellDelegate> xxcell  = [[NSClassFromString(_rowType) alloc] initWithReuseIdentifier:_rowType];
+            xxcell.tableViewShell       = self;
+            xxcell.indexPath            = indexPath;
+            cell                        = (UITableViewCell*)xxcell;
         }
     }
     if(nil == cell){
@@ -184,9 +190,8 @@
         }
     }
     else{
-        if([cell respondsToSelector:@selector(reset:)]){
-            [cell performSelector:@selector(reset:) withObject:rowData];
-        }
+        id<XXtableViewCellDelegate> xxcell = (id<XXtableViewCellDelegate>)cell;
+        [xxcell reset:rowData];
     }
     return cell;
 }
