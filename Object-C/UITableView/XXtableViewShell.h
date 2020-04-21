@@ -1,17 +1,26 @@
 /**
  * 2020-04-20
- * 1、新增<XXtableViewCellDelegate>，主要是规范自定义cell的接口
- * 2、对于[cell reset:data]中的data，如果是需要在cell中对数据进行修改，则这个data需要是Mutable，这可能跟原生的设计有点出入（原生在数据修改是由Table这层控制的，但是XXtable可能是偏向的cell中管理自己的数据）
+ * 1、新增[XXtableViewShell resetData:(id)data atIndexPath:(NSIndexPath*)indexPath]，用于重置对应row
+ * 2、新增<XXtableViewCellDelegate>，主要是规范自定义cell的接口
+ * 3、对于[cell resetData:data]中的data，如果是需要在cell中对数据进行修改，则这个data需要是Mutable，这可能跟原生的设计有点出入
+ *      （原生在数据修改是由Table这层控制的，但是XXtable可能是偏向的cell中管理自己的数据）
  *
  * 2020-04-08
  * UITableView的封装（第三版），集成以下功能
  * 1、内部管理cell（header、row、footer）
  * 2、动态增删section
  *
- * 注意：
- *  在使用自定义cell时，需要实现遵循协议<XXtableViewCellDelegate>
+ *
+ *
+ * 在使用自定义cell时，需要实现遵循协议<XXtableViewCellDelegate>
  *  nib自定义时，[awakeFromNib]中初始化
  *  code自定义时，[initWithStyle: reuseIdentifier:]中初始化
+ *
+ * 在使用系统cell是，可以使用以下的'标识'来设置对应的值
+ *  @"Title"：           UITableViewCell.textLabel.text
+ *  @"Detail"：          UITableViewCell.detailTextLabel.text
+ *  @"Image"：           UITableViewCell.imageView.image
+ *  @"AccessoryType"：   UITableViewCell.accessoryType
  */
 
 #import <UIKit/UIKit.h>
@@ -30,7 +39,7 @@ typedef enum : NSUInteger {
 @property (nonatomic,assign) XXtableViewShellRowLoadType rowLoadType;   // 自定义row（cell）的加载方式
 @property (nonatomic,assign) UITableViewCellStyle rowSystemStyle;       // 系统row（cell）的样式
 
-@property (nonatomic,copy,nullable) void(^onRowClicked)(NSIndexPath *indexPath, id data);   // row点击回调
+@property (nonatomic,copy,nullable) void(^onRowClicked)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);   // row点击回调
 
 /**
  * @brief 设置shell的目标TableView
@@ -94,11 +103,18 @@ typedef enum : NSUInteger {
 - (void)removeSectionAtIndex:(int)index;
 
 /**
- * @brief 重置指定section的row数据
- * @param row 重置后的数据，为nil时，指示该section的row数量为0
+ * @brief 重置指定section的中所有row数据
+ * @param row 重置后的数据，为nil时，该section的row数量为0
  * @param section 目标section的位置
  */
 - (void)resetRow:(nullable NSArray*)row atSection:(int)section;
+
+/**
+ * @brief 重置指定indexPath的row数据
+ * @param data 单个row（cell）的数据
+ * @param indexPath 需要重置row（cell）的位置
+ */
+- (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath;
 @end
 
 
@@ -106,6 +122,6 @@ typedef enum : NSUInteger {
 @required
 @property (nonatomic,weak) XXtableViewShell *tableViewShell;
 @property (nonatomic,strong) NSIndexPath *indexPath;
-- (void)reset:(id)data;
+- (void)resetData:(id)data;
 @end
 NS_ASSUME_NONNULL_END

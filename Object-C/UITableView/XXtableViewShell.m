@@ -13,11 +13,9 @@
 #define kImage @"Image"
 #define kAccessoryType @"AccessoryType"
 
-@interface XXtableViewShell()
-@end
 
 @implementation XXtableViewShell
-#pragma mark - <初始化>
+#pragma mark - <Init>
 - (instancetype)init{
     self = [super init];
     if (self) {
@@ -124,6 +122,23 @@
     }
     [_target reloadData];
 }
+- (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath{
+    NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
+    if(nil == rows){
+        return;
+    }
+    [rows replaceObjectAtIndex:indexPath.row withObject:data];
+    [_target reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+}
+
+#pragma mark - <Private>
+- (nullable NSMutableArray*)getRowWithSection:(int)section{
+    return [[_sectionDatas objectAtIndex:section] objectForKey:kRow];
+}
+- (id)getRowDataWithSection:(int)section row:(int)row{
+    NSMutableArray *rows = [self getRowWithSection:section];
+    return [rows objectAtIndex:row];
+}
 
 #pragma mark - <UITableViewDataSource>
 - (nonnull UITableViewCell *)tableView:(nonnull UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
@@ -191,7 +206,7 @@
     }
     else{
         id<XXtableViewCellDelegate> xxcell = (id<XXtableViewCellDelegate>)cell;
-        [xxcell reset:rowData];
+        [xxcell resetData:rowData];
     }
     return cell;
 }
@@ -248,7 +263,7 @@
     if(_onRowClicked){
         NSMutableArray *rowsData    = [[_sectionDatas objectAtIndex:indexPath.section] objectForKey:kRow];
         id rowData                  = [rowsData objectAtIndex:indexPath.row];
-        _onRowClicked(indexPath, rowData);
+        _onRowClicked(self, indexPath, rowData);
     }
 }
 @end
