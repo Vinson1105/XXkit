@@ -1,7 +1,6 @@
 #import "XXstackViewShell.h"
 
 @interface XXstackViewShell()
-@property (nonatomic,strong) NSMutableDictionary<NSString*,UIView*> *nameToView;
 @end
 
 @implementation XXstackViewShell
