@@ -32,8 +32,8 @@
     _rightBgView.translatesAutoresizingMaskIntoConstraints = NO;
     
     _rightStackView = [[UIStackView alloc] init];
-    _rightStackView.alignment = UIStackViewAlignmentFill;
-    _rightStackView.distribution = UIStackViewDistributionFillEqually;
+    _rightStackView.alignment = UIStackViewAlignmentCenter;
+    _rightStackView.distribution = UIStackViewDistributionEqualCentering;
     _rightStackView.spacing = 5;
     _rightStackView.translatesAutoresizingMaskIntoConstraints = NO;
     [_rightBgView addSubview:_rightStackView];
@@ -41,6 +41,7 @@
     [_rightStackView.leadingAnchor constraintEqualToAnchor:_rightBgView.leadingAnchor constant:5].active = YES;
     [_rightStackView.bottomAnchor constraintEqualToAnchor:_rightBgView.bottomAnchor].active = YES;
     [_rightStackView.trailingAnchor constraintEqualToAnchor:_rightBgView.trailingAnchor constant:-5].active = YES;
+    [_rightStackView.widthAnchor constraintEqualToConstant:20].active = YES;
     
     _clearButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [_rightStackView addArrangedSubview:_clearButton];
