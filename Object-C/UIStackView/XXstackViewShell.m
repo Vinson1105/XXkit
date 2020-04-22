@@ -38,8 +38,10 @@
     if(nil == _target) return;
     if(nil == _nameToView[name]) return;
     
-    [_target removeArrangedSubview:_nameToView[name]];
+    UIView *view = _nameToView[name];
+    [_target removeArrangedSubview:view];
     [_nameToView removeObjectForKey:name];
+    [view removeFromSuperview];
 }
 -(void)removeViewAll{
     if(nil == _target) return;
@@ -47,6 +49,7 @@
     NSArray *views = _nameToView.allValues;
     for (UIView *view in views) {
         [_target removeArrangedSubview:view];
+        [view removeFromSuperview];
         [view removeFromSuperview];
     }
     [_nameToView removeAllObjects];

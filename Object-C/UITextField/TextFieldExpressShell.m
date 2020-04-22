@@ -50,4 +50,8 @@
 - (BOOL)textFieldShouldClear:(UITextField *)textField{
     return YES;
 }
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string{
+    NSLog(@"[###] location:%lu length:%d string:%@",(int)range.location,(int)range.length,string);
+    return YES;
+}
 @end
