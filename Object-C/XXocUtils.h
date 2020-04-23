@@ -10,8 +10,8 @@
  * 创建于2019-01-09
  */
 
-#ifndef __XXocUtility_h
-#define __XXocUtility_h
+#ifndef __XXocUtils_h
+#define __XXocUtils_h
 
 //// 调试信息输出(注意：由于__FILE__并不是输出文件名称而是路径，调试信息输出可能过长，需要再添加部分处理以输出文件名称)（废弃）
 //#ifdef XX_DEBUG
@@ -56,8 +56,21 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface XXocUtility : NSObject
+@interface XXocUtils : NSObject
 + (UIViewController*)viewController:(NSString*)vc withUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle;
+
+/// NSLayoutConstraint
++ (void)view:(UIView*)view size:(CGSize)size;
++ (void)view:(UIView*)view margin:(CGFloat)margin fillAt:(UIView*)fillAt;
++ (void)view:(UIView*)view centerAt:(UIView*)centerAt;
++ (void)view:(UIView*)view left:(CGFloat)left centerYAt:(UIView*)centerYAt;
++ (void)view:(UIView*)view right:(CGFloat)right centerYAt:(UIView*)centerYAt;
+
+/// UIButton
++ (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg;
++ (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg disNorImg:(UIImage*)disNorImg disSelImg:(UIImage*)disSelImg;
++ (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt;
++ (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt disNorTxt:(NSString*)disNorTxt disSelTxt:(NSString*)disSelTxt;
 @end
 
 NS_ASSUME_NONNULL_END
