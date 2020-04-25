@@ -18,6 +18,7 @@
         [strongTarget removeTarget:self action:@selector(onTextFieldEditingChanged:) forControlEvents:UIControlEventEditingChanged];
     }
     _target = target;
+    target.clearButtonMode = UITextFieldViewModeWhileEditing;
     strongTarget = _target;
     if(strongTarget){
         strongTarget.delegate = self;
@@ -50,6 +51,7 @@
     
     _target.rightView = bgView;
     _target.rightViewMode = UITextFieldViewModeAlways;
+    _target.clearButtonMode = UITextFieldViewModeNever;
     _clearButton = button;
 }
 - (void)configClear:(UIImage*)clear
@@ -115,6 +117,7 @@
     _target.rightView = bgView;
     _target.rightViewMode = UITextFieldViewModeAlways;
     _target.secureTextEntry = YES;
+    _target.clearButtonMode = UITextFieldViewModeNever;
     _clearButton = clearButton;
     _secureButton = secureButton;
 }
