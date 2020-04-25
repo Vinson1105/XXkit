@@ -71,6 +71,19 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg disNorImg:(UIImage*)disNorImg disSelImg:(UIImage*)disSelImg;
 + (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt;
 + (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt disNorTxt:(NSString*)disNorTxt disSelTxt:(NSString*)disSelTxt;
+
+/// UIColor
++ (UIColor*)colorFromHexString:(NSString*)hexString;
++ (UIColor*)colorFromHexString:(NSString*)hexString alpha:(CGFloat)alpha;
+
+/// UIAlertController
++ (UIAlertController*)alertWithTitle:(NSString*)title msg:(NSString*)msg okTitle:(NSString*)okTitle onOK:(void (^)(UIAlertAction *action))onOK;
++ (UIAlertController*)alertWithTitle:(NSString*)title
+                                 msg:(NSString*)msg
+                             okTitle:(NSString*)okTitle
+                                onOK:(void (^)(UIAlertAction *action))onOK
+                         cancelTitel:(NSString*)cancelTitel
+                            onCancel:(void (^)(UIAlertAction *action))onCancel;
 @end
 
 NS_ASSUME_NONNULL_END

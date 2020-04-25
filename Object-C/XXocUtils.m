@@ -58,4 +58,59 @@
     [button setTitle:disNorTxt forState:UIControlStateNormal|UIControlStateDisabled];
     [button setTitle:disSelTxt forState:UIControlStateSelected|UIControlStateDisabled];
 }
+
+#pragma mark - <UIColor>
++ (unsigned int)intFromHexString:(NSString *)hexStr{
+    unsigned int hexInt = 0;
+    // Create scanner
+    NSScanner *scanner = [NSScanner scannerWithString:hexStr];
+    // Tell scanner to skip the # character
+    [scanner setCharactersToBeSkipped:[NSCharacterSet characterSetWithCharactersInString:@"#"]];
+    // Scan hex value
+    [scanner scanHexInt:&hexInt];
+    return hexInt;
+}
++ (UIColor*)colorFromHexString:(NSString*)hexString{
+    unsigned int hexint = [XXocUtils intFromHexString:hexString];
+    UIColor *color =[UIColor colorWithRed:((CGFloat) ((hexint & 0xFF0000) >> 16))/255
+                                    green:((CGFloat) ((hexint & 0xFF00) >> 8))/255
+                                     blue:((CGFloat) (hexint & 0xFF))/255
+                                    alpha:1];
+    return color;
+}
++ (UIColor*)colorFromHexString:(NSString*)hexString alpha:(CGFloat)alpha{
+    unsigned int hexint = [XXocUtils intFromHexString:hexString];
+    UIColor *color =[UIColor colorWithRed:((CGFloat) ((hexint & 0xFF0000) >> 16))/255
+                                    green:((CGFloat) ((hexint & 0xFF00) >> 8))/255
+                                     blue:((CGFloat) (hexint & 0xFF))/255
+                                    alpha:alpha];
+    return color;
+}
+
+#pragma mark - <UIAlertController>
++ (UIAlertController*)alertWithTitle:(NSString*)title msg:(NSString*)msg okTitle:(NSString*)okTitle onOK:(void (^)(UIAlertAction *action))onOK{
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:title
+                                   message:msg
+                                   preferredStyle:UIAlertControllerStyleAlert];
+     
+    UIAlertAction* okAction = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleDefault handler:onOK];
+    [alert addAction:okAction];
+    return alert;
+}
++ (UIAlertController*)alertWithTitle:(NSString*)title
+                                 msg:(NSString*)msg
+                             okTitle:(NSString*)okTitle
+                                onOK:(void (^)(UIAlertAction *action))onOK
+                         cancelTitle:(NSString*)cancelTitle
+                            onCancel:(void (^)(UIAlertAction *action))onCancel{
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:title
+                                                                   message:msg
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction* okAction     = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleDefault handler:onOK];
+    UIAlertAction* cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleDefault handler:onCancel];
+    [alert addAction:okAction];
+    [alert addAction:cancelAction];
+    return alert;
+}
 @end
