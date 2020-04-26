@@ -106,11 +106,10 @@
     UIAlertController* alert = [UIAlertController alertControllerWithTitle:title
                                                                    message:msg
                                                             preferredStyle:UIAlertControllerStyleAlert];
-    
+    UIAlertAction* cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleDestructive handler:onCancel];
     UIAlertAction* okAction     = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleDefault handler:onOK];
-    UIAlertAction* cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleDefault handler:onCancel];
-    [alert addAction:okAction];
     [alert addAction:cancelAction];
+    [alert addAction:okAction];
     return alert;
 }
 @end

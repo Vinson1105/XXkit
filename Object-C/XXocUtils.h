@@ -1,6 +1,10 @@
 /**
  * XX库下的Object-C一些常用宏
  *
+ * 2020-04-26
+ * 1、增加Hex转UIColor接口
+ * 2、增加UIAlertController简单生成接口
+ *
  * 2020-04-15
  * 本文件内容从单纯的宏定义更改为一些常用工具类
  *
@@ -77,12 +81,16 @@ NS_ASSUME_NONNULL_BEGIN
 + (UIColor*)colorFromHexString:(NSString*)hexString alpha:(CGFloat)alpha;
 
 /// UIAlertController
-+ (UIAlertController*)alertWithTitle:(NSString*)title msg:(NSString*)msg okTitle:(NSString*)okTitle onOK:(void (^)(UIAlertAction *action))onOK;
++ (UIAlertController*)alertWithTitle:(NSString*)title
+                                 msg:(NSString*)msg
+                             okTitle:(NSString*)okTitle
+                                onOK:(void (^)(UIAlertAction *action))onOK;
+
 + (UIAlertController*)alertWithTitle:(NSString*)title
                                  msg:(NSString*)msg
                              okTitle:(NSString*)okTitle
                                 onOK:(void (^)(UIAlertAction *action))onOK
-                         cancelTitel:(NSString*)cancelTitel
+                         cancelTitle:(NSString*)cancelTitle
                             onCancel:(void (^)(UIAlertAction *action))onCancel;
 @end
 
