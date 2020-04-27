@@ -1,17 +1,15 @@
 /**
- * XX库下的Object-C一些常用宏
+ *
+ * 2020-04-27
+ * 1、增加JSON和NSString转换接口
+ * 2、增加Date和NSString转换接口
+ * 3、增加基本文档路径获取
  *
  * 2020-04-26
  * 1、增加Hex转UIColor接口
  * 2、增加UIAlertController简单生成接口
  *
- * 2020-04-15
- * 本文件内容从单纯的宏定义更改为一些常用工具类
- *
- * 2020-04-11
- * 本文件将会被废弃
- *
- * 创建于2019-01-09
+ * 2019-01-09 - 基本工具类
  */
 
 #ifndef __XXocUtils_h
@@ -92,6 +90,21 @@ NS_ASSUME_NONNULL_BEGIN
                                 onOK:(void (^)(UIAlertAction *action))onOK
                          cancelTitle:(NSString*)cancelTitle
                             onCancel:(void (^)(UIAlertAction *action))onCancel;
+
+/// JSON
++ (nullable NSString*)jsonStringWithJson:(id)json pretty:(BOOL)pretty;
++ (nullable id)jsonWithJsonString:(NSString*)jsonString;
+
+/// Date
++ (void)setDefaultDateFormatter:(NSDateFormatter*)formatter;
++ (NSString*)currentDateString;
++ (NSString*)currentDateStringWithDateFormat:(NSString*)format timeZone:(NSTimeZone*)timeZone;
++ (NSString*)dateStringWithTimestamp:(NSTimeInterval)timestamp;
++ (NSString*)dateStringWithTimestamp:(NSTimeInterval)timestamp dateFormat:(NSString*)format timeZone:(NSTimeZone*)timeZone;
+
+/// File System
++ (NSString*)documentAbsolutePath;
++ (NSString*)fileAbsolutePathInDocument:(NSArray*)nodes;
 @end
 
 NS_ASSUME_NONNULL_END
