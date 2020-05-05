@@ -1,10 +1,7 @@
-//
-//  UIViewController+ApplicationState.h
-//  iCamSee
-//
-//  Created by VINSON on 2020/1/13.
-//  Copyright © 2020 Macrovideo. All rights reserved.
-//
+/**
+ 2020-03-25
+ 1、内置App的状态通知，配合XXappDelegate使用
+ */
 
 #import <UIKit/UIKit.h>
 
@@ -19,6 +16,10 @@ typedef enum : NSUInteger {
 
 @interface UIViewController(ApplicationState)
 @property (nonatomic,copy) void(^onApplicationStateChanged)(ApplicationState state);
+/**
+ 装载通知处理
+ @param install YES：装载，NO：移除，装载之后需要在dealloc处需要调用[self installApplicationState:NO]
+ */
 -(void)installApplicationState:(BOOL)install;   // 对象释放之前需要[self installApplicationState:NO]
 @end
 
