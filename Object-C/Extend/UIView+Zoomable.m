@@ -1,6 +1,19 @@
 #import "UIView+Zoomable.h"
 #import <objc/runtime.h>
 
+#define kZoomable   @"zoomable"
+#define kScaleMax   @"scaleMax"
+#define kScaleMin   @"scaleMin"
+
+#define kTotalScale     @"totalScale"
+#define kNormalX        @"normalX"
+#define kNormalY        @"normalY"
+#define kNormalWidth    @"normalWidth"
+#define kNormalHeight   @"normalHeight"
+
+#define kPinchGesture   @"pinchGesture"
+#define kPanGesture     @"panGesture"
+
 @interface UIView()
 @property (nonatomic,assign) CGFloat totalScale;    // 当前缩放比例
 @property (nonatomic,assign) CGFloat normalX;       // 未进行缩放移动状态下的origin.x
@@ -13,7 +26,7 @@
 @end
 
 @implementation UIView (Zoomable)
-#pragma mark - 构建析构
+#pragma mark - Init
 + (instancetype)allocWithZone:(struct _NSZone *)zone{
     UIView *instance = [super allocWithZone:zone];
     if(instance){
@@ -25,89 +38,93 @@
     return instance;
 }
 
-#pragma mark - 公共接口: <恢复原来的缩放和位置>
+#pragma mark - Public
 - (void)zoomRestore{
     // 由于第一次触发手势才记录x/y/w/h信息,所以还原时需要判断一下原始信息的可用性,避免没有进行触发手势时直接还原导致的异常
     if(self.normalHeight == 0 && self.normalWidth == 0){
         return;
     }
-    self.totalScale = 1.0;
-    self.transform = CGAffineTransformMakeScale(1, 1);
-    self.frame = CGRectMake(self.normalX, self.normalY, self.normalWidth, self.normalHeight);
+    
+    self.transform  = CGAffineTransformMakeScale(1, 1);
+    self.frame      = CGRectMake(self.normalX, self.normalY, self.normalWidth, self.normalHeight);
+    
+    self.totalScale     = 1.0;
+    self.normalHeight   = 0;
+    self.normalWidth    = 0;
 }
 
-#pragma mark - 属性读写: <Zoomable> <ScaleMax> <ScaleMin> <TotalScale>
+#pragma mark - Property
 - (void)setZoomable:(BOOL)zoomable{
-    id obj = objc_getAssociatedObject(self, @"XXzoomable");
+    id obj = objc_getAssociatedObject(self, kZoomable);
     if(nil != obj && [obj boolValue] == zoomable){
         return;
     }
-    objc_setAssociatedObject(self, @"XXzoomable", @(zoomable), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kZoomable, @(zoomable), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     zoomable ? [self installRecognizer] : [self uninstallRecognizer];
 }
 - (BOOL)zoomable{
-    return [objc_getAssociatedObject(self, @"XXzoomable") boolValue];
+    return [objc_getAssociatedObject(self, kZoomable) boolValue];
 }
 - (void)setScaleMax:(CGFloat)scaleMax{
-    objc_setAssociatedObject(self, @"XXscaleMax", @(scaleMax), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kScaleMax, @(scaleMax), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 -(CGFloat)scaleMax{
-    return [objc_getAssociatedObject(self, @"XXscaleMax") floatValue];
+    return [objc_getAssociatedObject(self, kScaleMax) floatValue];
 }
 - (void)setScaleMin:(CGFloat)scaleMin{
-    objc_setAssociatedObject(self, @"XXscaleMin", @(scaleMin), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kScaleMin, @(scaleMin), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 -(CGFloat)scaleMin{
-    return [objc_getAssociatedObject(self, @"XXscaleMin") floatValue];
+    return [objc_getAssociatedObject(self, kScaleMin) floatValue];
 }
 - (void)setTotalScale:(CGFloat)totelScale{
-    objc_setAssociatedObject(self, @"XXtotalScale", @(totelScale), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kTotalScale, @(totelScale), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 -(CGFloat)totalScale{
-    return [objc_getAssociatedObject(self, @"XXtotalScale") floatValue];
+    return [objc_getAssociatedObject(self, kTotalScale) floatValue];
 }
 
-#pragma mark - 属性读写: <NormalX> <NormalY> <NormalHeight> <NormalWidth>
+#pragma mark - Property
 - (void)setNormalX:(CGFloat)normalX{
-    objc_setAssociatedObject(self, @"XXnormalX", @(normalX), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kNormalX, @(normalX), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 - (CGFloat)normalX{
-    return [objc_getAssociatedObject(self, @"XXnormalX") floatValue];
+    return [objc_getAssociatedObject(self, kNormalX) floatValue];
 }
 - (void)setNormalY:(CGFloat)normalY{
-    objc_setAssociatedObject(self, @"XXnormalY", @(normalY), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kNormalY, @(normalY), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 - (CGFloat)normalY{
-    return [objc_getAssociatedObject(self, @"XXnormalY") floatValue];
+    return [objc_getAssociatedObject(self, kNormalY) floatValue];
 }
 - (void)setNormalWidth:(CGFloat)normalWidth{
-    objc_setAssociatedObject(self, @"XXnormalWidth", @(normalWidth), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kNormalWidth, @(normalWidth), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 - (CGFloat)normalWidth{
-    return [objc_getAssociatedObject(self, @"XXnormalWidth") floatValue];
+    return [objc_getAssociatedObject(self, kNormalWidth) floatValue];
 }
 - (void)setNormalHeight:(CGFloat)normalHeight{
-    objc_setAssociatedObject(self, @"XXnormalHeight", @(normalHeight), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kNormalHeight, @(normalHeight), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 - (CGFloat)normalHeight{
-    return [objc_getAssociatedObject(self, @"XXnormalHeight") floatValue];
+    return [objc_getAssociatedObject(self, kNormalHeight) floatValue];
 }
 
-#pragma mark - 属性读写: <PanRecognizer> <PinchRecognizer>
+#pragma mark - Property
 - (void)setPanGesture:(UIPanGestureRecognizer *)panGesture{
-    objc_setAssociatedObject(self, @"XXpanGesture", panGesture, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kPanGesture, panGesture, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 - (UIPanGestureRecognizer *)panGesture{
-    return objc_getAssociatedObject(self, @"XXpanGesture");
+    return objc_getAssociatedObject(self, kPanGesture);
 }
 - (void)setPinchGesture:(UIPinchGestureRecognizer *)pinchGesture{
-    objc_setAssociatedObject(self, @"XXpinchGesture", pinchGesture, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, kPinchGesture, pinchGesture, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 - (UIPinchGestureRecognizer *)pinchGesture{
-    return objc_getAssociatedObject(self, @"XXpinchGesture");
+    return objc_getAssociatedObject(self, kPinchGesture);
 }
 
-#pragma mark - 私有函数: <添加手势触发> <移除手势触发> <缩放手势> <移动手势>
+#pragma mark - 手势相关
 - (void) saveRestoreRect{
     if(self.normalWidth == 0 && self.normalHeight == 0){
         CGRect frame        = self.frame;
