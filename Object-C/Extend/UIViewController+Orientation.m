@@ -86,13 +86,21 @@
     }
 }
 - (void)onOrientationWillChange:(NSNotification*)notification {
-    /// FIXME: 会触发两次
+    /// MARK: 会触发两次，但是现在已经加上判断，避免了这个问题，但是后续需要了解为何这样
+    NSDictionary *userInfo          = notification.userInfo;
+    UIInterfaceOrientation will     = [userInfo[@"UIApplicationStatusBarOrientationUserInfoKey"] intValue];
+    
+    BOOL isWillLandscape = will == UIInterfaceOrientationLandscapeLeft || will == UIInterfaceOrientationLandscapeRight;
+    if(self.isLandscape == isWillLandscape){
+        return;
+    }
+
     if(nil != self.onOrientationWillChange){
         self.onOrientationWillChange();
     }
 }
 - (void)onOrientationDidChanged:(NSNotification*)notification {
-    /// FIXME: 会触发两次，现在增加判断避免重复调用
+    /// MARK: 会触发两次，但是现在已经加上判断，避免了这个问题，但是后续需要了解为何这样
     BOOL isLandscape    = self.isLandscape;
     if(self.landscape == isLandscape){
         return;
@@ -109,7 +117,7 @@
             [self.view layoutIfNeeded];
         }];
     }
-    
+
     if(nil != self.onOrientationDidChanged){
         self.onOrientationDidChanged();
     }

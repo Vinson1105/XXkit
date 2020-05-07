@@ -1,12 +1,15 @@
 /**
- 2020-05-06
+ 2020.05.07
+ 1、增加状态判断避免多次触发
+ 
+ 2020.05.06
  1、调整横竖屏状态获取
  2、新增旋转对应的layout接口
  注意：
  1、UIApplicationWillChangeStatusBarOrientationNotification/UIApplicationWillChangeStatusBarOrientationNotification相关在iOS13之后会被废弃，后续需要及时更新
  2、UIApplicationWillChangeStatusBarOrientationNotification存在触发两次的情况，后续需要及时修复
  
- 2019-10-14 UIViewController的横屏竖控制
+ 2019.10.14 UIViewController的横屏竖控制
  */
 
 #import <UIKit/UIKit.h>
