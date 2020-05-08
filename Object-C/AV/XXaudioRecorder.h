@@ -1,10 +1,6 @@
-//
-//  XXaudioRecorder.h
-//  UITestForiOS
-//
-//  Created by VINSON on 2020/3/14.
-//  Copyright © 2020 xxx.UITestForiOS. All rights reserved.
-//
+/**
+ 2020.03.14 - 音频实时采集器
+ */
 
 #import <Foundation/Foundation.h>
 #import "XXaudioFormat.h"
@@ -19,10 +15,26 @@ NS_ASSUME_NONNULL_BEGIN
 @interface XXaudioRecorder : NSObject
 @property (nonatomic,assign,readonly) BOOL isRunning;
 @property (nonatomic,weak) id<XXaudioRecorderEvents> events;
-+(XXaudioRecorder*) sharedInstance;
--(void)config:(XXaudioFormat*)format;
--(void)start;
--(void)stop;
+
+/**
+ 单例
+ */
++ (XXaudioRecorder*)sharedInstance;
+
+/**
+ 配置音频格式，需要在start之前调用
+ */
+- (void)config:(XXaudioFormat*)format;
+
+/**
+ 开启
+ */
+- (void)start;
+
+/**
+ 停止
+ */
+- (void)stop;
 @end
 
 NS_ASSUME_NONNULL_END
