@@ -1,26 +1,24 @@
 /**
- * 2020-04-20
- * 1、新增[XXtableViewShell resetData:(id)data atIndexPath:(NSIndexPath*)indexPath]，用于重置对应row
- * 2、新增<XXtableViewCellDelegate>，主要是规范自定义cell的接口
- * 3、对于[cell resetData:data]中的data，如果是需要在cell中对数据进行修改，则这个data需要是Mutable，这可能跟原生的设计有点出入
- *      （原生在数据修改是由Table这层控制的，但是XXtable可能是偏向的cell中管理自己的数据）
- *
- * 2020-04-08
- * UITableView的封装（第三版），集成以下功能
- * 1、内部管理cell（header、row、footer）
- * 2、动态增删section
- *
- *
- *
- * 在使用自定义cell时，需要实现遵循协议<XXtableViewCellDelegate>
- *  nib自定义时，[awakeFromNib]中初始化
- *  code自定义时，[initWithStyle: reuseIdentifier:]中初始化
- *
- * 在使用系统cell是，可以使用以下的'标识'来设置对应的值
- *  @"Title"：           UITableViewCell.textLabel.text
- *  @"Detail"：          UITableViewCell.detailTextLabel.text
- *  @"Image"：           UITableViewCell.imageView.image
- *  @"AccessoryType"：   UITableViewCell.accessoryType
+ 2020.04.20
+ 1、新增[XXtableViewShell resetData:(id)data atIndexPath:(NSIndexPath*)indexPath]，用于重置对应row
+ 2、新增<XXtableViewCellDelegate>，主要是规范自定义cell的接口
+ 3、对于[cell resetData:data]中的data，如果是需要在cell中对数据进行修改，则这个data需要是Mutable，这可能跟原生的设计有点出入
+    （原生在数据修改是由Table这层控制的，但是XXtable可能是偏向的cell中管理自己的数据）
+ 
+ 2020.04.08
+ UITableView的封装（第三版），集成以下功能
+ 1、内部管理cell（header、row、footer）
+ 2、动态增删section
+ 
+ 在使用自定义cell时，需要实现遵循协议<XXtableViewCellDelegate>
+    nib自定义时，[awakeFromNib]中初始化
+    code自定义时，[initWithStyle: reuseIdentifier:]中初始化
+ 
+ 在使用系统cell是，可以使用以下的'标识'来设置对应的值
+    @"Title"：           UITableViewCell.textLabel.text
+    @"Detail"：          UITableViewCell.detailTextLabel.text
+    @"Image"：           UITableViewCell.imageView.image
+    @"AccessoryType"：   UITableViewCell.accessoryType
  */
 
 #import <UIKit/UIKit.h>
@@ -42,77 +40,74 @@ typedef enum : NSUInteger {
 @property (nonatomic,copy,nullable) void(^onRowClicked)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);   // row点击回调
 
 /**
- * @brief 设置shell的目标TableView
- * @param target 目标的TableView
+ 设置shell的目标TableView
+ @param target 目标的TableView
  */
 - (void)shell:(UITableView*)target;
 
 /**
- * @brief 配置TableView的row（cell）参数
- * @param type TableView的row（cell）的类型，自定义则传入自定义的类名；系统则传入nil
- * @param loadType TableView的row（cell）的自定义方式，有【xib、code】两种类型，使用系统类型该参数传入无效
- * @param systemStyle 使用系统的row（cell）时，可以指定系统样式，使用自定义类型该参数传入无效
- * @param height row（cell）的高度，0：自适应，否则指定该高度
+ 配置TableView的row（cell）参数
+ @param type TableView的row（cell）的类型，自定义则传入自定义的类名；系统则传入nil
+ @param loadType TableView的row（cell）的自定义方式，有【xib、code】两种类型，使用系统类型该参数传入无效
+ @param systemStyle 使用系统的row（cell）时，可以指定系统样式，使用自定义类型该参数传入无效
+ @param height row（cell）的高度，0：自适应，否则指定该高度
  */
 - (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellRowLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height;
 
 /**
- * @brief 配置TableView的所有section的数据，调用后会触发TableView的刷新
- * @param headers 当中元素是每一个section的header的数据
- * @param rows 当中元素是每一个section的row的数据，如果该section的row数量为0
- * @param footers 当中元素是每一个section的footer的数据
- *
- * headers和footers可以为nil，若两者不为nil时，则长度需要与rows数量相同，rows的数量视作为TableView的section数量；
- *
+ 配置TableView的所有section的数据，调用后会触发TableView的刷新，headers和footers可以为nil，若两者不为nil时，则长度需要与rows数量相同，rows的数量视作为TableView的section数量；
+ @param headers 当中元素是每一个section的header的数据
+ @param rows 当中元素是每一个section的row的数据，如果该section的row数量为0
+ @param footers 当中元素是每一个section的footer的数据
  */
 - (void)configSectionWithHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers;
 
 /**
- * @brief 配置单个TableView的section数据，调用后不会触发TableView的刷新，需要配合【XXtableViewShell configFinished】使用
- * @param header section的header数据
- * @param row section的row数据，为nil时，该section的row数量为0
- * @param footer section的footer数据
+ 配置单个TableView的section数据，调用后不会触发TableView的刷新，需要配合【XXtableViewShell configFinished】使用
+ @param header section的header数据
+ @param row section的row数据，为nil时，该section的row数量为0
+ @param footer section的footer数据
  */
 - (void)configSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer;
 
 /**
- * @brief 配置完成，触发刷新
+ 配置完成，触发刷新
  */
 - (void)configFinished;
 
 /**
- * @brief 在最后追加一个section
- * @param header section的header数据
- * @param row section的row数据，为nil时，该section的row数量为0
- * @param footer section的footer数据
+ 在最后追加一个section
+ @param header section的header数据
+ @param row section的row数据，为nil时，该section的row数量为0
+ @param footer section的footer数据
  */
 - (void)addSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer;
 
 /**
- * @brief 在指定位置插入一个section
- * @param header section的header数据
- * @param row section的row数据，为nil时，该section的row数量为0
- * @param footer section的footer数据
+ 在指定位置插入一个section
+ @param header section的header数据
+ @param row section的row数据，为nil时，该section的row数量为0
+ @param footer section的footer数据
  */
 - (void)insertSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(id)footer atIndex:(int)index;
 
 /**
- * @brief 移除指定位置的section
- * @param index 目标section的位置
+ 移除指定位置的section
+ @param index 目标section的位置
  */
 - (void)removeSectionAtIndex:(int)index;
 
 /**
- * @brief 重置指定section的中所有row数据
- * @param row 重置后的数据，为nil时，该section的row数量为0
- * @param section 目标section的位置
+ 重置指定section的中所有row数据
+ @param row 重置后的数据，为nil时，该section的row数量为0
+ @param section 目标section的位置
  */
 - (void)resetRow:(nullable NSArray*)row atSection:(int)section;
 
 /**
- * @brief 重置指定indexPath的row数据
- * @param data 单个row（cell）的数据
- * @param indexPath 需要重置row（cell）的位置
+ 重置指定indexPath的row数据
+ @param data 单个row（cell）的数据
+ @param indexPath 需要重置row（cell）的位置
  */
 - (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath;
 @end

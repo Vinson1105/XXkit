@@ -1,15 +1,14 @@
 /**
- *
- * 2020-04-27
- * 1、增加JSON和NSString转换接口
- * 2、增加Date和NSString转换接口
- * 3、增加基本文档路径获取
- *
- * 2020-04-26
- * 1、增加Hex转UIColor接口
- * 2、增加UIAlertController简单生成接口
- *
- * 2019-01-09 - 基本工具类
+ 2020.04.27
+ 1、增加JSON和NSString转换接口
+ 2、增加Date和NSString转换接口
+ 3、增加基本文档路径获取
+ 
+ 2020.04.26
+ 1、增加Hex转UIColor接口
+ 2、增加UIAlertController简单生成接口
+ 
+ 2019.01.09 - 基本工具类
  */
 
 #ifndef __XXocUtils_h

@@ -1,13 +1,5 @@
-//
-//  UIViewController+SceneState.h
-//  XXkitProject
-//
-//  Created by VINSON on 2020/5/5.
-//  Copyright © 2020 郭文轩. All rights reserved.
-//
-
 /**
- 2020-05-05
+ 2020.05.05
  1、内置Scene的状态通知
  */
 

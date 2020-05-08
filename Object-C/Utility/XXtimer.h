@@ -1,5 +1,5 @@
 /**
- 2020-04-29 基于'GCD Timer'的封装封装
+ 2020.04.29 基于'GCD Timer'的封装封装
  */
 
 #import <Foundation/Foundation.h>
