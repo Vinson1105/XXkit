@@ -15,12 +15,13 @@ NS_ASSUME_NONNULL_BEGIN
 @interface XXaudioFileRecorder : NSObject
 @property (nonatomic,assign,readonly) BOOL isRunning;
 @property (nonatomic,assign,readonly) BOOL isRecording;
+@property (nonatomic,weak) id<XXaudioRecorderEvents> events;
 + (XXaudioFileRecorder*)sharedInstance;
 - (void)config:(XXaudioFormat*)format;
 - (BOOL)start:(NSURL*)url;
 - (void)pause;
-- (void)resume;
-- (NSURL*)stop;
+- (BOOL)resume;
+- (nullable NSURL*)stop;
 @end
 
 NS_ASSUME_NONNULL_END

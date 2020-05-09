@@ -15,8 +15,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) int sampleRate;
 @property (nonatomic,assign) int channels;
 @property (nonatomic,assign) int sampleBitSize;
-@property (nonatomic,assign) AudioFormatID formatID;        // 一般是kAudioFormatLinearPCM
-@property (nonatomic,assign) AudioFormatFlags formatFlags;  // 一般是kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked
+@property (nonatomic,assign) AudioFormatID formatID;        // Audio Data Format Identifiers，一般是kAudioFormatLinearPCM
+@property (nonatomic,assign) AudioFormatFlags formatFlags;  // AudioStreamBasicDescription Flags，一般是kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked
 @end
 
 NS_ASSUME_NONNULL_END

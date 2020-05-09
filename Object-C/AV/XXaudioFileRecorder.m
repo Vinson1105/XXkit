@@ -18,6 +18,7 @@ static XXaudioFileRecorder *_instance = nil;
 @end
 
 @implementation XXaudioFileRecorder
+#pragma mark - Init
 + (XXaudioFileRecorder*)sharedInstance{
     if(nil == _instance){
         static dispatch_once_t onceToken;
@@ -28,23 +29,60 @@ static XXaudioFileRecorder *_instance = nil;
     return _instance;
 }
 
+#pragma mark - Public
 - (void)config:(XXaudioFormat*)format{
     _audioFormat = format;
 }
-
-- (BOOL)start:(NSURL *)url{
+- (BOOL)start:(NSURL*)url{
+    if(_isRunning || nil == _audioFormat || nil == url){
+        return NO;
+    }
+    _isRunning = YES;
     
+    NSDictionary *settings = [self settingsFromFormat:_audioFormat];
+    NSError *error;
+    _recorder = [[AVAudioRecorder alloc] initWithURL:url settings:settings error:&error];
+    if(error){
+        NSLog(@"[XXaudioFileReocrder] 创建AVAudioRecorder实例失败，error：%@.",error);
+        _isRunning = NO;
+        return NO;
+    }
+    //_recorder.meteringEnabled = YES;
+    _recorder.delegate = self;
+    
+    AVAudioSession *recordSession = [AVAudioSession sharedInstance];
+    [recordSession setCategory:AVAudioSessionCategoryPlayAndRecord error:nil];
+    [recordSession setActive:YES error:nil];
+    
+    BOOL ret = [_recorder record];
+    if(!ret){
+        _isRunning = NO;
+    }
+    return ret;
 }
 - (void)pause{
-    
+    if(!_isRunning){
+        return;
+    }
+    [_recorder pause];
 }
-- (void)resume{
-    
+- (BOOL)resume{
+    if(!_isRunning){
+        return NO;
+    }
+    return [_recorder record];
+
 }
-- (NSURL *)stop{
-    
+- (nullable NSURL *)stop{
+    if(!_isRunning){
+        return nil;
+    }
+    _isRunning = NO;
+    [_recorder stop];
+    return _recorder.url;
 }
 
+#pragma mark - Private
 - (NSDictionary*)settingsFromFormat:(XXaudioFormat*)format{
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
     /// 音频压缩格式
@@ -60,5 +98,18 @@ static XXaudioFileRecorder *_instance = nil;
     /// 是否为大端模式
     /// TODO: 大小端判断
     return settings;
+}
+
+#pragma mark - AVAudioRecorderDelegate
+- (void)audioRecorderDidFinishRecording:(AVAudioRecorder *)recorder successfully:(BOOL)flag{
+    NSLog(@"[XXaudioFileRecorder] [audioRecorderDidFinishRecording] successfully:%d",flag);
+    
+}
+- (void)audioRecorderEncodeErrorDidOccur:(AVAudioRecorder *)recorder error:(NSError *)error{
+    NSLog(@"[XXaudioFileRecorder] [audioRecorderEncodeErrorDidOccur] error:%@",error);
+
+//    if(_events){
+//        [_events audioFileRecorder:self didOccurError:error];
+//    }
 }
 @end
