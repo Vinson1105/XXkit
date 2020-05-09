@@ -13,6 +13,7 @@ static NSDateFormatter *_dateFormatter;
 @implementation XXocUtils
 +(void)load{
     _dateFormatter = [NSDateFormatter new];
+    _dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
 }
 
 + (UIViewController*)viewController:(NSString*)vc withUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle{
@@ -175,7 +176,7 @@ static NSDateFormatter *_dateFormatter;
 + (NSString*)documentAbsolutePath{
     return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
 }
-+ (NSString*)fileAbsolutePathInDocument:(NSArray*)nodes{
++ (NSString*)absolutePathInDocument:(NSArray*)nodes{
     NSString *filePath  = [self documentAbsolutePath];
     
     NSEnumerator *enumer    = nodes.objectEnumerator;
@@ -184,5 +185,12 @@ static NSDateFormatter *_dateFormatter;
         filePath = [filePath stringByAppendingPathComponent:node];
     }
     return filePath;
+}
++ (nullable NSString*)mkdirInDocument:(NSArray*)nodes error:(NSError**)error{
+    NSString *dirPath = [self absolutePathInDocument:nodes];
+    if([[NSFileManager defaultManager] createDirectoryAtPath:dirPath withIntermediateDirectories:YES attributes:nil error:error]){
+        return dirPath;
+    }
+    return nil;
 }
 @end

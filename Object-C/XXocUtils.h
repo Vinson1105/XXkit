@@ -60,24 +60,24 @@ NS_ASSUME_NONNULL_BEGIN
 @interface XXocUtils : NSObject
 + (UIViewController*)viewController:(NSString*)vc withUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle;
 
-/// NSLayoutConstraint
+#pragma mark - <NSLayoutConstraint>
 + (void)view:(UIView*)view size:(CGSize)size;
 + (void)view:(UIView*)view margin:(CGFloat)margin fillAt:(UIView*)fillAt;
 + (void)view:(UIView*)view centerAt:(UIView*)centerAt;
 + (void)view:(UIView*)view left:(CGFloat)left centerYAt:(UIView*)centerYAt;
 + (void)view:(UIView*)view right:(CGFloat)right centerYAt:(UIView*)centerYAt;
 
-/// UIButton
+#pragma mark - <UIButton>
 + (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg;
 + (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg disNorImg:(UIImage*)disNorImg disSelImg:(UIImage*)disSelImg;
 + (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt;
 + (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt disNorTxt:(NSString*)disNorTxt disSelTxt:(NSString*)disSelTxt;
 
-/// UIColor
+#pragma mark - <UIColor>
 + (UIColor*)colorFromHexString:(NSString*)hexString;
 + (UIColor*)colorFromHexString:(NSString*)hexString alpha:(CGFloat)alpha;
 
-/// UIAlertController
+#pragma mark - <UIAlertController>
 + (UIAlertController*)alertWithTitle:(NSString*)title
                                  msg:(NSString*)msg
                              okTitle:(NSString*)okTitle
@@ -90,20 +90,24 @@ NS_ASSUME_NONNULL_BEGIN
                          cancelTitle:(NSString*)cancelTitle
                             onCancel:(void (^)(UIAlertAction *action))onCancel;
 
-/// JSON
+#pragma mark - <JSON>
 + (nullable NSString*)jsonStringWithJson:(id)json pretty:(BOOL)pretty;
 + (nullable id)jsonWithJsonString:(NSString*)jsonString;
 
-/// Date
+#pragma mark - <Date>
 + (void)setDefaultDateFormatter:(NSDateFormatter*)formatter;
 + (NSString*)currentDateString;
 + (NSString*)currentDateStringWithDateFormat:(NSString*)format timeZone:(NSTimeZone*)timeZone;
 + (NSString*)dateStringWithTimestamp:(NSTimeInterval)timestamp;
 + (NSString*)dateStringWithTimestamp:(NSTimeInterval)timestamp dateFormat:(NSString*)format timeZone:(NSTimeZone*)timeZone;
 
-/// File System
+#pragma mark - <File System>
+/** 返回沙箱文档文件夹路径 */
 + (NSString*)documentAbsolutePath;
-+ (NSString*)fileAbsolutePathInDocument:(NSArray*)nodes;
+/** 返回沙箱文档中以若干个节点组成的路径 */
++ (NSString*)absolutePathInDocument:(NSArray*)nodes;
+/** 在沙箱文档中以若干个节点组成的路径下创建文件夹 */
++ (nullable NSString*)mkdirInDocument:(NSArray*)nodes error:(NSError**)error;
 @end
 
 NS_ASSUME_NONNULL_END
