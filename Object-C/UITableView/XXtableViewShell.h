@@ -1,4 +1,8 @@
 /**
+ 2020.05.10
+ 1、新增对section中的row数据追加接口
+ 2、addRow和resetRow的参数section为当前section编号的最大值+1，则创建一个新section
+ 
  2020.04.20
  1、新增[XXtableViewShell resetData:(id)data atIndexPath:(NSIndexPath*)indexPath]，用于重置对应row
  2、新增<XXtableViewCellDelegate>，主要是规范自定义cell的接口
@@ -31,7 +35,7 @@ typedef enum : NSUInteger {
 } XXtableViewShellRowLoadType;
 
 @interface XXtableViewShell : NSObject<UITableViewDelegate,UITableViewDataSource>
-@property (nonatomic,weak,readonly) UITableView *target;                // 目标UITableView
+@property (nonatomic,weak,readonly) UITableView *tableView;             // 目标UITableView
 @property (nonatomic,strong,readonly) NSMutableArray *sectionDatas;     // TableView数据
 @property (nonatomic,copy,nullable) NSString *rowType;                  // row（cell）的类型，nil为使用系统组件
 @property (nonatomic,assign) XXtableViewShellRowLoadType rowLoadType;   // 自定义row（cell）的加载方式
@@ -41,9 +45,9 @@ typedef enum : NSUInteger {
 
 /**
  设置shell的目标TableView
- @param target 目标的TableView
+ @param tableView 目标的TableView
  */
-- (void)shell:(UITableView*)target;
+- (void)shell:(UITableView*)tableView;
 
 /**
  配置TableView的row（cell）参数
@@ -103,6 +107,13 @@ typedef enum : NSUInteger {
  @param section 目标section的位置
  */
 - (void)resetRow:(nullable NSArray*)row atSection:(int)section;
+
+/**
+ 在指定section中增加若干个row
+ @param row 追加的row的数据
+ @param section 目标section的位置
+ */
+- (void)addRow:(NSArray*)row atSection:(int)section;
 
 /**
  重置指定indexPath的row数据

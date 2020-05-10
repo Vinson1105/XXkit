@@ -28,12 +28,12 @@
 }
 
 #pragma mark - <Public>
-- (void)shell:(UITableView*)target{
-    if(nil != _target) return;
-    _target = target;
-    _target.delegate = self;
-    _target.dataSource = self;
-    _target.estimatedRowHeight = 30;//_rowHeight;
+- (void)shell:(UITableView*)tableView{
+    if(nil != _tableView) return;
+    _tableView = tableView;
+    _tableView.delegate = self;
+    _tableView.dataSource = self;
+    _tableView.estimatedRowHeight = 30;//_rowHeight;
 }
 - (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellRowLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height{
     _rowType = type;
@@ -42,10 +42,10 @@
     
     if(nil != type){
         if(XXtableViewShellRowLoadTypeNib == loadType){
-            [_target registerNib:[UINib nibWithNibName:_rowType bundle:nil] forCellReuseIdentifier:_rowType];
+            [_tableView registerNib:[UINib nibWithNibName:_rowType bundle:nil] forCellReuseIdentifier:_rowType];
         }
         else if(XXtableViewShellRowLoadTypeCode == loadType){
-            [_target registerClass:NSClassFromString(_rowType) forCellReuseIdentifier:_rowType];
+            [_tableView registerClass:NSClassFromString(_rowType) forCellReuseIdentifier:_rowType];
         }
         else{
             
@@ -53,10 +53,10 @@
     }
     
     if(height <= 0){
-        _target.estimatedRowHeight = 30;
+        _tableView.estimatedRowHeight = 30;
     }
     else{
-        _target.rowHeight = height;
+        _tableView.rowHeight = height;
     }
 }
 - (void)configSectionWithHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers{
@@ -72,7 +72,7 @@
         [_sectionDatas addObject:section];
     }
         
-    [_target reloadData];
+    [_tableView reloadData];
 }
 - (void)configSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
     NSMutableDictionary *section = [NSMutableDictionary new];
@@ -85,7 +85,7 @@
     [_sectionDatas addObject:section];
 }
 - (void)configFinished{
-    [_target reloadData];
+    [_tableView reloadData];
 }
 
 #pragma mark - <Public>
@@ -95,7 +95,7 @@
     if(nil != footer) [section setObject:footer forKey:kFooter];
     if(nil != row) [section setObject:row forKey:kRow];
     [_sectionDatas addObject:section];
-    [_target reloadData];
+    [_tableView reloadData];
 }
 - (void)insertSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(id)footer atIndex:(int)index{
     NSMutableDictionary *section = [NSMutableDictionary new];
@@ -103,24 +103,56 @@
     if(nil != footer) [section setObject:footer forKey:kFooter];
     if(nil != row) [section setObject:row forKey:kRow];
     [_sectionDatas insertObject:section atIndex:index];
-    [_target reloadData];
+    [_tableView reloadData];
 }
 - (void)removeSectionAtIndex:(int)index{
     [_sectionDatas removeObjectAtIndex:index];
-    [_target reloadData];
+    [_tableView reloadData];
 }
 - (void)resetRow:(nullable NSArray*)row atSection:(int)section{
-    NSMutableDictionary *sectionData = [_sectionDatas objectAtIndex:section];
+    NSMutableDictionary *sectionData = section < _sectionDatas.count?_sectionDatas[section]:nil;
     if(nil == sectionData){
-        return;
+        if(section == _sectionDatas.count){
+            /// 指定的section为当前最大section编号+1，则直接创建一个新section（section是有序的）
+            sectionData = [NSMutableDictionary new];
+            _sectionDatas[section] = sectionData;
+        }
+        else{
+            /// 指定的section并不是最大section编号+1，暂时不支持创建多个中间section
+            return;
+        }
     }
+    
     if(nil == row){
         [sectionData removeObjectForKey:kRow];
     }
     else{
         [sectionData setObject:row forKey:kRow];
     }
-    [_target reloadData];
+    [_tableView reloadData];
+}
+- (void)addRow:(NSArray*)row atSection:(int)section{
+    NSMutableDictionary *sectionData = section < _sectionDatas.count?_sectionDatas[section]:nil;
+    if(nil == sectionData){
+        if(section == _sectionDatas.count){
+            /// 指定的section为当前最大section编号+1，则直接创建一个新section（section是有序的）
+            sectionData = [NSMutableDictionary new];
+            _sectionDatas[section] = sectionData;
+        }
+        else{
+            /// 指定的section并不是最大section编号+1，暂时不支持创建多个中间section
+            return;
+        }
+    }
+    
+    NSMutableArray *localRow = sectionData[kRow];
+    if(nil == localRow){
+        sectionData[kRow] = [[NSMutableArray alloc] initWithArray:row];
+    }
+    else{
+        [localRow addObjectsFromArray:row];
+    }
+    [_tableView reloadData];
 }
 - (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath{
     NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
@@ -128,7 +160,7 @@
         return;
     }
     [rows replaceObjectAtIndex:indexPath.row withObject:data];
-    [_target reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+    [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
 }
 
 #pragma mark - <Private>
