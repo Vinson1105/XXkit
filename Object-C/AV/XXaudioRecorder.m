@@ -1,11 +1,3 @@
-//
-//  XXaudioRecorder.m
-//  UITestForiOS
-//
-//  Created by VINSON on 2020/3/14.
-//  Copyright © 2020 xxx.UITestForiOS. All rights reserved.
-//
-
 #import "XXaudioRecorder.h"
 #import <AVFoundation/AVFoundation.h>
 
