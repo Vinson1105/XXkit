@@ -103,9 +103,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - <File System>
 /** 返回沙箱文档文件夹路径 */
-+ (NSString*)documentAbsolutePath;
++ (NSString*)documentAbsolutePathString;
++ (NSURL*)documentAbsolutePathUrl;
 /** 返回沙箱文档中以若干个节点组成的路径 */
-+ (NSString*)absolutePathInDocument:(NSArray*)nodes;
++ (NSString*)absolutePathStringInDocument:(NSArray*)nodes;
++ (NSURL*)absolutePathUrlInDocument:(NSArray*)nodes;
 /** 在沙箱文档中以若干个节点组成的路径下创建文件夹 */
 + (nullable NSString*)mkdirInDocument:(NSArray*)nodes error:(NSError**)error;
 @end

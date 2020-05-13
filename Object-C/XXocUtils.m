@@ -173,11 +173,14 @@ static NSDateFormatter *_dateFormatter;
 }
 
 #pragma mark - <File System>
-+ (NSString*)documentAbsolutePath{
++ (NSString*)documentAbsolutePathString{
     return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
 }
-+ (NSString*)absolutePathInDocument:(NSArray*)nodes{
-    NSString *filePath  = [self documentAbsolutePath];
++ (NSURL*)documentAbsolutePathUrl{
+    return [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].lastObject;
+}
++ (NSString*)absolutePathStringInDocument:(NSArray*)nodes{
+    NSString *filePath  = [self documentAbsolutePathString];
     
     NSEnumerator *enumer    = nodes.objectEnumerator;
     NSString *node          = nil;
@@ -186,8 +189,18 @@ static NSDateFormatter *_dateFormatter;
     }
     return filePath;
 }
++ (NSURL*)absolutePathUrlInDocument:(NSArray*)nodes{
+    NSURL *url  = [self documentAbsolutePathUrl];
+    
+    NSEnumerator *enumer    = nodes.objectEnumerator;
+    NSString *node          = nil;
+    while (nil != (node = enumer.nextObject)) {
+        url = [url URLByAppendingPathComponent:node];
+    }
+    return url;
+}
 + (nullable NSString*)mkdirInDocument:(NSArray*)nodes error:(NSError**)error{
-    NSString *dirPath = [self absolutePathInDocument:nodes];
+    NSString *dirPath = [self absolutePathStringInDocument:nodes];
     if([[NSFileManager defaultManager] createDirectoryAtPath:dirPath withIntermediateDirectories:YES attributes:nil error:error]){
         return dirPath;
     }
