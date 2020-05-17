@@ -95,29 +95,38 @@ static NSDateFormatter *_dateFormatter;
 }
 
 #pragma mark - <UIAlertController>
-+ (UIAlertController*)alertWithTitle:(NSString*)title msg:(NSString*)msg okTitle:(NSString*)okTitle onOK:(void (^)(UIAlertAction *action))onOK{
-    UIAlertController* alert = [UIAlertController alertControllerWithTitle:title
-                                   message:msg
-                                   preferredStyle:UIAlertControllerStyleAlert];
-     
-    UIAlertAction* okAction = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleDefault handler:onOK];
-    [alert addAction:okAction];
-    return alert;
-}
 + (UIAlertController*)alertWithTitle:(NSString*)title
                                  msg:(NSString*)msg
-                             okTitle:(NSString*)okTitle
-                                onOK:(void (^)(UIAlertAction *action))onOK
-                         cancelTitle:(NSString*)cancelTitle
-                            onCancel:(void (^)(UIAlertAction *action))onCancel{
+                             okTitle:(nullable NSString*)okTitle
+                                onOK:(nullable void (^)(UIAlertAction *action))onOK
+                         cancelTitle:(nullable NSString*)cancelTitle
+                            onCancel:(nullable void (^)(UIAlertAction *action))onCancel{
     UIAlertController* alert = [UIAlertController alertControllerWithTitle:title
                                                                    message:msg
                                                             preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction* cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:onCancel];
-    UIAlertAction* okAction     = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleDefault handler:onOK];
-    [alert addAction:cancelAction];
-    [alert addAction:okAction];
+    if(okTitle){
+        UIAlertAction* okAction     = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleDefault handler:onOK];
+        [alert addAction:okAction];
+    }
+    if(cancelTitle){
+        UIAlertAction* cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:onCancel];
+        [alert addAction:cancelAction];
+    }
     return alert;
+}
++ (void)alert:(UIAlertController*)alert
+      okTitle:(nullable NSString*)okTitle
+         onOK:(nullable void (^)(UIAlertAction *action))onOK
+  cancelTitle:(nullable NSString*)cancelTitle
+     onCancel:(nullable void (^)(UIAlertAction *action))onCancel{
+    if(okTitle && onOK){
+        UIAlertAction* okAction     = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleDefault handler:onOK];
+        [alert addAction:okAction];
+    }
+    if(cancelTitle && onCancel){
+        UIAlertAction* cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:onCancel];
+        [alert addAction:cancelAction];
+    }
 }
 
 #pragma mark - <JSON>

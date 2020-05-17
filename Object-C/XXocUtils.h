@@ -80,15 +80,16 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - <UIAlertController>
 + (UIAlertController*)alertWithTitle:(NSString*)title
                                  msg:(NSString*)msg
-                             okTitle:(NSString*)okTitle
-                                onOK:(void (^)(UIAlertAction *action))onOK;
+                             okTitle:(nullable NSString*)okTitle
+                                onOK:(nullable void (^)(UIAlertAction *action))onOK
+                         cancelTitle:(nullable NSString*)cancelTitle
+                            onCancel:(nullable void (^)(UIAlertAction *action))onCancel;
 
-+ (UIAlertController*)alertWithTitle:(NSString*)title
-                                 msg:(NSString*)msg
-                             okTitle:(NSString*)okTitle
-                                onOK:(void (^)(UIAlertAction *action))onOK
-                         cancelTitle:(NSString*)cancelTitle
-                            onCancel:(void (^)(UIAlertAction *action))onCancel;
++ (void)alert:(UIAlertController*)alert
+      okTitle:(nullable NSString*)okTitle
+         onOK:(nullable void (^)(UIAlertAction *action))onOK
+  cancelTitle:(nullable NSString*)cancelTitle
+     onCancel:(nullable void (^)(UIAlertAction *action))onCancel;
 
 #pragma mark - <JSON>
 + (nullable NSString*)jsonStringWithJson:(id)json pretty:(BOOL)pretty;
