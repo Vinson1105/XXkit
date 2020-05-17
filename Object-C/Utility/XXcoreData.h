@@ -18,14 +18,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)insertObject:(NSString*)entryName initHandle:(void(^)(id obj))initHandle error:(NSError* _Nullable*)error;
 
-- (void)deleteObject:(NSString*)entryName predicate:(NSPredicate*)predicate error:(NSError* _Nullable*)error;
+- (void)deleteObject:(NSString*)entryName predicate:(nullable NSPredicate*)predicate error:(NSError* _Nullable*)error;
 - (void)deleteObject:(NSString*)entryName key:(NSString*)key equelTo:(id)value error:(NSError* _Nullable*)error;
 - (void)deleteObject:(NSString*)entryName key:(NSString*)key greaterThanTo:(id)value error:(NSError* _Nullable*)error;
 - (void)deleteObject:(NSString*)entryName key:(NSString*)key greaterThanOrEqualTo:(id)value error:(NSError* _Nullable*)error;
 - (void)deleteObject:(NSString*)entryName key:(NSString*)key lessThanTo:(id)value error:(NSError* _Nullable*)error;
 - (void)deleteObject:(NSString*)entryName key:(NSString*)key lessThanOrEqualTo:(id)value error:(NSError* _Nullable*)error;
 
-- (NSArray*)getObject:(NSString*)entryName predicate:(NSPredicate*)predicate error:(NSError* _Nullable*)error;
+- (NSArray*)getObject:(NSString*)entryName predicate:(nullable NSPredicate*)predicate error:(NSError* _Nullable*)error;
 - (NSArray*)getObject:(NSString*)entryName key:(NSString*)key equelTo:(id)value error:(NSError* _Nullable*)error;
 - (NSArray*)getObject:(NSString*)entryName key:(NSString*)key greaterThanTo:(id)value error:(NSError* _Nullable*)error;
 - (NSArray*)getObject:(NSString*)entryName key:(NSString*)key greaterThanOrEqualTo:(id)value error:(NSError* _Nullable*)error;

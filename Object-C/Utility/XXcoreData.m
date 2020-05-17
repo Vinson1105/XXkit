@@ -64,9 +64,12 @@ static XXcoreData *_instance = nil;
 }
 
 #pragma mark - 删除
-- (void)deleteObject:(NSString*)entryName predicate:(NSPredicate*)predicate error:(NSError* _Nullable*)error{
+- (void)deleteObject:(NSString*)entryName predicate:(nullable NSPredicate*)predicate error:(NSError* _Nullable*)error{
     /// 创建查询请求
     NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:entryName];
+    if(predicate){
+        request.predicate = predicate;
+    }
         
     /// 获取目标对象列表
     NSArray *objs = [_context executeFetchRequest:request error:error];
@@ -101,9 +104,12 @@ static XXcoreData *_instance = nil;
 }
 
 #pragma mark - 查询
-- (NSArray*)getObject:(NSString*)entryName predicate:(NSPredicate*)predicate error:(NSError* _Nullable*)error{
+- (NSArray*)getObject:(NSString*)entryName predicate:(nullable NSPredicate*)predicate error:(NSError* _Nullable*)error{
     /// 创建查询请求
     NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:entryName];
+    if(predicate){
+        request.predicate = predicate;
+    }
         
     /// 获取目标对象列表
     return [_context executeFetchRequest:request error:error];
