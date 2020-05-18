@@ -50,13 +50,13 @@ static XXcoreData *_instance = nil;
 }
 
 #pragma mark - 增加
-- (void)insertObject:(NSString*)entryName initHandle:(void(^)(id obj))initHandle error:(NSError* _Nullable*)error{
+- (void)insertObject:(NSString*)entryName initHandler:(void(^)(id obj))initHandler error:(NSError* _Nullable*)error{
     /// 生成对象
     id obj = [NSEntityDescription  insertNewObjectForEntityForName:entryName  inManagedObjectContext:_context];
     
     /// 对象赋值
-    if(initHandle){
-        initHandle(obj);
+    if(initHandler){
+        initHandler(obj);
     }
 
     /// 保存操作
