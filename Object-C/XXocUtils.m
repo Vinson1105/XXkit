@@ -7,6 +7,7 @@
 //
 
 #import "XXocUtils.h"
+#import <LocalAuthentication/LocalAuthentication.h>
 
 static NSDateFormatter *_dateFormatter;
 
@@ -16,8 +17,10 @@ static NSDateFormatter *_dateFormatter;
     _dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
 }
 
-+ (UIViewController*)viewController:(NSString*)vc withUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle{
-    return [[UIStoryboard storyboardWithName:storyboard bundle:bundle] instantiateViewControllerWithIdentifier:vc];
+
+#pragma mark - <UIViewController>
++ (UIViewController*)viewController:(NSString*)storyboardID{
+    return [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:storyboardID];
 }
 
 #pragma mark - <NSLayoutConstraint>
@@ -214,5 +217,14 @@ static NSDateFormatter *_dateFormatter;
         return dirPath;
     }
     return nil;
+}
+
+#pragma mark - <TouchID/FaceID>
++ (BOOL)evaluatePolicyWithReason:(NSString*)reason reply:(void(^)(BOOL success, NSError * _Nullable error))reply{
+    LAContext *context = [LAContext new];
+    if(![context canEvaluatePolicy:LAPolicyDeviceOwnerAuthentication error:nil])
+        return NO;
+    [[LAContext new] evaluatePolicy:LAPolicyDeviceOwnerAuthentication localizedReason:reason reply:reply];
+    return YES;
 }
 @end

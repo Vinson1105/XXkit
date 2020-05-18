@@ -58,7 +58,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface XXocUtils : NSObject
-+ (UIViewController*)viewController:(NSString*)vc withUIStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle;
+#pragma mark - <UIViewCotroller>
++ (UIViewController*)viewController:(NSString*)storyboardID;
 
 #pragma mark - <NSLayoutConstraint>
 + (void)view:(UIView*)view size:(CGSize)size;
@@ -111,6 +112,15 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSURL*)absolutePathUrlInDocument:(NSArray*)nodes;
 /** 在沙箱文档中以若干个节点组成的路径下创建文件夹 */
 + (nullable NSString*)mkdirInDocument:(NSArray*)nodes error:(NSError**)error;
+
+#pragma mark - <TouchID/FaceID>
+/**
+ 使用指定reason显示TouchID/FaceID验证
+ @param reason alert弹框的message
+ @param reply 验证结果回调，其中error.code参考LAError的枚举值
+ @return 调用成功返回YES，否则返回NO
+ */
++ (BOOL)evaluatePolicyWithReason:(NSString*)reason reply:(void(^)(BOOL success, NSError * _Nullable error))reply;
 @end
 
 NS_ASSUME_NONNULL_END
