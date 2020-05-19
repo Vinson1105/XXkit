@@ -10,7 +10,7 @@
 #import <Security/SecItem.h>
 #import <Security/SecBase.h>
 
-#define kService @"XXkeyChain"
+#define kService @"com.xxkit.xxkeychain"
 static NSInteger const kErrorCodeKeychainSomeArgumentsInvalid = 1000;
 static XXkeyChain *_instance = nil;
 
@@ -23,7 +23,7 @@ static XXkeyChain *_instance = nil;
     });
     return _instance;
 }
-- (void)saveAccount:(NSString*)account password:(NSString *)password error:(NSError * _Nullable __autoreleasing * _Nullable)error{
+- (void)addAcount:(NSString*)account password:(NSString *)password error:(NSError * _Nullable __autoreleasing * _Nullable)error{
     if (!account || !password || !_service) {
         if(error){ *error = [self toError:kErrorCodeKeychainSomeArgumentsInvalid]; }
         return;
@@ -90,7 +90,19 @@ static XXkeyChain *_instance = nil;
     }
     
     if ([self isExist:account error:nil]) {
-        [self updateAccount:account password:password error:error];
+        NSDictionary *queryItems = @{
+            (id)kSecClass: (id)kSecClassGenericPassword,
+            (id)kSecAttrService: _service,
+            (id)kSecAttrAccount: account
+        };
+        
+        NSData *passwordData        = [password dataUsingEncoding:NSUTF8StringEncoding];
+        NSDictionary *passwordItem  = @{(id)kSecValueData: passwordData,};
+        
+        OSStatus status = SecItemUpdate((CFDictionaryRef)queryItems, (CFDictionaryRef)passwordItem);
+        if(error){
+            *error = [self toError:status];
+        }
     }
     else{
         NSData *passwordData        = [password dataUsingEncoding:NSUTF8StringEncoding];
