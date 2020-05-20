@@ -42,7 +42,10 @@
 
 #pragma mark - Navigation初始化
 - (void)createNavigationWithRootViewController:(UIViewController*)root{
-    self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    self.window = [UIApplication sharedApplication].windows.firstObject;
+    if(nil == self.window){
+        self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    }
     UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:root];
     self.window.rootViewController = nav;
     [self.window makeKeyAndVisible];

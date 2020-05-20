@@ -17,7 +17,7 @@
 #pragma mark - Navigation初始化
 - (void)createNavigationWithRootViewController:(UIViewController*)root{
     UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:root];
-    self.window.rootViewController = nav;
+    [UIApplication sharedApplication].windows.firstObject.rootViewController = nav;
 }
 - (void)createNavigationWithIntitalViewControllerAtStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle{
     UIViewController *rootVC = [[UIStoryboard storyboardWithName:storyboard bundle:bundle] instantiateInitialViewController];
