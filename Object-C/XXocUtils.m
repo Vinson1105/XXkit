@@ -227,4 +227,14 @@ static NSDateFormatter *_dateFormatter;
     [[LAContext new] evaluatePolicy:LAPolicyDeviceOwnerAuthentication localizedReason:reason reply:reply];
     return YES;
 }
+
+#pragma mark - <Thread>
++ (void)mainThreadProcess:(void(^)(void))handler{
+    if([NSThread currentThread].isMainThread){
+        handler();
+    }
+    else {
+        dispatch_async(dispatch_get_main_queue(), handler);
+    }
+}
 @end

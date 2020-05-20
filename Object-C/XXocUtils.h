@@ -121,6 +121,9 @@ NS_ASSUME_NONNULL_BEGIN
  @return 调用成功返回YES，否则返回NO
  */
 + (BOOL)evaluatePolicyWithReason:(NSString*)reason reply:(void(^)(BOOL success, NSError * _Nullable error))reply;
+
+#pragma mark - <Thread>
++ (void)mainThreadProcess:(void(^)(void))handler;
 @end
 
 NS_ASSUME_NONNULL_END
