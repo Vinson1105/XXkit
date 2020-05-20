@@ -24,7 +24,7 @@
                     ss.button.enabled = YES;
                 }
                 else{
-                    [ss.button setTitle:[NSString stringWithFormat:@"%ds",remainder] forState:UIControlStateDisabled];
+                    [ss.button setTitle:[NSString stringWithFormat:@"%dS",remainder] forState:UIControlStateDisabled];
                 }
             });
         };
