@@ -1,4 +1,7 @@
 /**
+ 2020.05.20
+ 1、过滤掉由于delay完触发的回调，
+ 
  2020.04.29 基于'GCD Timer'的封装封装
  */
 
@@ -7,7 +10,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface XXtimer : NSObject
-@property (nonatomic,copy) void(^onTimeout)(XXtimer *timer, int times);
+/** 定时器触发回调，其中index为本次的触发的编号，从0开始 */
+@property (nonatomic,copy) void(^onTimeout)(XXtimer *timer, int index);
 @property (nonatomic,assign,readonly) BOOL isRunning;
 
 /**
