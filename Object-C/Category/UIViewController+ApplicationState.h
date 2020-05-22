@@ -20,7 +20,7 @@ typedef enum : NSUInteger {
  装载通知处理
  @param install YES：装载，NO：移除，装载之后需要在dealloc处需要调用[self installApplicationState:NO]
  */
--(void)installApplicationState:(BOOL)install;   // 对象释放之前需要[self installApplicationState:NO]
+-(void)installApplicationState:(BOOL)install;
 @end
 
 NS_ASSUME_NONNULL_END
