@@ -14,7 +14,7 @@
  */
 
 #import <UIKit/UIKit.h>
-#import "../UITextField/XXtextFieldShell.h"
+#import "./XXtextFieldShell.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
