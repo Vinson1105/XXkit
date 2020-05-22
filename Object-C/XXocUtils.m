@@ -237,4 +237,13 @@ static NSDateFormatter *_dateFormatter;
         dispatch_async(dispatch_get_main_queue(), handler);
     }
 }
+
+#pragma mark - <Xib/Image in bundle>
++ (NSBundle*)bundleNamed:(NSString*)name{
+    if (name.length > 0) {
+        NSString *bundlePath = [[NSBundle mainBundle] pathForResource:name ofType:@"bundle"];
+        return [NSBundle bundleWithPath:bundlePath];
+    }
+    return nil;
+}
 @end

@@ -124,6 +124,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - <Thread>
 + (void)mainThreadProcess:(void(^)(void))handler;
+
+#pragma mark - <Bundle>
++ (NSBundle*)bundleNamed:(NSString*)name;
 @end
 
 NS_ASSUME_NONNULL_END
