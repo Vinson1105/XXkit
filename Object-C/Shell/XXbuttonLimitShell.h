@@ -8,7 +8,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface XXlimitButtonShell : NSObject
+@interface XXbuttonLimitShell : NSObject
 @property (nonatomic,strong,readonly) UIButton *button;
 
 /**

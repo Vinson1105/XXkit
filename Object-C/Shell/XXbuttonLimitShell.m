@@ -1,13 +1,13 @@
-#import "XXlimitButtonShell.h"
+#import "XXbuttonLimitShell.h"
 #import "../Utility/XXtimer.h"
 #import "../XXocUtils.h"
 
-@interface XXlimitButtonShell()
+@interface XXbuttonLimitShell()
 @property (nonatomic,strong) XXtimer *timer;
 @property (nonatomic,assign) int duration;
 @end
 
-@implementation XXlimitButtonShell
+@implementation XXbuttonLimitShell
 #pragma mark - <Init>
 - (instancetype)init{
     self = [super init];
