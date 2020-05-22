@@ -16,7 +16,7 @@
     _codeShell = [XXtextFieldShell new];
     [_codeShell shell:code];
     
-    _requestShell = [XXlimitButtonShell new];
+    _requestShell = [XXbuttonLimitShell new];
     [_requestShell shell:request];
     [request addTarget:self action:@selector(onButtonTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
 }
