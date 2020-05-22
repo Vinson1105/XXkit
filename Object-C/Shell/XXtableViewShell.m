@@ -1,224 +1,313 @@
 #import "XXtableViewShell.h"
-#import "../XXocDefine.h"
 
-@interface XXtableViewShell ()
-@property (weak,nonatomic) UITableView          *tableView;
-@property (nonatomic,copy) NSString             *sectionsType;      // section的类型
-@property (nonatomic,assign) NSInteger          sectionCount;           // section的数量
-@property (nonatomic,strong) NSMutableArray     *rowCountInSection;     // 每一个section中row的数量
-@property (nonatomic,strong) NSMutableArray     *localData;            // 整个table的数据
-@end
+#define kReuseRowDefault @"ReuseRowDefault"
+#define kReuseHeaderDefault @"ReuseHeaderDefault"
+#define kReuseFooterDefault @"ReuseFooterDefault"
+
+#define kHeader @"Header"
+#define kRow @"Row"
+#define kFooter @"Footer"
+
+#define kTitle @"Title"
+#define kDetail @"Detail"
+#define kImage @"Image"
+#define kAccessoryType @"AccessoryType"
+
 
 @implementation XXtableViewShell
+#pragma mark - <Init>
+- (instancetype)init{
+    self = [super init];
+    if (self) {
+        _sectionDatas   = [NSMutableArray new];
+        _rowSystemStyle = UITableViewCellStyleDefault;
+        _rowType        = nil;
+        //_rowHeight = -1;
+    }
+    return self;
+}
 
-- (void) initContext{
-    _tableView = self.context;
+#pragma mark - <Public>
+- (void)shell:(UITableView*)tableView{
+    if(nil != _tableView) return;
+    _tableView = tableView;
     _tableView.delegate = self;
     _tableView.dataSource = self;
+    _tableView.estimatedRowHeight = 30;//_rowHeight;
+}
+- (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellRowLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height{
+    _rowType = type;
+    _rowLoadType = loadType;
+    _rowSystemStyle = systemStyle;
     
-    _tableView.estimatedRowHeight           = 30;           // 预测行高
-    _tableView.estimatedSectionHeaderHeight = 0;            // 预测页头高度
-    _tableView.estimatedSectionFooterHeight = 0;            // 预测页脚高度
-    _tableView.rowHeight = UITableViewAutomaticDimension;   // 自适应cell的高度
+    if(nil != type){
+        if(XXtableViewShellRowLoadTypeNib == loadType){
+            [_tableView registerNib:[UINib nibWithNibName:_rowType bundle:nil] forCellReuseIdentifier:_rowType];
+        }
+        else if(XXtableViewShellRowLoadTypeCode == loadType){
+            [_tableView registerClass:NSClassFromString(_rowType) forCellReuseIdentifier:_rowType];
+        }
+        else{
+            
+        }
+    }
     
-    switch (self.cellLoadType) {
-        case XXcellLoadType_Default:
-            break;
-        case XXcellLoadType_Class:
-            [_tableView registerClass:NSClassFromString(self.cellType) forCellReuseIdentifier:self.cellType];
-            break;
-        case XXcellLoadType_Nib:
-            [_tableView registerNib:[UINib nibWithNibName:self.cellType bundle:nil] forCellReuseIdentifier:self.cellType];
-            break;
-        default:
-            break;
+    if(height <= 0){
+        _tableView.estimatedRowHeight = 30;
+    }
+    else{
+        _tableView.rowHeight = height;
     }
 }
-- (void) setClassHeaderType:(NSString*)headerType{
-    // 自定义header
-}
-- (void) setNIbHeaderType:(NSString*)headerType{
-    // 自定义header
-}
-
-
-#pragma mark - 数据设置
-- (void) setData:(NSMutableArray *)xxdata{
-    // [0] 重置数据
-    _localData = nil;
-    _sectionCount = 0;
-    [_rowCountInSection removeAllObjects];
+- (void)configSectionWithHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers{
     
-    // [1] 表数据
-    if(nil == xxdata)
+    int sectionCount = (int)rows.count;
+    for (int index = 0; index < sectionCount; index++) {
+        NSMutableDictionary *section = [NSMutableDictionary new];
+        if(nil != headers) [section setObject:headers[index] forKey:kHeader];
+        if(nil != footers) [section setObject:footers[index] forKey:kFooter];
+        
+        NSMutableArray *rowsDataOfOneSection = [[NSMutableArray alloc] initWithArray:rows[index]];
+        [section setObject:rowsDataOfOneSection forKey:kRow];
+        [_sectionDatas addObject:section];
+    }
+        
+    [_tableView reloadData];
+}
+- (void)configSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
+    NSMutableDictionary *section = [NSMutableDictionary new];
+    if(nil != header) [section setObject:header forKey:kHeader];
+    if(nil != footer) [section setObject:footer forKey:kFooter];
+    if(nil != row) {
+        NSMutableArray *rowsDataOfOneSection = [[NSMutableArray alloc] initWithArray:row];
+        [section setObject:rowsDataOfOneSection forKey:kRow];
+    }
+    [_sectionDatas addObject:section];
+}
+- (void)configFinished{
+    [_tableView reloadData];
+}
+
+#pragma mark - <Public>
+- (void)addSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
+    NSMutableDictionary *section = [NSMutableDictionary new];
+    if(nil != header) [section setObject:header forKey:kHeader];
+    if(nil != footer) [section setObject:footer forKey:kFooter];
+    if(nil != row) [section setObject:row forKey:kRow];
+    [_sectionDatas addObject:section];
+    [_tableView reloadData];
+}
+- (void)insertSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(id)footer atIndex:(int)index{
+    NSMutableDictionary *section = [NSMutableDictionary new];
+    if(nil != header) [section setObject:header forKey:kHeader];
+    if(nil != footer) [section setObject:footer forKey:kFooter];
+    if(nil != row) [section setObject:row forKey:kRow];
+    [_sectionDatas insertObject:section atIndex:index];
+    [_tableView reloadData];
+}
+- (void)removeSectionAtIndex:(int)index{
+    [_sectionDatas removeObjectAtIndex:index];
+    [_tableView reloadData];
+}
+- (void)resetRow:(nullable NSArray*)row atSection:(int)section{
+    NSMutableDictionary *sectionData = section < _sectionDatas.count?_sectionDatas[section]:nil;
+    if(nil == sectionData){
+        if(section == _sectionDatas.count){
+            /// 指定的section为当前最大section编号+1，则直接创建一个新section（section是有序的）
+            sectionData = [NSMutableDictionary new];
+            _sectionDatas[section] = sectionData;
+        }
+        else{
+            /// 指定的section并不是最大section编号+1，暂时不支持创建多个中间section
+            return;
+        }
+    }
+    
+    if(nil == row){
+        [sectionData removeObjectForKey:kRow];
+    }
+    else{
+        [sectionData setObject:row forKey:kRow];
+    }
+    [_tableView reloadData];
+}
+- (void)addRow:(NSArray*)row atSection:(int)section{
+    NSMutableDictionary *sectionData = section < _sectionDatas.count?_sectionDatas[section]:nil;
+    if(nil == sectionData){
+        if(section == _sectionDatas.count){
+            /// 指定的section为当前最大section编号+1，则直接创建一个新section（section是有序的）
+            sectionData = [NSMutableDictionary new];
+            _sectionDatas[section] = sectionData;
+        }
+        else{
+            /// 指定的section并不是最大section编号+1，暂时不支持创建多个中间section
+            return;
+        }
+    }
+    
+    NSMutableArray *localRow = sectionData[kRow];
+    if(nil == localRow){
+        sectionData[kRow] = [[NSMutableArray alloc] initWithArray:row];
+    }
+    else{
+        [localRow addObjectsFromArray:row];
+    }
+    [_tableView reloadData];
+}
+- (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath{
+    NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
+    if(nil == rows){
         return;
-    _localData = [xxdata mutableCopy];
-    
-    // [2] section的数量
-    _sectionCount = _localData.count;
-    
-    // [3] section下row的数量
-    if (nil == _rowCountInSection) {
-        _rowCountInSection = [NSMutableArray array];
     }
-    
-    NSDictionary *section  = nil;
-    NSArray     *rows      = nil;
-    for(NSInteger i = 0; i < _sectionCount; i++){
-        section = [_localData objectAtIndex:i];
-        if(nil == section){
-            [_rowCountInSection addObject:@"0"];
-        }
-        else{
-            rows = [section objectForKey:XXSHELL_SECTION_ROW];
-            if(nil == rows){
-                [_rowCountInSection addObject:@"0"];
-            }
-            else{
-                [_rowCountInSection addObject:[NSString stringWithFormat:@"%lu", (unsigned long)rows.count]];
-            }
-        }
-    }
-    [self.tableView reloadData];
+    [rows replaceObjectAtIndex:indexPath.row withObject:data];
+    [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
 }
 
-#pragma mark - section的数量和section中row的数量
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return _sectionCount;
+#pragma mark - <Private>
+- (nullable NSMutableArray*)getRowWithSection:(int)section{
+    return [[_sectionDatas objectAtIndex:section] objectForKey:kRow];
 }
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+- (id)getRowDataWithSection:(int)section row:(int)row{
+    NSMutableArray *rows = [self getRowWithSection:section];
+    return [rows objectAtIndex:row];
+}
+
+#pragma mark - <UITableViewDataSource>
+- (nonnull UITableViewCell *)tableView:(nonnull UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
+    UITableViewCell *cell       = nil;
+    BOOL isSystem               = nil == _rowType;
     
-    if (nil == [_rowCountInSection objectAtIndex:section]) {
-        return 0;
+    /// 获取重用cell
+    if (isSystem) {
+        cell = [tableView dequeueReusableCellWithIdentifier:kReuseRowDefault];
     }
     else{
-        return [[_rowCountInSection objectAtIndex:section] integerValue];
-    }
-}
-
-#pragma mark - header
-- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
-    id data = [self getSectionHeaderData:section];
-    if (XXOC_IS_STRING(data)) {
-        return data;
-    }
-    else if(XXOC_IS_DICTIONARY(data)){
-        NSDictionary *dict = data;
-        if (XXOC_IS_STRING([dict objectForKey:XXSHELL_HEADER_TITLE])) {
-            return dict[XXSHELL_HEADER_TITLE];
-        }
-        else{
-            return @"";
-        }
-    }
-    else{
-        return @"";
-    }
-}
-
-#pragma mark - delegate相关函数
-//- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-//    return _rowsHeight_;
-//}
-- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
-    return _headerHeight;
-}
-- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
-    return _footerHeight;
-}
-- (NSIndexPath *)tableView:(UITableView *)tableView willSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    // 选择功能未开放
-    return nil;
-}
-- (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section{
-    if (nil == _sectionsType) {
-        // 使用默认header时,可以对其配置
-        UITableViewHeaderFooterView *header = (UITableViewHeaderFooterView *)view;
-        // 字体颜色
-        if (nil != _headerTextColor){
-            header.textLabel.textColor = _headerTextColor;
-        }
-        // 字体格式
-        if(nil != _headerTextFont){
-            header.textLabel.font = _headerTextFont;
-        }
-    }
-}
-
-#pragma mark - cell的生成
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *cellType      = self.cellType;
-    UITableViewCell *cell   = nil;
-    if (XXcellLoadType_Default == self.cellLoadType) {
-        cell = [_tableView dequeueReusableCellWithIdentifier:cellType];
-    }
-    else{
-        cell = [_tableView dequeueReusableCellWithIdentifier:cellType forIndexPath:indexPath];
+        id<XXtableViewCellDelegate> xxcell  = [tableView dequeueReusableCellWithIdentifier:_rowType forIndexPath:indexPath];
+        xxcell.tableViewShell       = self;
+        xxcell.indexPath            = indexPath;
+        cell                        = (UITableViewCell*)xxcell;
     }
     
-    // [2] 无可用cell,重新分配
-    if(nil == cell){
-        if (XXcellLoadType_Default == self.cellLoadType) {
-            // 创建默认
-            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellType];
-        }
-        else{
-            // 创建自定义cell
-            cell = [[NSClassFromString(cellType) alloc] initWithReuseIdentifier:cellType];
-        }
-    }
+    /// 无可重用的cell
     if (nil == cell) {
-        XXNSLog(@"CellType=%@, 没有找对应的自定义cell类型", cellType);
-        return nil;
+        if(isSystem){
+            cell = [[UITableViewCell alloc] initWithStyle:_rowSystemStyle reuseIdentifier:kReuseRowDefault];
+        }
+        else{
+            id<XXtableViewCellDelegate> xxcell  = [[NSClassFromString(_rowType) alloc] initWithReuseIdentifier:_rowType];
+            xxcell.tableViewShell       = self;
+            xxcell.indexPath            = indexPath;
+            cell                        = (UITableViewCell*)xxcell;
+        }
     }
-    
-    // row对应的数据
-    NSInteger section       = indexPath.section;
-    NSInteger row           = indexPath.row;
-    NSArray *rowDataArray   = [self getSectionRowsData:section];
-    if (nil == rowDataArray) {
+    if(nil == cell){
+        NSLog(@"[XXtableViewShell] Failure to create cell.");
         return cell;
     }
-    NSDictionary *rowData = [rowDataArray objectAtIndex:row];
-
-    // [3] cell数据设置
-    if (XXcellLoadType_Default == self.cellLoadType) {
-        if (XXOC_IS_STRING([rowData objectForKey:XXSHELL_ROW_TEXT])) {
-            cell.textLabel.text = rowData[XXSHELL_ROW_TEXT];
+    
+    /// 获取对应的row（cell）的数据
+    NSMutableArray *rowsData = [[_sectionDatas objectAtIndex:indexPath.section] objectForKey:kRow];
+    id rowData = [rowsData objectAtIndex:indexPath.row];
+    if(nil == rowData){
+        return cell;
+    }
+    
+    /// 设置数据
+    if(isSystem){
+        if([rowData isKindOfClass:[NSString class]]){
+            cell.textLabel.text = rowData;
+        }
+        else if([rowData isKindOfClass:[NSDictionary class]]){
+            NSDictionary *dict = rowData;
+            if(nil != [dict objectForKey:kTitle]){
+                cell.textLabel.text = dict[kTitle];
+            }
+            if(nil != [dict objectForKey:kDetail]){
+                cell.detailTextLabel.text = dict[kDetail];
+            }
+            if(nil != [dict objectForKey:kImage]){
+                cell.imageView.image = dict[kImage];
+            }
+            if(nil != [dict objectForKey:kAccessoryType]){
+                cell.accessoryType = [dict[kAccessoryType] intValue];
+            }
+        }
+        else{
+            NSLog(@"[XXtableViewShell] Unknown type(%@) of row data(%@).", NSStringFromClass([rowData class]), rowData);
         }
     }
-    else {
-        // 设置数据 判断自定义的cell有没有实现约定的setData方法
-        if ([cell respondsToSelector:@selector(setIndexPath:Data:)]) {
-            id<XXcellProtocol> xxcell = (id<XXcellProtocol>)cell;
-            [xxcell setIndexPath:indexPath Data:rowData];
-        }
-        
-        // 设置事件处理block
-        if(nil != self.onCellEvent && [cell respondsToSelector:@selector(setOnEvent:)]){
-            [cell performSelector:@selector(setOnEvent:) withObject:self.onCellEvent];
-        }
+    else{
+        id<XXtableViewCellDelegate> xxcell = (id<XXtableViewCellDelegate>)cell;
+        [xxcell resetData:rowData];
     }
     return cell;
 }
-
-
-- (id) getSectionData:(NSInteger)section Key:(NSString*)key{
-    id obj = [_localData objectAtIndex:section];
-    if (!XXOC_IS_DICTIONARY(obj)) {
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
+    NSDictionary *sectionData = _sectionDatas[section];
+    id headerData = [sectionData objectForKey:kHeader];
+    if(nil == headerData){
         return nil;
     }
-    
-    NSDictionary *dict = obj;
-    return [dict valueForKey:key];
+    else if([headerData isKindOfClass:[NSString class]]){
+        return headerData;
+    }
+    else if([headerData isKindOfClass:[NSDictionary class]]){
+        return [headerData objectForKey:kTitle];
+    }
+    else{
+        return nil;
+    }
 }
-- (id) getSectionHeaderData:(NSInteger)section{
-    return [self getSectionData:section Key:XXSHELL_SECTION_HEADER];
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section{
+    NSDictionary *sectionData = _sectionDatas[section];
+    id headerData = [sectionData objectForKey:kFooter];
+    if(nil == headerData){
+        return nil;
+    }
+    else if([headerData isKindOfClass:[NSString class]]){
+        return headerData;
+    }
+    else if([headerData isKindOfClass:[NSDictionary class]]){
+        return [headerData objectForKey:kTitle];
+    }
+    else{
+        return nil;
+    }
 }
-- (id) getSectionFooterData:(NSInteger)section{
-    return [self getSectionData:section Key:XXSHELL_SECTION_FOOTER];
+
+- (NSInteger)tableView:(nonnull UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    NSMutableDictionary *sectionData = [_sectionDatas objectAtIndex:section];
+    if(nil == sectionData){
+        return 0;
+    }
+    NSArray *rowsData = [sectionData objectForKey:kRow];
+    if(nil == rowsData){
+        return 0;
+    }
+    return rowsData.count;
 }
-- (NSArray*) getSectionRowsData:(NSInteger)section{
-    return [self getSectionData:section Key:XXSHELL_SECTION_ROW];
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
+    return _sectionDatas.count;
+}
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath{
+    return YES;
+}
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath{
+    if(editingStyle == UITableViewCellEditingStyleDelete){
+        NSLog(@"%@ delete", indexPath);
+    }
+}
+- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath{
+    return YES;
+}
+
+#pragma mark - <UITableViewDelegate>
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    if(_onRowClicked){
+        NSMutableArray *rowsData    = [[_sectionDatas objectAtIndex:indexPath.section] objectForKey:kRow];
+        id rowData                  = [rowsData objectAtIndex:indexPath.row];
+        _onRowClicked(self, indexPath, rowData);
+    }
 }
 @end
+
