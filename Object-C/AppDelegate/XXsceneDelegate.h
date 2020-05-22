@@ -12,6 +12,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface XXsceneDelegate : UIResponder <UIWindowSceneDelegate>
+@property (nonatomic,strong) UIWindow *window;
+
 /**
  创建一个导航栏
  @param root 创建导航栏时使用的ViewController

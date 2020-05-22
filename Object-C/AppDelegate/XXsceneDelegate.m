@@ -17,7 +17,13 @@
 #pragma mark - Navigation初始化
 - (void)createNavigationWithRootViewController:(UIViewController*)root{
     UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:root];
-    [UIApplication sharedApplication].windows.firstObject.rootViewController = nav;
+    if(nil == self.window){
+        self.window = [UIApplication sharedApplication].windows.firstObject;
+    }
+    if(nil == self.window){
+        self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    }
+    self.window.rootViewController = nav;
 }
 - (void)createNavigationWithIntitalViewControllerAtStoryboard:(NSString*)storyboard bundle:(nullable NSBundle*)bundle{
     UIViewController *rootVC = [[UIStoryboard storyboardWithName:storyboard bundle:bundle] instantiateInitialViewController];
