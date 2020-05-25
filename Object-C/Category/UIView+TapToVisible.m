@@ -10,10 +10,12 @@
 #define kTapGesture         @"tapToPopup_tapGesture"
 #define kTimer              @"tapToPopup_timer"
 
+#define kXXinterval         @"tapToPopup_interval"
 
 @interface UIView()
 @property (nonatomic,strong) UITapGestureRecognizer *tapGesture;
 @property (nonatomic,strong) XXtimer *timer;
+@property (nonatomic,assign) NSTimeInterval interval;
 @end
 
 @implementation UIView(TapToVisible)
@@ -34,6 +36,9 @@
 
 - (void)setXx_holdon:(BOOL)holdon{
     objc_setAssociatedObject(self, kXXholdon, @(holdon), OBJC_ASSOCIATION_COPY_NONATOMIC);
+    if(!holdon && self.xx_visible && self.timer){
+        [self.timer start];
+    }
 }
 - (BOOL)xx_holdon{
     return [objc_getAssociatedObject(self, kXXholdon) boolValue];
@@ -53,6 +58,14 @@
     return objc_getAssociatedObject(self, kTimer);
 }
 
+- (void)setXx_visibleInterval:(NSTimeInterval)xx_visibleInterval{
+    objc_setAssociatedObject(self, kXXinterval, @(xx_visibleInterval), OBJC_ASSOCIATION_ASSIGN);
+}
+- (NSTimeInterval)xx_visibleInterval{
+    id obj = objc_getAssociatedObject(self, kXXinterval);
+    return nil == obj ? 0 : [obj doubleValue];
+}
+
 - (void)xx_installTapToVisible:(BOOL)install{
     [self installTapGesture:install];
 }
@@ -65,8 +78,8 @@
         }
         [self addGestureRecognizer:self.tapGesture];
         
-        if(nil == self.timer){
-            XXtimer *timer  = [XXtimer timerWithDelay:0 interval:5 singleShot:YES];
+        if(nil == self.timer && self.xx_visibleInterval > 0){
+            XXtimer *timer  = [XXtimer timerWithDelay:0 interval:self.xx_visibleInterval singleShot:YES];
             self.timer      = timer;
             
             XXOC_WS;
@@ -88,8 +101,23 @@
     }
 }
 -(void)onTapGesture:(UITapGestureRecognizer*)gesture{
-    if(self.xx_holdon || self.xx_visible){return;}
-    self.xx_visible = YES;
+    if(self.xx_holdon){return;}
+    if(self.xx_visible){
+        if(self.timer){
+            /// 更新定时器
+            XXOC_WS;
+            [XXocUtils mainThreadProcess:^{
+               XXOC_SS
+                [ss.timer start];
+            }];
+        }
+        else{
+            self.xx_visible = NO;
+        }
+    }
+    else{
+        self.xx_visible = YES;
+    }
 }
 - (void)toVisible:(BOOL)visible{
     XXOC_WS;
