@@ -7,14 +7,14 @@
 #define kXXpopup "xx_popup"
 
 @implementation UIView(Popup)
-- (void)setXx_popupConstraint:(NSArray *)layoutForPopup{
-    objc_setAssociatedObject(self, kXXpopupConstraint, layoutForPopup, OBJC_ASSOCIATION_RETAIN);
+- (void)setXx_popupConstraint:(NSArray *)popupConstraint{
+    objc_setAssociatedObject(self, kXXpopupConstraint, popupConstraint, OBJC_ASSOCIATION_RETAIN);
 }
 - (NSArray *)xx_popupConstraint{
     return objc_getAssociatedObject(self, kXXpopupConstraint);
 }
-- (void)setXx_popdownConstraint:(NSArray *)layoutForPopdown{
-    objc_setAssociatedObject(self, kXXpopdownConstraint, layoutForPopdown, OBJC_ASSOCIATION_RETAIN);
+- (void)setXx_popdownConstraint:(NSArray *)popdownConstraint{
+    objc_setAssociatedObject(self, kXXpopdownConstraint, popdownConstraint, OBJC_ASSOCIATION_RETAIN);
 }
 - (NSArray *)xx_popdownConstraint{
     return objc_getAssociatedObject(self, kXXpopdownConstraint);
@@ -27,6 +27,10 @@
 - (BOOL)xx_popup{
     id value = objc_getAssociatedObject(self, kXXpopup);
     return nil == value ? NO : [value boolValue];
+}
+
+- (void)xx_initPopup:(BOOL)popup{
+    objc_setAssociatedObject(self, kXXpopup, @(popup), OBJC_ASSOCIATION_COPY);
 }
 
 - (void)toPopup:(BOOL)popup{
