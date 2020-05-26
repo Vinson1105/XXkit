@@ -8,6 +8,7 @@
 
 #import "XXocUtils.h"
 #import <LocalAuthentication/LocalAuthentication.h>
+#import <objc/runtime.h>
 
 static NSDateFormatter *_dateFormatter;
 
@@ -245,5 +246,21 @@ static NSDateFormatter *_dateFormatter;
         return [NSBundle bundleWithPath:bundlePath];
     }
     return nil;
+}
+
+#pragma mark - <Run Time>
++ (void)replaceMethod:(Class)cls src:(SEL)src dest:(SEL)dest{
+    Method srcMethod = class_getInstanceMethod(cls, src);
+    Method destMethod = class_getInstanceMethod(cls, dest);
+    
+    BOOL didAddMethod =
+    class_addMethod(cls, src, method_getImplementation(destMethod), method_getTypeEncoding(destMethod));
+    
+    if (didAddMethod) {
+        class_replaceMethod(cls, dest, method_getImplementation(srcMethod), method_getTypeEncoding(srcMethod));
+    }
+    else {
+        method_exchangeImplementations(srcMethod, destMethod);
+    }
 }
 @end

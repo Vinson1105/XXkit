@@ -127,6 +127,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - <Bundle>
 + (NSBundle*)bundleNamed:(NSString*)name;
+
+#pragma mark - <Run Time>
++ (void)replaceMethod:(Class)cls src:(SEL)src dest:(SEL)dest;
 @end
 
 NS_ASSUME_NONNULL_END
