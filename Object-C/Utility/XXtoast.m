@@ -3,30 +3,46 @@
 #import "./XXtimer.h"
 
 /// 用于显示的组件
-@interface XXtoastItem : UIButton
+@interface XXtoastItem : UIView
 @property (nonatomic,strong) XXtimer *timer;
+@property (nonatomic,strong) UILabel *titleLabel;
 @end
 @implementation XXtoastItem
-+(XXtoastItem*) toastItemWithMessage:(NSString*)message duration:(NSTimeInterval)duration{
-    XXtoastItem *item = [XXtoastItem buttonWithType:UIButtonTypeCustom];
-    item.translatesAutoresizingMaskIntoConstraints = NO;
-    item.titleLabel.font        = [UIFont systemFontOfSize:15];
-    item.backgroundColor        = [UIColor colorWithWhite:0 alpha:0.7];
-    item.layer.cornerRadius     = 4;
-    item.contentEdgeInsets      = UIEdgeInsetsMake(4, 4, 4, 4);
-    [item setTitle:message forState:UIControlStateNormal];
-    [item setTitleColor:UIColor.whiteColor forState:UIControlStateNormal];
-    
-    item.timer = [XXtimer timerWithDelay:0 interval:duration singleShot:YES];
-    __weak XXtoastItem *wi = item;
-    item.timer.onTimeout = ^(XXtimer * _Nonnull timer, int times) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            __strong XXtoastItem *si = wi;
-            [si removeFromSuperview];
-        });
-    };
-    
-    return item;
++(XXtoastItem*) toastItemWithMessage:(NSString*)message duration:(CGFloat)duration{
+    return [[XXtoastItem alloc] initWithMessage:message duration:duration];
+}
+- (instancetype)initWithMessage:(NSString*)message duration:(CGFloat)duration{
+    self = [super init];
+    if (self) {
+        self.translatesAutoresizingMaskIntoConstraints = NO;
+        
+        _titleLabel                 = [UILabel new];
+        _titleLabel.textAlignment   = NSTextAlignmentCenter;
+        _titleLabel.numberOfLines   = 0;
+        _titleLabel.font            = [UIFont systemFontOfSize:15];
+        _titleLabel.text            = message;
+        _titleLabel.textColor       = UIColor.whiteColor;
+        _titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        [self addSubview:_titleLabel];
+        
+        [_titleLabel.topAnchor constraintEqualToAnchor:self.topAnchor constant:4].active = YES;
+        [_titleLabel.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:4].active = YES;
+        [_titleLabel.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-4].active = YES;
+        [_titleLabel.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-4].active = YES;
+
+        _timer = [XXtimer timerWithDelay:0 interval:duration singleShot:YES];
+        __weak typeof(self) ws = self;
+        _timer.onTimeout = ^(XXtimer *timer, int times) {
+            __strong typeof(ws) ss = ws;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [ss removeFromSuperview];
+            });
+        };
+        
+        self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.7];
+        self.layer.cornerRadius = 4;
+    }
+    return self;
 }
 @end
 
