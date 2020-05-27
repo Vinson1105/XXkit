@@ -1,8 +1,17 @@
+//
+//  XXtoast.m
+//  iCamSee
+//
+//  Created by VINSON on 2020/4/27.
+//  Copyright © 2020 Macrovideo. All rights reserved.
+//
+
 #import "XXtoast.h"
 #import <UIKit/UIKit.h>
-#import "./XXtimer.h"
+#import "XXtimer.h"
 
-/// 用于显示的组件
+
+
 @interface XXtoastItem : UIView
 @property (nonatomic,strong) XXtimer *timer;
 @property (nonatomic,strong) UILabel *titleLabel;
@@ -29,10 +38,11 @@
         [_titleLabel.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:4].active = YES;
         [_titleLabel.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-4].active = YES;
         [_titleLabel.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-4].active = YES;
+        [_titleLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
 
         _timer = [XXtimer timerWithDelay:0 interval:duration singleShot:YES];
         __weak typeof(self) ws = self;
-        _timer.onTimeout = ^(XXtimer *timer, int times) {
+        _timer.onTimeout = ^(int times) {
             __strong typeof(ws) ss = ws;
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ss removeFromSuperview];
@@ -41,28 +51,27 @@
         
         self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.7];
         self.layer.cornerRadius = 4;
+        [self setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
     }
     return self;
 }
 @end
 
-/// 管理显示组件
 @interface XXtoast()
 @property (nonatomic,strong) XXtoastItem *item;
 @end
+
 @implementation XXtoast
 + (void)showMessage:(NSString*)msg{
-    /// 每次都重新生成一个新的组件，避免XXtoast中的item被复用
     XXtoast *toast = [[XXtoast alloc] initWithMessage:msg duration:1.5];
     [toast show];
 }
 + (void)showMessage:(NSString*)msg duration:(CGFloat)duartion{
-    /// 每次都重新生成一个新的组件，避免XXtoast中的item被复用
     XXtoast *toast = [[XXtoast alloc] initWithMessage:msg duration:duartion];
     [toast show];
 }
 
-- (instancetype)initWithMessage:(NSString*)message duration:(NSTimeInterval)duration{
+- (instancetype)initWithMessage:(NSString*)message duration:(CGFloat)duration{
     self = [super init];
     if(self){
         _item = [XXtoastItem toastItemWithMessage:message duration:duration];
@@ -75,6 +84,15 @@
         [keyWindow addSubview:_item];
         [self.item.centerXAnchor constraintEqualToAnchor:keyWindow.centerXAnchor].active = YES;
         [self.item.centerYAnchor constraintEqualToAnchor:keyWindow.centerYAnchor].active = YES;
+        
+        NSLayoutConstraint *constraint = [self.item.leadingAnchor constraintGreaterThanOrEqualToAnchor:keyWindow.leadingAnchor constant:20];
+        constraint.priority = 500;
+        constraint.active = YES;
+        
+        constraint = [self.item.trailingAnchor constraintGreaterThanOrEqualToAnchor:keyWindow.trailingAnchor constant:-20];
+        constraint.priority = 500;
+        constraint.active = YES;
+        
         [_item.timer start];
     }
     else{
@@ -83,6 +101,15 @@
             [keyWindow addSubview:self.item];
             [self.item.centerXAnchor constraintEqualToAnchor:keyWindow.centerXAnchor].active = YES;
             [self.item.centerYAnchor constraintEqualToAnchor:keyWindow.centerYAnchor].active = YES;
+            
+            NSLayoutConstraint *constraint = [self.item.leadingAnchor constraintGreaterThanOrEqualToAnchor:keyWindow.leadingAnchor constant:20];
+            constraint.priority = 500;
+            constraint.active = YES;
+            
+            constraint = [self.item.trailingAnchor constraintGreaterThanOrEqualToAnchor:keyWindow.trailingAnchor constant:-20];
+            constraint.priority = 500;
+            constraint.active = YES;
+            
             [self.item.timer start];
         });
     }
