@@ -1,11 +1,3 @@
-//
-//  XXtoast.m
-//  iCamSee
-//
-//  Created by VINSON on 2020/4/27.
-//  Copyright © 2020 Macrovideo. All rights reserved.
-//
-
 #import "XXtoast.h"
 #import <UIKit/UIKit.h>
 #import "XXtimer.h"
@@ -38,11 +30,13 @@
         [_titleLabel.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:4].active = YES;
         [_titleLabel.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-4].active = YES;
         [_titleLabel.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-4].active = YES;
-        [_titleLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
+        //[_titleLabel setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
+        [_titleLabel setContentHuggingPriority:501 forAxis:UILayoutConstraintAxisHorizontal];
+        [_titleLabel setContentCompressionResistancePriority:499 forAxis:UILayoutConstraintAxisHorizontal];
 
         _timer = [XXtimer timerWithDelay:0 interval:duration singleShot:YES];
         __weak typeof(self) ws = self;
-        _timer.onTimeout = ^(int times) {
+        _timer.onTimeout = ^(XXtimer *timer, int times) {
             __strong typeof(ws) ss = ws;
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ss removeFromSuperview];
@@ -51,7 +45,8 @@
         
         self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.7];
         self.layer.cornerRadius = 4;
-        [self setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
+        [self setContentHuggingPriority:501 forAxis:UILayoutConstraintAxisHorizontal];
+        [self setContentCompressionResistancePriority:499 forAxis:UILayoutConstraintAxisHorizontal];
     }
     return self;
 }
