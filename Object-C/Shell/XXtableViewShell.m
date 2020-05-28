@@ -27,7 +27,7 @@
     return self;
 }
 
-#pragma mark - <Public>
+#pragma mark - <Config>
 - (void)shell:(UITableView*)tableView{
     if(nil != _tableView) return;
     _tableView = tableView;
@@ -88,7 +88,7 @@
     [_tableView reloadData];
 }
 
-#pragma mark - <Public>
+#pragma mark - <Section>
 - (void)addSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
     NSMutableDictionary *section = [NSMutableDictionary new];
     if(nil != header) [section setObject:header forKey:kHeader];
@@ -109,6 +109,8 @@
     [_sectionDatas removeObjectAtIndex:index];
     [_tableView reloadData];
 }
+
+#pragma mark - <Row>
 - (void)resetRow:(nullable NSArray*)row atSection:(int)section{
     NSMutableDictionary *sectionData = section < _sectionDatas.count?_sectionDatas[section]:nil;
     if(nil == sectionData){
@@ -161,6 +163,16 @@
     }
     [rows replaceObjectAtIndex:indexPath.row withObject:data];
     [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+}
+- (void)removeRowAtIndexPath:(NSIndexPath*)indexPath{
+    NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
+    if(nil == rows){
+        return;
+    }
+    if(indexPath.row>=0 && indexPath.row<rows.count){
+        [rows removeObjectAtIndex:indexPath.row];
+        [_tableView reloadData];
+    }
 }
 
 #pragma mark - <Private>
@@ -294,7 +306,15 @@
 }
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath{
     if(editingStyle == UITableViewCellEditingStyleDelete){
-        NSLog(@"%@ delete", indexPath);
+        BOOL toDelete = YES;
+        if(_onRowEditingDelete){
+            id data = [self getRowDataWithSection:(int)indexPath.section row:(int)indexPath.row];
+            toDelete = _onRowEditingDelete(self,indexPath,data);
+        }
+        
+        if(toDelete){
+            [self removeRowAtIndexPath:indexPath];
+        }
     }
 }
 - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath{

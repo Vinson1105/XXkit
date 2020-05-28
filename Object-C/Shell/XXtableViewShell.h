@@ -1,4 +1,7 @@
 /**
+ 2020.05.28
+ 1、新增row的editing状态删除处理、回调
+ 
  2020.05.10
  1、新增对section中的row数据追加接口
  2、addRow和resetRow的参数section为当前section编号的最大值+1，则创建一个新section
@@ -35,13 +38,15 @@ typedef enum : NSUInteger {
 } XXtableViewShellRowLoadType;
 
 @interface XXtableViewShell : NSObject<UITableViewDelegate,UITableViewDataSource>
-@property (nonatomic,weak,readonly) UITableView *tableView;             // 目标UITableView
-@property (nonatomic,strong,readonly) NSMutableArray *sectionDatas;     // TableView数据
-@property (nonatomic,copy,nullable) NSString *rowType;                  // row（cell）的类型，nil为使用系统组件
-@property (nonatomic,assign) XXtableViewShellRowLoadType rowLoadType;   // 自定义row（cell）的加载方式
-@property (nonatomic,assign) UITableViewCellStyle rowSystemStyle;       // 系统row（cell）的样式
+@property (nonatomic,weak,readonly) UITableView *tableView;                     // 目标UITableView
+@property (nonatomic,strong,readonly) NSMutableArray *sectionDatas;             // TableView数据
+@property (nonatomic,copy,nullable) NSString *rowType;                          // row（cell）的类型，nil为使用系统组件
+@property (nonatomic,assign,readonly) XXtableViewShellRowLoadType rowLoadType;  // 自定义row（cell）的加载方式
+@property (nonatomic,assign,readonly) UITableViewCellStyle rowSystemStyle;      // 系统row（cell）的样式
 
-@property (nonatomic,copy,nullable) void(^onRowClicked)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);   // row点击回调
+
+@property (nonatomic,copy,nullable) void(^onRowClicked)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);          // row点击回调
+@property (nonatomic,copy,nullable) BOOL(^onRowEditingDelete)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);    // editing状态下，row删除编辑回调，通过返回NO：取消删除，返回YES：确认删除
 
 /**
  设置shell的目标TableView
@@ -121,6 +126,12 @@ typedef enum : NSUInteger {
  @param indexPath 需要重置row（cell）的位置
  */
 - (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath;
+
+/**
+ 移除指定indexPath的row
+ @param indexPath 需要删除row的位置
+ */
+- (void)removeRowAtIndexPath:(NSIndexPath*)indexPath;
 @end
 
 
