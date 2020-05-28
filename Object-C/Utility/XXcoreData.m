@@ -102,6 +102,10 @@ static XXcoreData *_instance = nil;
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%@ <= %@", key, value];
     [self deleteObject:entryName predicate:predicate error:error];
 }
+- (void)deleteObject:(NSManagedObject*)object error:(NSError* _Nullable*)error{
+    [_context deleteObject:object];
+    [_context save:error];
+}
 
 #pragma mark - 查询
 - (NSArray*)getObject:(NSString*)entryName predicate:(nullable NSPredicate*)predicate error:(NSError* _Nullable*)error{

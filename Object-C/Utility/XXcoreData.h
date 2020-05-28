@@ -45,6 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)deleteObject:(NSString*)entryName key:(NSString*)key greaterThanOrEqualTo:(id)value error:(NSError* _Nullable*)error;
 - (void)deleteObject:(NSString*)entryName key:(NSString*)key lessThanTo:(id)value error:(NSError* _Nullable*)error;
 - (void)deleteObject:(NSString*)entryName key:(NSString*)key lessThanOrEqualTo:(id)value error:(NSError* _Nullable*)error;
+- (void)deleteObject:(NSManagedObject*)object error:(NSError* _Nullable*)error;
 
 /**
  查找对象
