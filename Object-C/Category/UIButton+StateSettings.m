@@ -80,9 +80,7 @@
     [self checkState];
 }
 
-- (void) checkState{
-    NSLog(@"[StateSettings] text:%@ state:%lu", self.titleLabel.text, (unsigned long)self.state);
-    
+- (void) checkState{    
     NSMutableDictionary *settings = self.stateToSettings[@(self.state)];
     if(nil == settings){
         return;
