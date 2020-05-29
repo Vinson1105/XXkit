@@ -11,7 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface XXaudioFilePlayer : AVAudioPlayer
-@property (nonatomic,copy,nullable) void(^onProgressChanged)(XXaudioFilePlayer *player);
+@property (nonatomic,copy,nullable) void(^onProgressUpdate)(XXaudioFilePlayer *player);
 @property (nonatomic,copy,nullable) void(^onFinished)(XXaudioFilePlayer *player, BOOL succeed);
 @property (nonatomic,copy,nullable) void(^onDecodeError)(XXaudioFilePlayer *player, NSError *error);
 @end
