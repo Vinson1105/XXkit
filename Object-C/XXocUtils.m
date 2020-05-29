@@ -9,6 +9,7 @@
 #import "XXocUtils.h"
 #import <LocalAuthentication/LocalAuthentication.h>
 #import <objc/runtime.h>
+#import <AVFoundation/AVFoundation.h>
 
 static NSDateFormatter *_dateFormatter;
 
@@ -185,6 +186,31 @@ static NSDateFormatter *_dateFormatter;
     return [formatter stringFromDate:[NSDate dateWithTimeIntervalSince1970:timestamp]];
 }
 
+#pragma mark - <Time>
++ (NSString*)timeStringWithSecond:(NSTimeInterval)second timeFormat:(NSString*)format{
+    NSString *string = format;
+    
+    NSRange hh = [format rangeOfString:@"hh"];
+    if(hh.location != NSNotFound){
+        NSString *hour = [NSString stringWithFormat:@"%02d",(int)second/3600];
+        string = [string stringByReplacingCharactersInRange:hh withString:hour];
+    }
+    
+    NSRange mm = [format rangeOfString:@"mm"];
+    if(mm.location != NSNotFound){
+        NSString *min = [NSString stringWithFormat:@"%02d",((int)second%3600)/60];
+        string = [string stringByReplacingCharactersInRange:mm withString:min];
+    }
+    
+    NSRange ss = [format rangeOfString:@"ss"];
+    if(mm.location != NSNotFound){
+        NSString *sec = [NSString stringWithFormat:@"%02d",(int)second%60];
+        string = [string stringByReplacingCharactersInRange:ss withString:sec];
+    }
+    
+    return string;
+}
+
 #pragma mark - <File System>
 + (NSString*)documentAbsolutePathString{
     return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
@@ -262,5 +288,13 @@ static NSDateFormatter *_dateFormatter;
     else {
         method_exchangeImplementations(srcMethod, destMethod);
     }
+}
+
+#pragma mark - <Audio/Video>
++ (NSTimeInterval)audioDuration:(NSURL*)url{
+    NSDictionary *options   = @{AVURLAssetPreferPreciseDurationAndTimingKey:@(YES)};
+    AVURLAsset *asset       = [AVURLAsset URLAssetWithURL:url options:options];;
+    CMTime duration         = asset.duration;
+    return CMTimeGetSeconds(duration);
 }
 @end

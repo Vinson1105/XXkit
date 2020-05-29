@@ -103,6 +103,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSString*)dateStringWithTimestamp:(NSTimeInterval)timestamp;
 + (NSString*)dateStringWithTimestamp:(NSTimeInterval)timestamp dateFormat:(NSString*)format timeZone:(NSTimeZone*)timeZone;
 
+#pragma mark - <Time>
++ (NSString*)timeStringWithSecond:(NSTimeInterval)second timeFormat:(NSString*)format;
+
 #pragma mark - <File System>
 /** 返回沙箱文档文件夹路径 */
 + (NSString*)documentAbsolutePathString;
@@ -130,6 +133,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - <Run Time>
 + (void)replaceMethod:(Class)cls src:(SEL)src dest:(SEL)dest;
+
+#pragma mark - <Audio/Video>
++ (NSTimeInterval)audioDuration:(NSURL*)url;
 @end
 
 NS_ASSUME_NONNULL_END
