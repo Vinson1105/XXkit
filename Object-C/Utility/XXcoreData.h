@@ -18,12 +18,14 @@ NS_ASSUME_NONNULL_BEGIN
 /** 单例 */
 + (XXcoreData*)sharedInstance;
 
+- (void)configModel:(NSString*)name;
+
 /**
  配置模型
  @param name 模型的文件名称，即【***】.xcdatamodeld中的***
  @param bundle 模型文件所在的包，为nil时，使用mainBundle
  @param storeType 数据库类型，支持类型查看‘Persistent Store Types’
- @param storeUrl 数据库路径
+ @param storeUrl 数据库保存路径
  */
 - (void)configModel:(NSString*)name bundle:(nullable NSBundle*)bundle storeType:(NSString*)storeType storeUrl:(NSURL*)storeUrl;
 
