@@ -174,6 +174,21 @@
         [_tableView reloadData];
     }
 }
+- (void)rowDoSomething:(NSString*)event info:(nullable id)info atIndex:(NSIndexPath*)indexPath{
+    UITableViewCell *cell = [_tableView cellForRowAtIndexPath:indexPath];
+    if(nil == cell){
+        NSLog(@"[XXtableViewShell] [rowDoSomething] indexPath（%@）对应的cell为nil。", indexPath);
+        return;
+    }
+    
+    if(![cell conformsToProtocol:@protocol(XXtableViewCellDelegate)]){
+        NSLog(@"[XXtableViewShell] [rowDoSomething] cell没有遵循协议‘XXtableViewCellDelegate’。");
+        return;
+    }
+    
+    id<XXtableViewCellDelegate> xxcell = (id<XXtableViewCellDelegate>)cell;
+    [xxcell doSomething:event info:info];
+}
 
 #pragma mark - <Private>
 - (nullable NSMutableArray*)getRowWithSection:(int)section{

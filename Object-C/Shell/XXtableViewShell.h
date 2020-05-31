@@ -132,6 +132,15 @@ typedef enum : NSUInteger {
  @param indexPath 需要删除row的位置
  */
 - (void)removeRowAtIndexPath:(NSIndexPath*)indexPath;
+
+/**
+ 要求row进行某些操作，这个跟resetData有所区别，resetData意指需要重置或者设置row的本身数据，
+ doSomething需要执行某些动作，shell的本身不会对data进行修改，需要又row/cell本身去判断这个操作是否需要进行data修改
+ @param event 需要执行的事件名称
+ @param info 执行需要携带的参数
+ @param indexPath cell所在的位置
+ */
+- (void)rowDoSomething:(NSString*)event info:(nullable id)info atIndex:(NSIndexPath*)indexPath;
 @end
 
 
@@ -140,5 +149,6 @@ typedef enum : NSUInteger {
 @property (nonatomic,weak) XXtableViewShell *tableViewShell;
 @property (nonatomic,strong) NSIndexPath *indexPath;
 - (void)resetData:(id)data;
+- (void)doSomething:(NSString*)event info:(nullable id)info;
 @end
 NS_ASSUME_NONNULL_END
