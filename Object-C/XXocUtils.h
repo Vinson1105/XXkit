@@ -70,8 +70,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - <UIButton>
 + (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg;
++ (void)button:(UIButton*)button norImg:(UIImage*)norImg disImg:(UIImage*)disImg;
++ (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg disImg:(UIImage*)disImg;
 + (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg disNorImg:(UIImage*)disNorImg disSelImg:(UIImage*)disSelImg;
+
 + (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt;
++ (void)button:(UIButton*)button norTxt:(NSString*)norTxt disTxt:(NSString*)disTxt;
++ (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt disTxt:(NSString*)disTxt;
 + (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt disNorTxt:(NSString*)disNorTxt disSelTxt:(NSString*)disSelTxt;
 
 #pragma mark - <UIColor>

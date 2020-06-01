@@ -54,6 +54,15 @@ static NSDateFormatter *_dateFormatter;
     [button setImage:norImg forState:UIControlStateNormal];
     [button setImage:selImg forState:UIControlStateSelected];
 }
++ (void)button:(UIButton*)button norImg:(UIImage*)norImg disImg:(UIImage*)disImg{
+    [button setImage:norImg forState:UIControlStateNormal];
+    [button setImage:disImg forState:UIControlStateDisabled];
+}
++ (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg disImg:(UIImage*)disImg{
+    [button setImage:norImg forState:UIControlStateNormal];
+    [button setImage:selImg forState:UIControlStateSelected];
+    [button setImage:disImg forState:UIControlStateDisabled];
+}
 + (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg disNorImg:(UIImage*)disNorImg disSelImg:(UIImage*)disSelImg{
     [button setImage:norImg forState:UIControlStateNormal];
     [button setImage:selImg forState:UIControlStateSelected];
@@ -63,6 +72,15 @@ static NSDateFormatter *_dateFormatter;
 + (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt{
     [button setTitle:norTxt forState:UIControlStateNormal];
     [button setTitle:selTxt forState:UIControlStateSelected];
+}
++ (void)button:(UIButton*)button norTxt:(NSString*)norTxt disTxt:(NSString*)disTxt{
+    [button setTitle:norTxt forState:UIControlStateNormal];
+    [button setTitle:disTxt forState:UIControlStateDisabled];
+}
++ (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt disTxt:(NSString*)disTxt{
+    [button setTitle:norTxt forState:UIControlStateNormal];
+    [button setTitle:selTxt forState:UIControlStateSelected];
+    [button setTitle:disTxt forState:UIControlStateDisabled];
 }
 + (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt disNorTxt:(NSString*)disNorTxt disSelTxt:(NSString*)disSelTxt{
     [button setTitle:norTxt forState:UIControlStateNormal];
