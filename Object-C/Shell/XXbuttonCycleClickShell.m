@@ -6,15 +6,15 @@
 //  Copyright © 2020 Macrovideo. All rights reserved.
 //
 
-#import "XXbuttonCycleStateShell.h"
+#import "XXbuttonCycleClickShell.h"
 
-@interface XXbuttonCycleStateShell()
+@interface XXbuttonCycleClickShell()
 @property (nonatomic,strong) NSMutableArray *keys;
 @property (nonatomic,strong) NSMutableDictionary *keyToImage;
 @property (nonatomic,copy) NSString *currentKey;
 @end
 
-@implementation XXbuttonCycleStateShell
+@implementation XXbuttonCycleClickShell
 - (instancetype)init
 {
     self = [super init];
@@ -29,7 +29,7 @@
     _button = button;
     [_button addTarget:self action:@selector(onButtonTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
 }
-- (void)configCycleState:(NSString *)key image:(UIImage *)image{
+- (void)add:(NSString *)key image:(UIImage *)image{
     _keyToImage[key] = image;
     if(![_keys containsObject:key]){
         [_keys addObject:key];
@@ -39,7 +39,7 @@
         [_button setImage:image forState:UIControlStateNormal];
     }
 }
-- (void)resetCycleState:(NSString *)key{
+- (void)reset:(NSString *)key{
     if(_currentKey == key){
         return;
     }
@@ -58,7 +58,6 @@
     
     NSUInteger index = [_keys indexOfObject:_currentKey];
     if(NSNotFound == index){
-        NSLog(@"[XXbuttonCycleStateShell] key(%@)不存在在已有列表中",_currentKey);
         return;
     }
     
@@ -71,8 +70,8 @@
     UIImage *image = [_keyToImage objectForKey:_currentKey];
     [_button setImage:image forState:UIControlStateNormal];
     
-    if(_onCycleStateChanged){
-        _onCycleStateChanged(self,previous,_currentKey);
+    if(_onClicked){
+        _onClicked(self,previous,_currentKey);
     }
 }
 @end
