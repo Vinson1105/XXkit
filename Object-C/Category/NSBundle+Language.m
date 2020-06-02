@@ -1,7 +1,8 @@
-#import "NSBundle+XXlanguage.h"
+#import "NSBundle+Language.h"
 #import <objc/runtime.h>
-#define STANDARD_USER_DEFAULT   [NSUserDefaults standardUserDefaults]
-static NSString *languageKey                = @"XXlanguageKey"; // 语言存储的关键字
+#define kLanguage @"Language"
+#define kUserDefaults   [NSUserDefaults standardUserDefaults]
+#define kSigCurrentLanguageChanged @"sigCurrentLanguageChanged"
 
 //
 //
@@ -11,8 +12,8 @@ static NSString *languageKey                = @"XXlanguageKey"; // 语言存储�
 
 @implementation XXlanguageBundle
 + (NSBundle *)mainBundle{
-    // 获取之前存储的语言并加载翻译文件
-    NSString *currentLanguage = [STANDARD_USER_DEFAULT valueForKey:languageKey];
+    /// 根据当前设置的语言，选择对应的包
+    NSString *currentLanguage = [kUserDefaults valueForKey:kLanguage];
     if(nil != currentLanguage){
         NSString *path = [[super mainBundle] pathForResource:currentLanguage ofType:@"lproj"];
         if (path.length) {
@@ -21,9 +22,8 @@ static NSString *languageKey                = @"XXlanguageKey"; // 语言存储�
     }
     return nil;
 }
-- (NSString *)localizedStringForKey:(NSString *)key value:(NSString *)value table:(NSString *)tableName
-{
-    // 返回mainBundle,是根据当前语言,返回mainBundle为nil时,即为语言是跟随系统
+- (NSString *)localizedStringForKey:(NSString *)key value:(NSString *)value table:(NSString *)tableName{
+    /// 返回mainBundle,是根据当前语言,返回mainBundle为nil时,即为语言是跟随系统
     if ([XXlanguageBundle mainBundle]) {
         return [[XXlanguageBundle mainBundle] localizedStringForKey:key value:value table:tableName];
     } else {
@@ -37,39 +37,42 @@ static NSString *languageKey                = @"XXlanguageKey"; // 语言存储�
 //
 //
 @implementation NSBundle(XXlanguage)
-+ (NSString*) currentLanguage{
-    return [STANDARD_USER_DEFAULT valueForKey:languageKey];
-}
-+ (void) setCurrentLanguage:(NSString* _Nullable)language Refresh:(BOOL)refreshable{
-    static NSString *lastLanguage = nil;
-    lastLanguage = [STANDARD_USER_DEFAULT valueForKey:languageKey];
-    if (language == lastLanguage) {
-        return;
-    }
-    
-    if (nil == language) {
-        [STANDARD_USER_DEFAULT removeObjectForKey:languageKey];
-    }
-    else{
-        [STANDARD_USER_DEFAULT setValue:language forKey:languageKey];
-    }
-    
-    if (refreshable) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self refreshViewController];
-        });
-    }
-}
-
 + (void)load{
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        // 替换原来的mainBundle
+        /// 替换原来的mainBundle
         object_setClass([NSBundle mainBundle], [XXlanguageBundle class]);
     });
 }
++ (NSArray *)xx_avaliableLanguages{
+    NSString *dir = [NSBundle mainBundle].resourcePath;
+    dir = [dir stringByAppendingString:@""];
+    return [[NSBundle mainBundle] pathsForResourcesOfType:@"lproj" inDirectory:dir];
+}
++ (nullable NSString*) xx_currentLanguage{
+    return [kUserDefaults valueForKey:kLanguage];
+}
++ (void)xx_setLanguage:(nullable NSString *)language{
+    /// 如果当前language和目标language都是为nil，或者相等直接返回
+    NSString *currentLanguage = [self xx_currentLanguage];
+    if (currentLanguage==language || [[self xx_currentLanguage] isEqualToString:language]) {
+        return;
+    }
+    
+    /// TODO: 判断是否为可选语言
+    
+    /// 更改语言
+    if (nil == language) {
+        [kUserDefaults removeObjectForKey:kLanguage];
+    }
+    else{
+        [kUserDefaults setValue:language forKey:kLanguage];
+    }
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kSigCurrentLanguageChanged object:nil userInfo:nil];
+}
 
-+ (void) refreshViewController{
++ (void)refreshViewController{
     // 注意:可是为keyWindow.rootViewController必然为UINavigationController
     UIViewController *root = [UIApplication sharedApplication].keyWindow.rootViewController;
     if(![root isKindOfClass: [UINavigationController class]]){
