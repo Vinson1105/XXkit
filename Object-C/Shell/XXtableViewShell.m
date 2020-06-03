@@ -156,14 +156,6 @@
     }
     [_tableView reloadData];
 }
-- (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath{
-    NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
-    if(nil == rows){
-        return;
-    }
-    [rows replaceObjectAtIndex:indexPath.row withObject:data];
-    [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
-}
 - (void)removeRowAtIndexPath:(NSIndexPath*)indexPath{
     NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
     if(nil == rows){
@@ -174,6 +166,22 @@
         [_tableView reloadData];
     }
 }
+- (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath{
+    NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
+    if(nil == rows){
+        return;
+    }
+    [rows replaceObjectAtIndex:indexPath.row withObject:data];
+    [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+}
+- (id)getDataAtIndexPath:(NSIndexPath*)indexPath{
+    NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
+    if(nil == rows){
+        return nil;
+    }
+    return [rows objectAtIndex:indexPath.row];
+}
+
 - (void)rowDoSomething:(NSString*)event info:(nullable id)info atIndex:(NSIndexPath*)indexPath{
     UITableViewCell *cell = [_tableView cellForRowAtIndexPath:indexPath];
     if(nil == cell){

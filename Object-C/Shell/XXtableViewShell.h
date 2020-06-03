@@ -121,17 +121,22 @@ typedef enum : NSUInteger {
 - (void)addRow:(NSArray*)row atSection:(int)section;
 
 /**
+ 移除指定indexPath的row
+ @param indexPath 需要删除row的位置
+ */
+- (void)removeRowAtIndexPath:(NSIndexPath*)indexPath;
+
+/**
  重置指定indexPath的row数据
  @param data 单个row（cell）的数据
  @param indexPath 需要重置row（cell）的位置
  */
 - (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath;
-
 /**
- 移除指定indexPath的row
- @param indexPath 需要删除row的位置
+ 获取指定indexPath的row数据
+ @param indexPath 需要重置row（cell）的位置
  */
-- (void)removeRowAtIndexPath:(NSIndexPath*)indexPath;
+- (id)getDataAtIndexPath:(NSIndexPath*)indexPath;
 
 /**
  要求row进行某些操作，这个跟resetData有所区别，resetData意指需要重置或者设置row的本身数据，
