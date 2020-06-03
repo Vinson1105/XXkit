@@ -1,6 +1,6 @@
 #import "NSBundle+Language.h"
 #import <objc/runtime.h>
-#define kLanguage @"Language"
+#define kLanguage @"XXlanguage"
 #define kUserDefaults   [NSUserDefaults standardUserDefaults]
 #define kSigCurrentLanguageChanged @"sigCurrentLanguageChanged"
 
@@ -13,7 +13,7 @@
 @implementation XXlanguageBundle
 + (NSBundle *)mainBundle{
     /// 根据当前设置的语言，选择对应的包
-    NSString *currentLanguage = [kUserDefaults valueForKey:kLanguage];
+    NSString *currentLanguage = [kUserDefaults objectForKey:kLanguage];
     if(nil != currentLanguage){
         NSString *path = [[super mainBundle] pathForResource:currentLanguage ofType:@"lproj"];
         if (path.length) {
@@ -36,7 +36,7 @@
 //
 //
 //
-@implementation NSBundle(XXlanguage)
+@implementation NSBundle(Language)
 + (void)load{
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -45,9 +45,28 @@
     });
 }
 + (NSArray *)xx_avaliableLanguages{
-    NSString *dir = [NSBundle mainBundle].resourcePath;
-    dir = [dir stringByAppendingString:@""];
-    return [[NSBundle mainBundle] pathsForResourcesOfType:@"lproj" inDirectory:dir];
+    NSArray *array = [[NSBundle mainBundle] pathsForResourcesOfType:@"lproj" inDirectory:nil];
+    if(0 == array.count){
+        return nil;
+    }
+    
+    NSString *dir = [[NSBundle mainBundle].resourcePath stringByAppendingString:@"/"];
+    NSMutableArray *languages = [NSMutableArray new];
+    for (NSString *path in array) {
+        /// 获取路径前缀位置
+        NSRange prefix      = [path rangeOfString:dir];
+        /// 获取扩展名位置
+        NSRange suffix      = [path rangeOfString:@".lproj"];
+        /// 文件名起始=前缀长度，前缀长度 - 扩展名的起始 = 文件名长度
+        NSRange content     = NSMakeRange(prefix.length, suffix.location-prefix.length);
+        NSString *language  = [path substringWithRange:content];
+        
+        /// 过滤Base
+        if(language && ![language isEqualToString:@"Base"]){
+            [languages addObject:language];
+        }
+    }
+    return languages;
 }
 + (nullable NSString*) xx_currentLanguage{
     return [kUserDefaults valueForKey:kLanguage];
