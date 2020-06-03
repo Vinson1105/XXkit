@@ -66,7 +66,11 @@
             [languages addObject:language];
         }
     }
-    return languages;
+    
+    NSArray *languagesAfterSorted = [languages sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        return [obj1 compare:obj2] == NSOrderedDescending; // 升序
+    }];
+    return languagesAfterSorted;
 }
 + (nullable NSString*) xx_currentLanguage{
     return [kUserDefaults valueForKey:kLanguage];
