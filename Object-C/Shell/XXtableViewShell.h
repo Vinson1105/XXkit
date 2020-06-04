@@ -44,6 +44,7 @@ typedef enum : NSUInteger {
 @property (nonatomic,assign,readonly) XXtableViewShellRowLoadType rowLoadType;  // 自定义row（cell）的加载方式
 @property (nonatomic,assign,readonly) UITableViewCellStyle rowSystemStyle;      // 系统row（cell）的样式
 
+@property (nonatomic,assign) BOOL canSlideDelete;   /// 能否左滑动删除，默认为NO，注意设置了tableView.edit之后不能通过左滑动删除
 
 @property (nonatomic,copy,nullable) void(^onRowClicked)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);          // row点击回调
 @property (nonatomic,copy,nullable) BOOL(^onRowEditingDelete)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);    // editing状态下，row删除编辑回调，通过返回NO：取消删除，返回YES：确认删除
