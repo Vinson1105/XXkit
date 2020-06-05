@@ -12,6 +12,16 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface XXmaskView : UIView<UIGestureRecognizerDelegate>
+/// 方案一
+@property (nonatomic,assign) BOOL touchToHidden;
+@property (nonatomic,assign) BOOL animated;
++ (XXmaskView*)maskViewWithContent:(UIView*)content;
++ (XXmaskView*)maskViewWithContentAtCenter:(UIView*)content edgeInsets:(UIEdgeInsets)edgeInsets;
++ (XXmaskView*)maskViewWithContentAtBottom:(UIView*)content edgeInsets:(UIEdgeInsets)edgeInsets;
+
+/// 方案二
++ (XXmaskView*)sharedInstance;
+- (void)show:(UIView*)view animated:(BOOL)animated;
 
 /**
  * @brief    单例,使用单例时,在某些情况下可能出现无法显示的问题,暂时没有解决
