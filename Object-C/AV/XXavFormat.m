@@ -1,12 +1,4 @@
-//
-//  XXaudioFormat.m
-//  UITestForiOS
-//
-//  Created by VINSON on 2020/3/24.
-//  Copyright © 2020 xxx.UITestForiOS. All rights reserved.
-//
-
-#import "XXaudioFormat.h"
+#import "XXavFormat.h"
 
 @implementation XXaudioFormat
 - (nonnull id)copyWithZone:(nullable NSZone *)zone {
@@ -19,4 +11,14 @@
     return obj;
 }
 
+@implementation XXvideoFormat
+- (nonnull id)copyWithZone:(nullable NSZone *)zone {
+    XXvideoFormat *obj = [[[self class] allocWithZone:zone] init];
+    obj.width = self.width;
+    obj.height = self.height;
+    obj.frameRate = self.frameRate;
+    obj.bitRate = self.bitRate;
+    obj.pixelID = self.pixelID;
+    return obj;
+}
 @end

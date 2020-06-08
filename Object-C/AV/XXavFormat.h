@@ -1,11 +1,7 @@
-//
-//  XXaudioFormat.h
-//  UITestForiOS
-//
-//  Created by VINSON on 2020/3/24.
-//  Copyright © 2020 xxx.UITestForiOS. All rights reserved.
-//
 /**
+ 2020.06.08
+ 新增视频相关参数XXvideoFormat，并更改文件名称
+ 
  2020.03.24
  通用音频格式参数
  */
@@ -26,6 +22,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) AudioFormatID formatID;
 /** AudioStreamBasicDescription Flags，一般是kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked */
 @property (nonatomic,assign) AudioFormatFlags formatFlags;
+@end
+
+@interface XXvideoFormat : NSObject<NSCopying>
+@property (nonatomic,assign) int width;
+@property (nonatomic,assign) int height;
+@property (nonatomic,assign) int frameRate;
+@property (nonatomic,assign) int bitRate;
+@property (nonatomic,assign) CMVideoCodecType pixelID;
 @end
 
 NS_ASSUME_NONNULL_END
