@@ -4,137 +4,186 @@
 #import <CoreFoundation/CoreFoundation.h>
 #include <pthread.h>
 
-#define PARAM_KEY_WIDTH     @"Width"
-#define PARAM_KEY_HEIGHT    @"Height"
-#define PARAM_KEY_FRAMERATE @"FrameRate"
-#define PARAM_KEY_BITRATE   @"BitRate"
-#define PARAM_KEY_IS_H265   @"IsH265"
+#define kTimeScale 90000;
 
-const int TIMESCALE = 90000;
 static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, OSStatus status, VTEncodeInfoFlags infoFlags, CMSampleBufferRef sampleBuffer);
 
-//
-//
-//
 @interface XXh26xEncoder()
-@property (nonatomic,assign) BOOL isRunning;
 @property (nonatomic,assign) VTCompressionSessionRef sessionRef;
-
-@property (nonatomic,assign) int width;
-@property (nonatomic,assign) int height;
-@property (nonatomic,assign) int frameRate;
-@property (nonatomic,assign) int bitRate;
-@property (nonatomic,assign) BOOL isH265;
 @end
 
 @implementation XXh26xEncoder
-+ (id) paramWithWidth:(int)width Height:(int)height FrameRate:(int)frameRate BitRate:(int)bitRate IsH265:(BOOL)isH265{
-    NSDictionary *dictionary = @{
-                                 PARAM_KEY_WIDTH        : @(width),
-                                 PARAM_KEY_HEIGHT       : @(height),
-                                 PARAM_KEY_FRAMERATE    : @(frameRate),
-                                 PARAM_KEY_BITRATE      : @(bitRate),
-                                 PARAM_KEY_IS_H265      : @(isH265),
-                                 };
-    return dictionary;
+#pragma mark - <Init/Dealloc>
++ (nullable XXh26xEncoder*)encoderWithFormat:(XXvideoFormat*)format{
+    return [[XXh26xEncoder alloc] initWithFormat:format];
+}
+- (instancetype)initWithFormat:(XXvideoFormat*)format{
+    self = [super init];
+    if (self) {
+        /// format的有效性检查，空指针 || （不是h265 && 不是h264）
+        if(nil == format ||
+           (format.codecType!=kCMVideoCodecType_HEVC && format.codecType!=kCMVideoCodecType_H264)){
+            return nil;
+        }
+        _sessionRef = [self initSession];
+        if(nil == _sessionRef){
+            return nil;
+        }
+    }
+    return self;
+}
+- (void)dealloc{
+    if(_sessionRef){
+        VTCompressionSessionInvalidate(_sessionRef);
+        CFRelease(_sessionRef);
+    }
+}
+- (nullable VTCompressionSessionRef)initSession{
+    /// 创建session
+    VTCompressionSessionRef session = nil;
+    OSStatus status = VTCompressionSessionCreate(NULL, _format.width, _format.height, _format.codecType,
+                                                 NULL,NULL,NULL, compressionOutputCallback,
+                                                 (__bridge void *)(self), &session);
+    if(noErr != status){
+        return nil;
+    }
+    
+    /// 设置码率，平均码率
+    status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_AverageBitRate, (__bridge CFTypeRef)@(_format.bitRate));
+    
+    /// 设置Profile
+    if(kCMVideoCodecType_HEVC == _format.codecType){
+        /// 265
+        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_HEVC_Main_AutoLevel);
+    }
+    else {
+        /// 264
+        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_H264_Baseline_AutoLevel);
+    }
+    
+    /// 设置实时编码
+    status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
+    
+    /// 设置是否允许生成B帧
+    status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse);
+    
+    /// 设置gop
+    status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_MaxKeyFrameInterval, (__bridge CFTypeRef)@(_format.frameRate));
+    
+    /// 设置session的帧率
+    status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ExpectedFrameRate, (__bridge CFTypeRef)@(_format.frameRate));
+    if (status != noErr) {
+        VTCompressionSessionInvalidate(session);
+        CFRelease(session);
+        return nil;
+    }
+    
+    return session;
 }
 
-#pragma mark - 重载函数: <start> <encode> <stop> <configParam>
-- (BOOL) start{
-    if (_isRunning) {
-        return NO;
-    }
-    
-    OSStatus status;
-    if (nil == _sessionRef) {
-        // 创建session
-        VTCompressionSessionRef session = nil;
-        status = VTCompressionSessionCreate(NULL,
-                                            _width,
-                                            _height,
-                                            _isH265 ? kCMVideoCodecType_HEVC : kCMVideoCodecType_H264,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            compressionOutputCallback,
-                                            (__bridge void *)(self), &session);
-        if (status != noErr) {
-            return NO;
-        }
-        
-        // 设置码率
-        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_AverageBitRate, (__bridge CFTypeRef)@(_bitRate));
-        // 设置profile
-        if (_isH265) {
-            status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_HEVC_Main_AutoLevel);
-        }
-        else{
-            status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_H264_Baseline_AutoLevel);
-        }
-        // 设置实时编码
-        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
-        // 设置是否允许生成B帧
-        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse);
-        // 设置gop
-        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_MaxKeyFrameInterval, (__bridge CFTypeRef)@(_frameRate));
-        // 设置session的帧率
-        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ExpectedFrameRate, (__bridge CFTypeRef)@(_frameRate));
-        if (status != noErr) {
-            VTCompressionSessionInvalidate(session);
-            return NO;
-        }
-        
-        _sessionRef = session;
-    }
-    
-    // 编码器准备编码
-    status = VTCompressionSessionPrepareToEncodeFrames(_sessionRef);
-    if (status != noErr) {
-        return NO;
-    }
-    
-    _isRunning = YES;
-    return YES;
-}
-- (BOOL) encode:(CVImageBufferRef)buffer Timestamp:(NSTimeInterval)timstamp{
-    if (!_isRunning || nil == _sessionRef) {
-        return NO;
-    }
+#pragma mark - <编码>
+- (BOOL)encode:(CVImageBuffer)buffer timestamp:(NSTimeInterval)timestamp{
     // pts
-    CMTime pts = CMTimeMake(timstamp * TIMESCALE, TIMESCALE);
+    CMTime pts = CMTimeMake(timstamp * kTimeScale, kTimeScale);
     // 设置是否为I帧
     //NSDictionary *frameProperties = @{(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame: @(forceKeyFrame)};
     // 自定义指针
     void *voidSelf = (__bridge void*)self;
-    printf("[%.3f] [Encode] PTS:%.3f(开始编码) (线程ID:%p)\n", (double)clock()/(CLOCKS_PER_SEC/10), timstamp, pthread_self());
-    //NSLog(@"[Encode] PTS:%.3f(开始编码) (线程ID:%p)", timstamp, pthread_self());
     VTCompressionSessionEncodeFrame(_sessionRef, buffer, pts, kCMTimeInvalid, nil, voidSelf, nil);
-    return YES;
-}
-- (void) stop{
-    if (!_isRunning || nil == _sessionRef) {
-        return;
-    }
-    VTCompressionSessionCompleteFrames(_sessionRef, kCMTimeInvalid);
-    _isRunning = NO;
-}
-- (void) configParam:(id)param{
-    NSDictionary *dictionary = param;
-    _width      = [dictionary[PARAM_KEY_WIDTH] intValue];
-    _height     = [dictionary[PARAM_KEY_HEIGHT] intValue];
-    _frameRate  = [dictionary[PARAM_KEY_FRAMERATE] intValue];
-    _bitRate    = [dictionary[PARAM_KEY_BITRATE] intValue];
-    _isH265     = [dictionary[PARAM_KEY_IS_H265] boolValue];
 }
 
+//- (BOOL) start{
+//    if (_isRunning) {
+//        return NO;
+//    }
+//
+//    OSStatus status;
+//    if (nil == _sessionRef) {
+//        // 创建session
+//        VTCompressionSessionRef session = nil;
+//        status = VTCompressionSessionCreate(NULL,
+//                                            _width,
+//                                            _height,
+//                                            _isH265 ? kCMVideoCodecType_HEVC : kCMVideoCodecType_H264,
+//                                            NULL,
+//                                            NULL,
+//                                            NULL,
+//                                            compressionOutputCallback,
+//                                            (__bridge void *)(self), &session);
+//        if (status != noErr) {
+//            return NO;
+//        }
+//
+//        // 设置码率
+//        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_AverageBitRate, (__bridge CFTypeRef)@(_bitRate));
+//        // 设置profile
+//        if (_isH265) {
+//            status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_HEVC_Main_AutoLevel);
+//        }
+//        else{
+//            status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_H264_Baseline_AutoLevel);
+//        }
+//        // 设置实时编码
+//        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
+//        // 设置是否允许生成B帧
+//        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse);
+//        // 设置gop
+//        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_MaxKeyFrameInterval, (__bridge CFTypeRef)@(_frameRate));
+//        // 设置session的帧率
+//        status &= VTSessionSetProperty(session, kVTCompressionPropertyKey_ExpectedFrameRate, (__bridge CFTypeRef)@(_frameRate));
+//        if (status != noErr) {
+//            VTCompressionSessionInvalidate(session);
+//            return NO;
+//        }
+//
+//        _sessionRef = session;
+//    }
+//
+//    // 编码器准备编码
+//    status = VTCompressionSessionPrepareToEncodeFrames(_sessionRef);
+//    if (status != noErr) {
+//        return NO;
+//    }
+//
+//    _isRunning = YES;
+//    return YES;
+//}
+//- (BOOL) encode:(CVImageBufferRef)buffer Timestamp:(NSTimeInterval)timstamp{
+//    if (!_isRunning || nil == _sessionRef) {
+//        return NO;
+//    }
+//    // pts
+//    CMTime pts = CMTimeMake(timstamp * kTimeScale, kTimeScale);
+//    // 设置是否为I帧
+//    //NSDictionary *frameProperties = @{(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame: @(forceKeyFrame)};
+//    // 自定义指针
+//    void *voidSelf = (__bridge void*)self;
+//    printf("[%.3f] [Encode] PTS:%.3f(开始编码) (线程ID:%p)\n", (double)clock()/(CLOCKS_PER_SEC/10), timstamp, pthread_self());
+//    //NSLog(@"[Encode] PTS:%.3f(开始编码) (线程ID:%p)", timstamp, pthread_self());
+//    VTCompressionSessionEncodeFrame(_sessionRef, buffer, pts, kCMTimeInvalid, nil, voidSelf, nil);
+//    return YES;
+//}
+//- (void) stop{
+//    if (!_isRunning || nil == _sessionRef) {
+//        return;
+//    }
+//    VTCompressionSessionCompleteFrames(_sessionRef, kCMTimeInvalid);
+//    _isRunning = NO;
+//}
+//- (void) configParam:(id)param{
+//    NSDictionary *dictionary = param;
+//    _width      = [dictionary[PARAM_KEY_WIDTH] intValue];
+//    _height     = [dictionary[PARAM_KEY_HEIGHT] intValue];
+//    _frameRate  = [dictionary[PARAM_KEY_FRAMERATE] intValue];
+//    _bitRate    = [dictionary[PARAM_KEY_BITRATE] intValue];
+//    _isH265     = [dictionary[PARAM_KEY_IS_H265] boolValue];
+//}
+
 #pragma mark - 私有函数: <onError> <onData> <toStream>
-- (void) onError:(NSString*)message{
-    [self.events videoEncoderEvent_onError:self.name Message:message];
-}
-- (void) onData:(NSData*)data Dts:(NSTimeInterval)dts Pts:(NSTimeInterval)pts IsKeyFrame:(BOOL)isKeyFrame{
-    [self.events videoEncoderEvent_onData:self.name Data:data Dts:dts Pts:pts IsKeyFrame:isKeyFrame];
-}
 - (NSArray<NSData*>*) toAnnexBWithXVCC:(NSData*)xvcc{
+    /**
+     将XVCC格式转换到AnnexB格式，XVCC：4字节的数据长度（不包含自己的4字节）+数据
+     */
     if (nil == xvcc || xvcc.length < 5) {
         return nil;
     }
@@ -145,22 +194,22 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     NSUInteger totalLength  = xvcc.length;
     
     while (offsetLength < totalLength - 4) {
-        // 读取slice的长度
+        /// 读取slice的长度
         uint32_t naluLength;
         memcpy(&naluLength, bytes+offsetLength, 4);
-        // 大端模式->本机字节序
+        /// 大端模式->本机字节序
         naluLength = CFSwapInt32BigToHost(naluLength);
-        // 读取数据
+        /// 读取数据
         NSData *nalu = [NSData dataWithBytes:bytes + offsetLength + 4 length:naluLength];
-        // 加入列表
+        /// 加入列表
         [array addObject:nalu];
-        // 设置offsetLength
+        /// 设置offsetLength
         offsetLength += naluLength + 4;
     }
     
     return array;
 }
-- (NSData*) toStream:(NSArray<NSData*>*)content VPS:(NSData*)vps SPS:(NSData*)sps PPS:(NSData*)pps{
+- (NSData*) toStream:(NSArray<NSData*>*)content vps:(NSData*)vps sps:(NSData*)sps pps:(NSData*)pps{
     static Byte startCode[] = {0x00, 0x00, 0x00, 0x01};
     
     NSMutableData *stream = [[NSMutableData alloc] init];
@@ -189,7 +238,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
 }
 
 #pragma mark - 私有函数: <content> <VPS> <SPS> <PPS> <isKeyFrame>
-- (NSData*) getContentFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef{
+- (NSData*)getContentFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef{
     CMBlockBufferRef blockBufferRef = CMSampleBufferGetDataBuffer(sampleBufferRef);
     if (nil == blockBufferRef) {
         return nil;
@@ -203,6 +252,20 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     Byte buffer[length];
     CMBlockBufferCopyDataBytes(blockBufferRef, 0, length, buffer);
     return [NSData dataWithBytes:buffer length:length];
+}
+- (void)getParamaterSetWithBufferRef:(CMSampleBufferRef)bufferRef vps:(NSData**)vps sps:(NSData**)sps pps:(NSData**)pps{
+    
+    const uint8_t *bytes    = nil;
+    size_t size             = 0;
+    if(kCMVideoCodecType_HEVC == _format.codecType){
+        CMVideoFormatDescriptionGetHEVCParameterSetAtIndex(description, 0, &bytes, &size, nil, nil);
+        CMVideoFormatDescriptionGetHEVCParameterSetAtIndex(description, 1, &bytes, &size, nil, nil);
+        CMVideoFormatDescriptionGetHEVCParameterSetAtIndex(description, 2, &bytes, &size, nil, nil);
+    }
+    else{
+        CMVideoFormatDescriptionGetH264ParameterSetAtIndex(description, 0, &bytes, &size, nil, nil);
+        CMVideoFormatDescriptionGetH264ParameterSetAtIndex(description, 1, &bytes, &size, nil, nil);
+    }
 }
 - (NSData*) getVPSFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef{
     if (!_isH265) {
