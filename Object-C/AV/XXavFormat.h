@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) int height;
 @property (nonatomic,assign) int frameRate;
 @property (nonatomic,assign) int bitRate;
-@property (nonatomic,assign) CMVideoCodecType pixelID;
+@property (nonatomic,assign) CMVideoCodecType codecType;
 @end
 
 NS_ASSUME_NONNULL_END
