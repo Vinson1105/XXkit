@@ -18,7 +18,7 @@
     obj.height = self.height;
     obj.frameRate = self.frameRate;
     obj.bitRate = self.bitRate;
-    obj.pixelID = self.pixelID;
+    obj.codecType = self.codecType;
     return obj;
 }
 @end
