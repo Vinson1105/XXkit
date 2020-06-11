@@ -2,7 +2,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import <CoreFoundation/CoreFoundation.h>
-#include <pthread.h>
+#import <CoreVideo/CoreVideo.h>
 
 #define kTimeScale 90000;
 
@@ -179,7 +179,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
 //    _isH265     = [dictionary[PARAM_KEY_IS_H265] boolValue];
 //}
 
-#pragma mark - 私有函数: <onError> <onData> <toStream>
+#pragma mark - <XVCC格式转到AnnexB格式、将frame数据/VPS/SPS/PPS整合成一个数据包(以0x00000001分割)>
 - (NSArray<NSData*>*) toAnnexBWithXVCC:(NSData*)xvcc{
     /**
      将XVCC格式转换到AnnexB格式，XVCC：4字节的数据长度（不包含自己的4字节）+数据
@@ -237,7 +237,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     return stream;
 }
 
-#pragma mark - 私有函数: <content> <VPS> <SPS> <PPS> <isKeyFrame>
+#pragma mark - <SampleBuffer一些参数、数据获取，如帧数据、VPS、SPS、PPS等>
 - (NSData*)getContentFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef{
     CMBlockBufferRef blockBufferRef = CMSampleBufferGetDataBuffer(sampleBufferRef);
     if (nil == blockBufferRef) {
@@ -258,62 +258,45 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     const uint8_t *bytes    = nil;
     size_t size             = 0;
     if(kCMVideoCodecType_HEVC == _format.codecType){
+        /// VPS
         CMVideoFormatDescriptionGetHEVCParameterSetAtIndex(description, 0, &bytes, &size, nil, nil);
+        if(size>0){
+            *vps = [NSData dataWithBytes:bytes length:size];
+        }
+        
+        /// SPS
+        size = 0;
         CMVideoFormatDescriptionGetHEVCParameterSetAtIndex(description, 1, &bytes, &size, nil, nil);
+        if(size>0){
+            *sps = [NSData dataWithBytes:bytes length:size];
+        }
+        
+        /// PPS
+        size = 0;
         CMVideoFormatDescriptionGetHEVCParameterSetAtIndex(description, 2, &bytes, &size, nil, nil);
+        if(size>0){
+            *pps = [NSData dataWithBytes:bytes length:size];
+        }
     }
     else{
+        /// VPS，h264没有VPS
+        *vps = nil;
+        
+        /// SPS
         CMVideoFormatDescriptionGetH264ParameterSetAtIndex(description, 0, &bytes, &size, nil, nil);
+        if(size>0){
+            *sps = [NSData dataWithBytes:bytes length:size];
+        }
+        
+        /// PPS
+        size = 0;
         CMVideoFormatDescriptionGetH264ParameterSetAtIndex(description, 1, &bytes, &size, nil, nil);
+        if(size>0){
+            *pps = [NSData dataWithBytes:bytes length:size];
+        }
     }
 }
-- (NSData*) getVPSFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef{
-    if (!_isH265) {
-        return nil;
-    }
-    CMVideoFormatDescriptionRef description = CMSampleBufferGetFormatDescription(sampleBufferRef);
-    
-    const uint8_t *bytes    = nil;
-    size_t size             = 0;
-    CMVideoFormatDescriptionGetHEVCParameterSetAtIndex(description, 0, &bytes, &size, nil, nil);
-    if (size <= 0) {
-        return nil;
-    }
-    return [NSData dataWithBytes:bytes length:size];
-}
-- (NSData*) getSPSFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef{
-    CMVideoFormatDescriptionRef description = CMSampleBufferGetFormatDescription(sampleBufferRef);
-    
-    const uint8_t *bytes    = nil;
-    size_t size             = 0;
-    if(!_isH265){
-        CMVideoFormatDescriptionGetH264ParameterSetAtIndex(description, 0, &bytes, &size, nil, nil);
-    }
-    else{
-        CMVideoFormatDescriptionGetHEVCParameterSetAtIndex(description, 1, &bytes, &size, nil, nil);
-    }
-    if (size <= 0) {
-        return nil;
-    }
-    return [NSData dataWithBytes:bytes length:size];
-}
-- (NSData*) getPPSFromSampleBufferRef:(CMSampleBufferRef)sampleBufferRef{
-    CMVideoFormatDescriptionRef description = CMSampleBufferGetFormatDescription(sampleBufferRef);
-    
-    const uint8_t *bytes    = nil;
-    size_t size             = 0;
-    if(!_isH265){
-        CMVideoFormatDescriptionGetH264ParameterSetAtIndex(description, 1, &bytes, &size, nil, nil);
-    }
-    else{
-        CMVideoFormatDescriptionGetHEVCParameterSetAtIndex(description, 2, &bytes, &size, nil, nil);
-    }
-    if (size <= 0) {
-        return nil;
-    }
-    return [NSData dataWithBytes:bytes length:size];
-}
-- (BOOL) isKeyFrame:(CMSampleBufferRef)sampleBufferRef{
+- (BOOL)isKeyFrame:(CMSampleBufferRef)sampleBufferRef{
     BOOL isKeyFrame = NO;
     CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBufferRef, 0);
     if (attachments != nil && CFArrayGetCount(attachments)) {
@@ -322,9 +305,26 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     }
     return isKeyFrame;
 }
+- (BOOL)getTimestampWithBufferRef:(CMSampleBufferRef)sampleBufferRef dts:(NSTimeInterval*)dts pts:(NSTimeInterval*)pts{
+    /// 取出时间信息
+    CMSampleTimingInfo timingInfo[10];
+    CMItemCount timingCount = 0;
+    OSStatus status = CMSampleBufferGetSampleTimingInfoArray(sampleBuffer, 10, timingInfo, &timingCount);
+    if (status != noErr) {
+        return NO;
+    }
+    
+    /// 根据timescale转换到pts和dts
+    CMTime ts   = timingInfo[0].decodeTimeStamp;
+    *dts        = (NSTimeInterval)ts.value / (NSTimeInterval)ts.timescale;
+    
+    ts          = timingInfo[0].presentationTimeStamp;
+    *pts        = (NSTimeInterval)ts.value / (NSTimeInterval)ts.timescale;
+    return YES;
+}
 @end
 
-#pragma mark - 私有函数: <session回调函数>
+#pragma mark - <session回调函数>
 static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, OSStatus status, VTEncodeInfoFlags infoFlags, CMSampleBufferRef sampleBuffer){
     XXh26xEncoder *encoder = (__bridge XXh26xEncoder*)outputCallbackRefCon;
     if (status != noErr) {
@@ -332,58 +332,59 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
         return;
     }
     else{
-        // 取出时间信息
-        CMSampleTimingInfo timingInfo[10];
-        CMItemCount timingCount = 0;
-        OSStatus status = CMSampleBufferGetSampleTimingInfoArray(sampleBuffer, 10, timingInfo, &timingCount);
-        if (status != noErr) {
-            [encoder onError:@"[XXh26xEncoder] can not get sample timing info array"];
+        /// 时间戳
+        NSTimeInterval dts,pts;
+        if(![encoder getTimestampWithBufferRef:sampleBuffer dts:&dts pts:&pts]){
+            NSLog(@"[XXh26xEncoder] can not get timestamp from sample buffer");
             return;
         }
         
-        // 根据timescale转换到pts和dts
-        CMTime dtsTime      = timingInfo[0].decodeTimeStamp;
-        NSTimeInterval dts  = (NSTimeInterval)dtsTime.value / (NSTimeInterval)dtsTime.timescale;
-        
-        CMTime ptsTime      = timingInfo[0].presentationTimeStamp;
-        NSTimeInterval pts  = (NSTimeInterval)ptsTime.value / (NSTimeInterval)ptsTime.timescale;
-        
-        printf("[%.3f] [Encode] PTS:%.3f(整理数据) (线程ID:%p)\n", (double)clock()/(CLOCKS_PER_SEC/10), pts, pthread_self());
-        //NSLog(@"[Encode] PTS:%.3f(整理数据) (线程ID:%p)", pts, pthread_self());
+        /// 实体数据
         NSData *content = [encoder getContentFromSampleBufferRef:sampleBuffer];
         if (nil == content) {
-            [encoder onError:@"[XXh26xEncoder] can not get content from sample buffer"];
+            if(encoder.onCompressionError){
+            }
+            NSLog(@"[XXh26xEncoder] can not get content from sample buffer");
             return;
         }
         NSArray<NSData*> *nalus = [encoder toAnnexBWithXVCC:content];
         if (nil == nalus || nalus.count <= 0) {
-            [encoder onError:@"[XXh26xEncoder] can not to annex-b"];
+            if(encoder.onCompressionError){
+            }
+            NSLog(@"[XXh26xEncoder] can not to annex-b");
             return ;
         }
         
+        /// 关键帧参数
         BOOL isKeyFrame = [encoder isKeyFrame:sampleBuffer];
         NSData *data    = nil;
         if (isKeyFrame) {
-            NSData *vps = [encoder getVPSFromSampleBufferRef:sampleBuffer];
-            NSData *sps = [encoder getSPSFromSampleBufferRef:sampleBuffer];
-            NSData *pps = [encoder getPPSFromSampleBufferRef:sampleBuffer];
+            NSData *vps, *sps, *pps;
+            [encoder getParamaterSetWithBufferRef:sampleBuffer vps:&vps sps:&sps pps:&pps];
             if (nil == sps || nil == pps) {
-                [encoder onError:@"[XXh26xEncoder] can not get sps/pps from sample buffer"];
+                if(encoder.onCompressionError){
+                }
+                NSLog(@"[XXh26xEncoder] can not get sps/pps from sample buffer");
                 return;
             }
             
-            data = [encoder toStream:nalus VPS:vps SPS:sps PPS:pps];
+            data = [encoder toStream:nalus vps:vps sps:sps pps:pps];
         }
         else{
-            data = [encoder toStream:nalus VPS:nil SPS:nil PPS:nil];
+            data = [encoder toStream:nalus vps:nil sps:nil pps:nil];
         }
         
+        /// 回调
         if (nil == data) {
-            [encoder onError:@"[XXh26xEncoder] can not to stream"];
+            if(encoder.onCompressionError){
+            }
+            NSLog(@"[XXh26xEncoder] can not to stream");
             return;
         }
-        [encoder onData:data Dts:dts Pts:pts IsKeyFrame:isKeyFrame];
-        printf("[%.3f] [Encode] PTS:%.3f(输出数据) (线程ID:%p)\n", (double)clock()/(CLOCKS_PER_SEC/10), pts, pthread_self());
-        //NSLog(@"[Encode] PTS:%.3f(输出数据) (线程ID:%p)", pts, pthread_self());
+        
+        if (encoder.onCompressionOutput) {
+            encoder.onCompressionOutput(encoder, data, dts, pts, isKeyFrame);
+        }
+        NSLog(@"[XXh26xEncoder] output. size:%d dts:%.3f pts:%.3f key:%d",data.length, dts, pts, isKeyFrame);
     }
 }
