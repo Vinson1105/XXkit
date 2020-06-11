@@ -10,6 +10,7 @@
     obj.formatFlags = self.formatFlags;
     return obj;
 }
+@end
 
 @implementation XXvideoFormat
 - (nonnull id)copyWithZone:(nullable NSZone *)zone {
