@@ -143,21 +143,6 @@
         if (nil != imageBuffer) {
             [_events videoRecorerEvent_onVideo:imageBuffer Timestamp:pts];
         }
-        
-//        CMBlockBufferRef blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer);
-//        if (nil == blockBuffer) {
-//            return;
-//        }
-//
-//        size_t length = CMBlockBufferGetDataLength(blockBuffer);
-//        if (length <= 0) {
-//            return;
-//        }
-//
-//        Byte buffer[length];
-//        CMBlockBufferCopyDataBytes(blockBuffer, 0, length, buffer);
-//        NSData *data = [NSData dataWithBytes:buffer length:length];
-//        [_events videoRecorerEvent_onVideo:data Timestamp:pts];
     }
     else{
         
