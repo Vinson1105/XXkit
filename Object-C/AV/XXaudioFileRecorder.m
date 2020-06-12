@@ -31,15 +31,15 @@ static XXaudioFileRecorder *_instance = nil;
 
 #pragma mark - Public
 - (void)config:(XXaudioFormat*)format{
-    _audioFormat = format;
+    self.audioFormat = format;
 }
 - (BOOL)start:(NSURL*)url{
-    if(_isRunning || nil == _audioFormat || nil == url){
+    if(_isRunning || nil == self.audioFormat || nil == url){
         return NO;
     }
     _isRunning = YES;
     
-    NSDictionary *settings = [self settingsFromFormat:_audioFormat];
+    NSDictionary *settings = [self settingsFromFormat:self.audioFormat];
     NSError *error;
     _recorder = [[AVAudioRecorder alloc] initWithURL:url settings:settings error:&error];
     if(error){
