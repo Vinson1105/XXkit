@@ -82,7 +82,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
 }
 
 #pragma mark - <编码>
-- (BOOL)encode:(CVImageBuffer)buffer timestamp:(NSTimeInterval)timestamp{
+- (BOOL)encode:(CVImageBufferRef)buffer timestamp:(NSTimeInterval)timestamp{
     // pts
     CMTime pts = CMTimeMake(timstamp * kTimeScale, kTimeScale);
     // 设置是否为I帧
