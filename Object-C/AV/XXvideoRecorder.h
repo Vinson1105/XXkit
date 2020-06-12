@@ -3,46 +3,41 @@
 #import <UIKit/UIKit.h>
 #import "XXh26xEncoder.h"
 
-typedef enum : NSUInteger {
-    XXvideoRecorderResult_Finished = 0,
-} XXvideoRecorderResult;
-
 NS_ASSUME_NONNULL_BEGIN
-
-@protocol XXvideoRecorderEvents <NSObject>
-- (void) videoRecorerEvent_onVideo:(CVImageBufferRef)bufferRef Timestamp:(NSTimeInterval)timestamp;
-- (void) videoRecorerEvent_onAudio:(NSData*)data Timestamp:(NSTimeInterval)timestamp;
-@end
 
 @interface XXvideoRecorder : NSObject<AVCaptureVideoDataOutputSampleBufferDelegate>
 /** 摄像头采集预览layer显示 */
 @property (nonatomic,weak,nullable) UIView *preview;
+
 /** 内置的编码器,当设置了该属性,会按编码输出 */
-@property (nonatomic,weak,nullable) XXh26xEncoder *encoder;
-/** 帧率，摄像头数据采集回调频率，默认15帧/S，不同的机型又不同可用帧率范围 */
+@property (nonatomic,strong,nullable) XXh26xEncoder *encoder;
+
+/** 帧率，摄像头数据采集回调频率，默认15帧/S，不同的机型又不同可用帧率范围（需要重新start生效） */
 @property (nonatomic,assign) int frameRate;
-/** 图像类型，注意：系统只支持个别类型，如kCVPixelFormatType_32BGRA、kCVPixelFormatType_420YpCbCr8BiPlanarFullRange等 */
+
+/** 图像类型，注意：系统只支持个别类型，如kCVPixelFormatType_32BGRA（默认）、kCVPixelFormatType_420YpCbCr8BiPlanarFullRange等*/
 @property (nonatomic,assign) int type;
-/** 分辨率（AVCaptureSessionPresetXXX）,注意:不同机型可能有不同的可用分辨率 */
-@property (nonatomic,copy) NSString *preset;    // 分辨率(AVCaptureSessionPresetXXX),注意:不同机型可能有不同的可用分辨率
 
-- (instancetype) initWithEvents:(id<XXvideoRecorderEvents>)events View:(UIView* _Nullable)view IsDefaultPositionFront:(BOOL)isFront;
+/** 分辨率（AVCaptureSessionPresetXXX）,注意:不同机型可能有不同的可用分辨率，默认：AVCaptureSessionPresetHigh */
+@property (nonatomic,copy) NSString *preset;
 
-- (BOOL)startPreview;
-- (void)stopPreivew;
+/** 是否为连接中，如果没有设置preview，是否为connect没有实质的可视化影响 */
+@property (nonatomic,assign,readonly) BOOL isConnecting;
 
-- (BOOL)startRecord;
+/** 是否在录制中 */
+@property (nonatomic,assign,readonly) BOOL isRecording;
+
+/** 采集位置，默认：AVCaptureDevicePositionBack */
+@property (nonatomic,assign) AVCaptureDevicePosition position;
+
+/** 镜头方向，默认：AVCaptureVideoOrientationPortrait */
+@property (nonatomic,assign) AVCaptureVideoOrientation orientation;
+
++ (XXvideoRecorder*)sharedInstance;
+- (BOOL)startConnect;
+- (BOOL)startrecord;
 - (void)stopRecord;
-
-- (BOOL) start;
-- (void) stop;
-
-- (BOOL) toFront;
-- (BOOL) toBack;
-
-- (BOOL) toPortrait;
-- (BOOL) toLandscapeRight;
-- (BOOL) toLandscapeLeft;
+- (void)stopConnect;
 @end
 
 NS_ASSUME_NONNULL_END
