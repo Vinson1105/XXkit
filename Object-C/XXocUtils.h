@@ -122,6 +122,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - <Image>
 + (UIImage*)imageFromColor:(UIColor*)color size:(CGSize)size;
+
+#pragma mark - <权限>
++ (BOOL)authorizedCamera;
++ (BOOL)authorizedMicrophone;
+
++ (BOOL)anthorizedCameraCheck;
 @end
 
 NS_ASSUME_NONNULL_END
