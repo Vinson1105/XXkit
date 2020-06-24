@@ -126,7 +126,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - <权限>
 + (BOOL)authorizedCamera;
 + (BOOL)authorizedMicrophone;
-+ (void)anthorizedCameraCheckWithTips:(NSString*)tips succeed:(void(^)(void))succeed;
++ (void)anthorizedCameraCheckAtViewController:(UIViewController*)viewController message:(NSString*)message succeed:(void(^)(void))succeed;
 @end
 
 NS_ASSUME_NONNULL_END

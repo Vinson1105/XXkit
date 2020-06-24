@@ -1,4 +1,5 @@
 #import "XXvideoRecorder.h"
+#import "XXocUtils.h"
 
 #define kFrameRateDefault   15
 #define kTypeDefault        kCVPixelFormatType_32BGRA
@@ -60,8 +61,7 @@ static XXvideoRecorder *_instance = nil;
     _isConnecting = YES;
     
     /// 摄像头权限判断
-    AVAuthorizationStatus videoAuthStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-    if (videoAuthStatus != AVAuthorizationStatusAuthorized){
+    if (![XXocUtils authorizedCamera]){
         _isConnecting = NO;
         return NO;
     }

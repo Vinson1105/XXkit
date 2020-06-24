@@ -11,12 +11,6 @@
 #import <objc/runtime.h>
 #import <AVFoundation/AVFoundation.h>
 
-typedef enum : NSUInteger {
-    <#MyEnumValueA#>,
-    <#MyEnumValueB#>,
-    <#MyEnumValueC#>,
-} <#MyEnum#>;
-
 static NSDateFormatter *_dateFormatter;
 
 @implementation XXocUtils
@@ -347,55 +341,26 @@ static NSDateFormatter *_dateFormatter;
     AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio];
     return status == AVAuthorizationStatusAuthorized;
 }
-+ (void)anthorizedCameraCheckWithTips:(NSString*)tips succeed:(void(^)(void))succeed{
++ (void)anthorizedCameraCheckAtViewController:(UIViewController*)viewController message:(NSString*)message succeed:(void(^)(void))succeed{
     if([XXocUtils authorizedCamera]) {
         succeed();
     }
     else{
-        NSDictionary *appInfo = [[NSBundle mainBundle] infoDictionary];
-    }
-}
+        UIAlertController *alert = [XXocUtils alertWithTitle:@"message"
+                                                         msg:@""//message
+                                                     okTitle:NSLocalizedString(@"gotoSystemSettings", @"去设置")
+                                                        onOK:^(UIAlertAction * _Nonnull action) {
+            NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+            [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+        }
+                                                 cancelTitle:NSLocalizedString(@"cancel", @"取消")
+                                                    onCancel:^(UIAlertAction * _Nonnull action) {
 
-+ (BOOL)anthorizedCameraCheck{
-    NSString *tipTextWhenNoPhotosAuthorization; // 提示语
-    NSString *mediaType = AVMediaTypeVideo;     //读取媒体类型
-    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:mediaType];          //读取设备授权状态
-    if(![XXocUtils authorizedCamera]) {
-        NSDictionary *mainInfoDictionary = [[NSBundle mainBundle] infoDictionary];
-        NSString *appName = [mainInfoDictionary objectForKey:@"CFBundleDisplayName"];
-        tipTextWhenNoPhotosAuthorization = [NSString stringWithFormat:@"请在\"设置-隐私-相机\"选项中，允许%@访问你的手机相机", appName];
-        UIViewController *currentController = [[AppDelegate appDelegate] getNewCurrentViewController];
-        
-        [self showAlertViewFromController:currentController
-                                    title:@"温馨提示"
-                                  message:tipTextWhenNoPhotosAuthorization
-                        CancleButtonTitle:@"取消"
-                         otherButtonTitle:@"去设置"
-                        cancleButtonClick:^{
-            
-        } otherButtonClick:^{
-            [self openSystemSetting];
         }];
-        // 展示提示语
-        NSLog(@" -- %@ ",tipTextWhenNoPhotosAuthorization);
-        if (CompletionHandler) {
-            CompletionHandler(NO);
-        }
+        [viewController presentViewController:alert animated:YES completion:^{
+
+        }];
+        
     }
-    else if(authStatus == AVAuthorizationStatusNotDetermined) { //第一次请求。
-        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (CompletionHandler) {
-                    CompletionHandler(granted);
-                }
-            }];
-                           });
-        }
-         else {
-            if (CompletionHandler) {
-                CompletionHandler(YES);
-            }
-        }
-         return NO;
 }
 @end
