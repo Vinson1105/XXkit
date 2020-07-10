@@ -1,5 +1,5 @@
 #import "XXtextFieldShell.h"
-#import "../XXocUtils.h"
+#import "XXocUtils.h"
 
 @interface XXtextFieldShell()
 @property (nonatomic,copy,nullable) NSString *lastText;     // 上一次string
@@ -11,6 +11,13 @@
 
 @implementation XXtextFieldShell
 #pragma mark - <Init>
+- (instancetype)init{
+    self = [super init];
+    if(self){
+        self.maxLength = 0;
+    }
+    return self;
+}
 -(void)shell:(UITextField*)target{
     __strong typeof(_target) strongTarget = _target;
     if(strongTarget){
@@ -132,34 +139,43 @@
 -(void)onTextFieldEditingChanged:(id)sender{
     UITextField *textField = (UITextField*)sender;
     NSString *currentText = textField.text;
+        
     if(nil != _predicate){
-        NSString *currentText = textField.text;
-        if([_predicate evaluateWithObject:currentText]){
-            _lastText = textField.text;
-            if (_onTextChanged) {
-                _onTextChanged(self,textField.text);
+        _isMatching = [_predicate evaluateWithObject:currentText];
+        
+        if(_maxLength>0 && currentText.length>_maxLength){
+            textField.text = self.lastText;
+            return;
+        }
+        
+        if(self.strongMatchMode){
+            if(_isMatching){
+                [self acceptChanged:currentText];
             }
-            if(_clearButton){
-                _clearButton.hidden = nil==currentText || 0==currentText.length;
+            else{
+                textField.text = self.lastText;
             }
         }
         else{
-            textField.text = _lastText;
+            [self acceptChanged:currentText];
         }
     }
     else{
-        if (_onTextChanged) {
-            _onTextChanged(self,textField.text);
+        if(_maxLength>0 && currentText.length>_maxLength){
+            textField.text = self.lastText;
+            return;
         }
-        if(_clearButton){
-            _clearButton.hidden = nil==currentText || 0==currentText.length;
-        }
+        [self acceptChanged:currentText];
     }
 }
 - (void)onButtonTouchUpInside:(UIButton*)button{
     if(button == _clearButton){
-        _target.text = @"";
+        self.target.text = @"";
         _clearButton.hidden = YES;
+        if(_predicate){
+            _isMatching = [_predicate evaluateWithObject:@""];
+        }
+        [self acceptChanged:@""];
     }
     else if(button == _secureButton){
         _secureButton.selected = !_secureButton.isSelected;
@@ -168,6 +184,15 @@
     }
     else{
         
+    }
+}
+- (void)acceptChanged:(NSString*)currentText{
+    self.lastText = currentText;
+    if (_onTextChanged) {
+        _onTextChanged(self, currentText);
+    }
+    if(_clearButton){
+        _clearButton.hidden = nil==currentText || 0==currentText.length;
     }
 }
 

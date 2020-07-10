@@ -1,4 +1,8 @@
 /**
+ 2020.07.08
+ 1、增加属性maxLength，用于限制可输入长度
+ 2、增加属性strongMatchMode，强制匹配，根据正则表达式只允许匹配的字符串输入（注意：当前有长度区间的表达式谨慎使用）
+ 
  2020.04.23
  1、删除配置左右图标接口，更改为只能配置左边图标
  2、右边固定为一键清空和安全模式功能
@@ -15,9 +19,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface XXtextFieldShell : NSObject<UITextFieldDelegate>
 /** 目标UITextField */
-@property (nonatomic,readonly,weak) UITextField *target;
+@property (nonatomic,readonly,strong) UITextField *target;
 /** 正则表达式 */
 @property (nonatomic,copy,nullable) NSString *expression;
+/** UITextField内容是否符合正则表达式；若正则表达式为nil，一直为NO；UITextField内容为空时，为NO */
+@property (nonatomic,assign,readonly) BOOL isMatching;
+/** 强制匹配模式，开启之后，需要满足正则表达式才会更改内容，不满足则会一直无法输入，默认为NO */
+@property (nonatomic,assign) BOOL strongMatchMode;
+/** 长度限制，与expression是并行对text进行限制，因为设置expression之后并关闭强制匹配模式，expression有一定长度需求时，无法对长度限制（默认为0，不作限制） */
+@property (nonatomic,assign) NSInteger maxLength;
+
 /** UITextField的text改变 */
 @property (nonatomic,copy,nullable) void(^onTextChanged)(XXtextFieldShell *shell, NSString *text);
 /** UITextField的开始编辑 */
