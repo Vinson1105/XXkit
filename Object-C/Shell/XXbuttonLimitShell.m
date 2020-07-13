@@ -4,7 +4,6 @@
 
 @interface XXbuttonLimitShell()
 @property (nonatomic,strong) XXtimer *timer;
-@property (nonatomic,assign) int duration;
 @end
 
 @implementation XXbuttonLimitShell
@@ -13,18 +12,21 @@
     self = [super init];
     if (self) {
         _duration = 60;
+        _limited = NO;
+        _format = @"%ds";
+        _clickEnterLimit = YES;
+        
         _timer = [XXtimer timerWithDelay:0 interval:1 singleShot:NO];
         XXOC_WS;
-        _timer.onTimeout = ^(XXtimer * _Nonnull timer, int times) {
+        _timer.onTimeout = ^(XXtimer *timer, int times) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 XXOC_SS;
                 int remainder = ss.duration - times;
                 if(remainder <= 0){
-                    [timer stop];
-                    ss.button.enabled = YES;
+                    ss.limited = NO;
                 }
                 else{
-                    [ss.button setTitle:[NSString stringWithFormat:@"%dS",remainder] forState:UIControlStateDisabled];
+                    [ss updateLimitText:remainder];
                 }
             });
         };
@@ -35,9 +37,43 @@
     [_timer stop];
 }
 
+#pragma mark - <Property>
+- (void)setEnabled:(BOOL)enabled{
+    if(_enabled == enabled) return;
+    _enabled = enabled;
+    if(!self.limited && self.button){
+        self.button.enabled = enabled;
+    }
+}
+- (void)setLimited:(BOOL)limited{
+    if(_limited==limited) return;
+    _limited = limited;
+    
+    XXOC_WS
+    [XXocUtils mainThreadProcess:^{
+        XXOC_SS
+        if(ss.button){
+            if(limited){
+                [ss updateLimitText:ss.duration];
+                [ss.timer start];
+                ss.button.enabled = NO;
+            }
+            else{
+                ss.button.enabled = ss.enabled;
+                [ss.timer stop];
+            }
+        }
+    }];
+}
+
 #pragma mark - <Config>
 - (void)shell:(UIButton*)button{
+    if(_button){
+        return;
+    }
+    
     _button = button;
+    _enabled = button.enabled;
     [_button addTarget:self action:@selector(onButtonTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
 }
 - (void)configDuration:(int)duration{
@@ -47,11 +83,25 @@
     [_button setTitleColor:normalColor forState:UIControlStateNormal];
     [_button setTitleColor:limitColor forState:UIControlStateDisabled];
 }
+- (void)resetLimit{
+    self.limited = NO;
+}
 
 #pragma mark - <Event>
 - (void)onButtonTouchUpInside:(UIButton*)sender{
-    [_button setTitle:[NSString stringWithFormat:@"%ds",_duration] forState:UIControlStateDisabled];
-    _button.enabled = NO;
-    [_timer start];
+    if(self.clickEnterLimit){
+        self.limited = YES;
+    }
+    
+    if(self.onClicked){
+        self.onClicked(self);
+    }
+}
+
+#pragma mark - <Private>
+- (void)updateLimitText:(int)times{
+    if(_format){
+        [_button setTitle:[NSString stringWithFormat:_format, times] forState:UIControlStateDisabled];
+    }
 }
 @end
