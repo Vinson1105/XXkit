@@ -124,9 +124,10 @@ NS_ASSUME_NONNULL_BEGIN
 + (UIImage*)imageFromColor:(UIColor*)color size:(CGSize)size;
 
 #pragma mark - <权限>
-+ (BOOL)authorizedCamera;
-+ (BOOL)authorizedMicrophone;
-+ (void)anthorizedCameraCheckAtViewController:(UIViewController*)viewController message:(NSString*)message succeed:(void(^)(void))succeed;
++ (void)anthorizedCameraCheckAtViewController:(UIViewController*)viewController
+                                        title:(NSString*)title
+                                      message:(NSString*)message
+                                      succeed:(void(^)(void))succeed;
 @end
 
 NS_ASSUME_NONNULL_END

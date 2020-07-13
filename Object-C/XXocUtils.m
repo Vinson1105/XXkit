@@ -333,21 +333,20 @@ static NSDateFormatter *_dateFormatter;
 }
 
 #pragma mark - <权限>
-+ (BOOL)authorizedCamera{
++ (AVAuthorizationStatus)authorizedCamera{
+    return [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+}
++ (AVAuthorizationStatus)authorizedMicrophone{
+    return [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio];
+}
++ (void)anthorizedCameraCheckAtViewController:(UIViewController*)viewController title:(NSString*)title message:(NSString*)message succeed:(void(^)(void))succeed{
     AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-    return status == AVAuthorizationStatusAuthorized;
-}
-+ (BOOL)authorizedMicrophone{
-    AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio];
-    return status == AVAuthorizationStatusAuthorized;
-}
-+ (void)anthorizedCameraCheckAtViewController:(UIViewController*)viewController message:(NSString*)message succeed:(void(^)(void))succeed{
-    if([XXocUtils authorizedCamera]) {
+    if(AVAuthorizationStatusDenied != status) {
         succeed();
     }
     else{
-        UIAlertController *alert = [XXocUtils alertWithTitle:@"message"
-                                                         msg:@""//message
+        UIAlertController *alert = [XXocUtils alertWithTitle:title
+                                                         msg:message
                                                      okTitle:NSLocalizedString(@"gotoSystemSettings", @"去设置")
                                                         onOK:^(UIAlertAction * _Nonnull action) {
             NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
