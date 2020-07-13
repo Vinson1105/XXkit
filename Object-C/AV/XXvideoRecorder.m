@@ -38,8 +38,12 @@ static XXvideoRecorder *_instance = nil;
 #pragma mark - <Property>
 - (void)setPreview:(UIView *)preview{
     if(preview == _preview) return;
-    if(_preview){
-        
+    if(_preview && _captureVideoPreviewLayer){
+        [_captureVideoPreviewLayer removeFromSuperlayer];
+    }
+    _preview = preview;
+    if(_captureVideoPreviewLayer){
+        [_preview.layer addSublayer:_captureVideoPreviewLayer];
     }
 }
 
@@ -61,7 +65,7 @@ static XXvideoRecorder *_instance = nil;
     _isConnecting = YES;
     
     /// 摄像头权限判断
-    if (![XXocUtils authorizedCamera]){
+    if (AVAuthorizationStatusDenied == [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio]){
         _isConnecting = NO;
         return NO;
     }
@@ -227,7 +231,7 @@ static XXvideoRecorder *_instance = nil;
     _captureVideoPreviewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
     
     if (nil != _preview) {
-        _captureVideoPreviewLayer.frame = _preview.frame;
+        _captureVideoPreviewLayer.frame = _preview.bounds;
         [_preview.layer insertSublayer:_captureVideoPreviewLayer atIndex:0];
     }
     return YES;
