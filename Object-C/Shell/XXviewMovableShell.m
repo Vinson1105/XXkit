@@ -8,7 +8,7 @@
 
 #import "XXviewMovableShell.h"
 
-@interface XXviewMovableShell()
+@interface XXviewMovableShell()<UIGestureRecognizerDelegate>
 @property (nonatomic,strong) UIPanGestureRecognizer *panGesture;
 @end
 
@@ -43,6 +43,11 @@
     }
     else{
         
+    }
+}
+-(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch{
+    if ([touch.view isDescendantOfView:self.tbView]) {
+        return NO;
     }
 }
 @end
