@@ -17,6 +17,7 @@
     self = [super init];
     if (self) {
         _panGesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(onPanGesture:)];
+//        _panGesture.delegate = self;
     }
     return self;
 }
@@ -44,10 +45,9 @@
     else{
         
     }
+    recognizer.cancelsTouchesInView = NO;
 }
--(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch{
-    if ([touch.view isDescendantOfView:self.tbView]) {
-        return NO;
-    }
-}
+//-(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch{
+//    return NO;
+//}
 @end

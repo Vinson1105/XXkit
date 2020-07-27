@@ -53,7 +53,7 @@
     button.hidden = YES;
     [bgView addSubview:button];
     [XXocUtils view:button size:size];
-    [XXocUtils view:button left:margin centerYAt:bgView];
+    [XXocUtils view:button containsLeft:margin centerYAt:bgView];
     [button addTarget:self action:@selector(onButtonTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
     
     _target.rightView = bgView;
@@ -77,7 +77,7 @@
     clearButton.hidden = YES;
     [bgView addSubview:clearButton];
     [XXocUtils view:clearButton size:size];
-    [XXocUtils view:clearButton left:margin centerYAt:bgView];
+    [XXocUtils view:clearButton containsLeft:margin centerYAt:bgView];
     [clearButton addTarget:self action:@selector(onButtonTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
     
     UIButton *popButton = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -85,7 +85,7 @@
     [XXocUtils button:popButton norImg:popup selImg:popdown];
     [bgView addSubview:popButton];
     [XXocUtils view:popButton size:size];
-    [XXocUtils view:popButton right:-margin centerYAt:bgView];
+    [XXocUtils view:popButton containsRight:-margin centerYAt:bgView];
     [popButton addTarget:self action:@selector(onButtonTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
     
     _target.rightView = bgView;
@@ -110,7 +110,7 @@
     clearButton.hidden = YES;
     [bgView addSubview:clearButton];
     [XXocUtils view:clearButton size:size];
-    [XXocUtils view:clearButton left:margin centerYAt:bgView];
+    [XXocUtils view:clearButton containsLeft:margin centerYAt:bgView];
     [clearButton addTarget:self action:@selector(onButtonTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
     
     UIButton *secureButton = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -118,7 +118,7 @@
     [XXocUtils button:secureButton norImg:secureON selImg:secureOFF];
     [bgView addSubview:secureButton];
     [XXocUtils view:secureButton size:size];
-    [XXocUtils view:secureButton right:-margin centerYAt:bgView];
+    [XXocUtils view:secureButton containsRight:-margin centerYAt:bgView];
     [secureButton addTarget:self action:@selector(onButtonTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
     
     _target.rightView = bgView;

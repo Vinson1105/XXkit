@@ -40,12 +40,20 @@ static NSDateFormatter *_dateFormatter;
     [view.centerXAnchor constraintEqualToAnchor:centerAt.centerXAnchor].active = YES;
     [view.centerYAnchor constraintEqualToAnchor:centerAt.centerYAnchor].active = YES;
 }
-+ (void)view:(UIView*)view left:(CGFloat)left centerYAt:(UIView*)centerYAt{
++ (void)view:(UIView*)view containsLeft:(CGFloat)left centerYAt:(UIView*)centerYAt{
     [view.leadingAnchor constraintEqualToAnchor:centerYAt.leadingAnchor constant:left].active = YES;
     [view.centerYAnchor constraintEqualToAnchor:centerYAt.centerYAnchor].active = YES;
 }
-+ (void)view:(UIView*)view right:(CGFloat)right centerYAt:(UIView*)centerYAt{
++ (void)view:(UIView*)view containsRight:(CGFloat)right centerYAt:(UIView*)centerYAt{
     [view.trailingAnchor constraintEqualToAnchor:centerYAt.trailingAnchor constant:right].active = YES;
+    [view.centerYAnchor constraintEqualToAnchor:centerYAt.centerYAnchor].active = YES;
+}
++ (void)view:(UIView*)view appendLeft:(CGFloat)left centerYAt:(UIView*)centerYAt{
+    [view.trailingAnchor constraintEqualToAnchor:centerYAt.leadingAnchor constant:left].active = YES;
+    [view.centerYAnchor constraintEqualToAnchor:centerYAt.centerYAnchor].active = YES;
+}
++ (void)view:(UIView*)view appendRight:(CGFloat)right centerYAt:(UIView*)centerYAt{
+    [view.leadingAnchor constraintEqualToAnchor:centerYAt.trailingAnchor constant:right].active = YES;
     [view.centerYAnchor constraintEqualToAnchor:centerYAt.centerYAnchor].active = YES;
 }
 
