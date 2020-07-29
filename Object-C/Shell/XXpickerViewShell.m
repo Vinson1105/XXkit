@@ -1,8 +1,7 @@
 #import "XXpickerViewShell.h"
 
 @interface XXpickerViewShell()<UIPickerViewDelegate,UIPickerViewDataSource>
-@property (nonatomic,strong) NSMutableArray *componentData;
-@property (nonatomic,assign) NSInteger lastSelected;
+@property (nonatomic,strong) NSMutableDictionary<NSNumber*,NSNumber*> *componentToSelected;
 @end
 
 @implementation XXpickerViewShell
@@ -10,15 +9,16 @@
 - (instancetype)init{
     self = [super init];
     if(self){
-        _componentData = [NSMutableArray new];
+        _componentData = [NSArray new];
         _rowHeight = 30;
         _unselectedColor = UIColor.grayColor;
         _selectedColor = UIColor.blueColor;
+        _componentToSelected = [NSMutableDictionary new];
     }
     return self;
 }
 
-#pragma mark - <配置>
+#pragma mark - <Public>
 - (void)shell:(UIPickerView*)pickerView{
     if(_pickerView){
         return;
@@ -27,28 +27,36 @@
     _pickerView.dataSource = self;
     _pickerView.delegate = self;
 }
-- (void)setData:(NSArray*)data atComponent:(int)component{
-    _lastSelected = 0;
-    if(component<_componentData.count){
-        _componentData[component] = data;
-        [_pickerView selectRow:0 inComponent:component animated:NO];
-    }
-    else if(component==_componentData.count){
-        [_componentData addObject:data];
-    }
-    else{
-        
-    }
-    [_pickerView reloadComponent:component];
+- (void)setComponentData:(NSArray <NSArray*>*)data{
+    [self resetSelectedIndex];
+    _componentData = data;
+    [_pickerView reloadAllComponents];
 }
-- (void)removeDataAtComponent:(int)component{
-    if(component >= _componentData.count){
+- (void)selectString:(NSString*)string atComponent:(int)component{
+    if(nil==_componentData){
         return;
     }
-    [_componentData removeObjectAtIndex:component];
+    
+    if(component>=_componentData.count){
+        return;
+    }
+    
+    NSUInteger index= [_componentData[component] indexOfObject:string];
+    if(index == NSNotFound){
+        return;
+    }
+    
+    NSNumber *selected = [_componentToSelected objectForKey:@(component)];
+    if(nil!=selected && index==[selected intValue]){
+        return;
+    }
+    
+    [_pickerView selectRow:index inComponent:component animated:YES];
 }
-- (void)selectRow:(int)row atComponent:(int)component{
-    [_pickerView selectRow:row inComponent:component animated:YES];
+- (void)selectString:(NSArray<NSString*>*)string{
+    for (int component=0; component<string.count; component++) {
+        [self selectString:string[component] atComponent:component];
+    }
 }
 
 #pragma mark - <UIPickerViewDelegate>
@@ -56,21 +64,32 @@
         return _componentData[component][row];
 }
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component{
-    _lastSelected = row;
+    [_componentToSelected setObject:@(row) forKey:@(component)];
     [pickerView reloadAllComponents];
 }
 - (CGFloat)pickerView:(UIPickerView *)pickerView rowHeightForComponent:(NSInteger)component{
     return _rowHeight;
 }
 - (NSAttributedString *)pickerView:(UIPickerView *)pickerView attributedTitleForRow:(NSInteger)row forComponent:(NSInteger)component{
-    NSAttributedString *string = nsar
+    UIColor *color = [_componentToSelected[@(component)] intValue] == row? _selectedColor : _unselectedColor;
+    NSAttributedString *string = [[NSAttributedString alloc] initWithString:_componentData[component][row] attributes:@{NSForegroundColorAttributeName:color}];
+    return string;
 }
 
 #pragma mark - <UIPickerViewDataSource>
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView{
-    return _componentData.count;
+    return nil==_componentData?0:_componentData.count;
 }
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component{
     return [_componentData[component] count];
+}
+
+#pragma mark - <Private>
+- (void)resetSelectedIndex{
+    NSEnumerator *keyEnumer = _componentToSelected.keyEnumerator;
+    NSNumber *component = nil;
+    while (nil != (component=keyEnumer.nextObject)) {
+        _componentToSelected[component] = @(0);
+    }
 }
 @end
