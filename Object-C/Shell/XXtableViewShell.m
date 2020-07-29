@@ -20,9 +20,10 @@
     self = [super init];
     if (self) {
         _sectionDatas   = [NSMutableArray new];
-        _rowSystemStyle = UITableViewCellStyleDefault;
-        _rowType        = nil;
-        //_rowHeight = -1;
+        _cellSystemStyle = UITableViewCellStyleDefault;
+        _cellClass        = nil;
+        _canSlideDelete = NO;
+        _cellSelectionStyle = UITableViewCellSelectionStyleNone;
     }
     return self;
 }
@@ -35,17 +36,17 @@
     _tableView.dataSource = self;
     _tableView.estimatedRowHeight = 30;//_rowHeight;
 }
-- (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellRowLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height{
-    _rowType = type;
-    _rowLoadType = loadType;
-    _rowSystemStyle = systemStyle;
+- (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height{
+    _cellClass = type;
+    _cellLoadType = loadType;
+    _cellSystemStyle = systemStyle;
     
     if(nil != type){
-        if(XXtableViewShellRowLoadTypeNib == loadType){
-            [_tableView registerNib:[UINib nibWithNibName:_rowType bundle:nil] forCellReuseIdentifier:_rowType];
+        if(XXtableViewShellLoadTypeNib == loadType){
+            [_tableView registerNib:[UINib nibWithNibName:_cellClass bundle:nil] forCellReuseIdentifier:_cellClass];
         }
-        else if(XXtableViewShellRowLoadTypeCode == loadType){
-            [_tableView registerClass:NSClassFromString(_rowType) forCellReuseIdentifier:_rowType];
+        else if(XXtableViewShellLoadTypeCode == loadType){
+            [_tableView registerClass:NSClassFromString(_cellClass) forCellReuseIdentifier:_cellClass];
         }
         else{
             
@@ -59,7 +60,7 @@
         _tableView.rowHeight = height;
     }
 }
-- (void)configSectionWithHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers{
+- (void)configSectionHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers{
     
     int sectionCount = (int)rows.count;
     for (int index = 0; index < sectionCount; index++) {
@@ -74,7 +75,7 @@
         
     [_tableView reloadData];
 }
-- (void)configSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
+- (void)configSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
     NSMutableDictionary *section = [NSMutableDictionary new];
     if(nil != header) [section setObject:header forKey:kHeader];
     if(nil != footer) [section setObject:footer forKey:kFooter];
@@ -89,7 +90,7 @@
 }
 
 #pragma mark - <Section>
-- (void)addSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
+- (void)addSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
     NSMutableDictionary *section = [NSMutableDictionary new];
     if(nil != header) [section setObject:header forKey:kHeader];
     if(nil != footer) [section setObject:footer forKey:kFooter];
@@ -210,14 +211,14 @@
 #pragma mark - <UITableViewDataSource>
 - (nonnull UITableViewCell *)tableView:(nonnull UITableView *)tableView cellForRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
     UITableViewCell *cell       = nil;
-    BOOL isSystem               = nil == _rowType;
+    BOOL isSystem               = nil == _cellClass;
     
     /// 获取重用cell
     if (isSystem) {
         cell = [tableView dequeueReusableCellWithIdentifier:kReuseRowDefault];
     }
     else{
-        id<XXtableViewCellDelegate> xxcell  = [tableView dequeueReusableCellWithIdentifier:_rowType forIndexPath:indexPath];
+        id<XXtableViewCellDelegate> xxcell  = [tableView dequeueReusableCellWithIdentifier:_cellClass forIndexPath:indexPath];
         xxcell.tableViewShell       = self;
         xxcell.indexPath            = indexPath;
         cell                        = (UITableViewCell*)xxcell;
@@ -226,14 +227,15 @@
     /// 无可重用的cell
     if (nil == cell) {
         if(isSystem){
-            cell = [[UITableViewCell alloc] initWithStyle:_rowSystemStyle reuseIdentifier:kReuseRowDefault];
+            cell = [[UITableViewCell alloc] initWithStyle:_cellSystemStyle reuseIdentifier:kReuseRowDefault];
         }
         else{
-            id<XXtableViewCellDelegate> xxcell  = [[NSClassFromString(_rowType) alloc] initWithReuseIdentifier:_rowType];
+            id<XXtableViewCellDelegate> xxcell  = [[NSClassFromString(_cellClass) alloc] initWithReuseIdentifier:_cellClass];
             xxcell.tableViewShell       = self;
             xxcell.indexPath            = indexPath;
             cell                        = (UITableViewCell*)xxcell;
         }
+        cell.selectionStyle = _cellSelectionStyle;
     }
     if(nil == cell){
         NSLog(@"[XXtableViewShell] Failure to create cell.");

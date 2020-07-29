@@ -33,21 +33,31 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef enum : NSUInteger {
-    XXtableViewShellRowLoadTypeNib,
-    XXtableViewShellRowLoadTypeCode,
-} XXtableViewShellRowLoadType;
+    XXtableViewShellLoadTypeNib,
+    XXtableViewShellLoadTypeCode,
+} XXtableViewShellLoadType;
 
 @interface XXtableViewShell : NSObject<UITableViewDelegate,UITableViewDataSource>
-@property (nonatomic,weak,readonly) UITableView *tableView;                     // 目标UITableView
-@property (nonatomic,strong,readonly) NSMutableArray *sectionDatas;             // TableView数据
-@property (nonatomic,copy,nullable) NSString *rowType;                          // row（cell）的类型，nil为使用系统组件
-@property (nonatomic,assign,readonly) XXtableViewShellRowLoadType rowLoadType;  // 自定义row（cell）的加载方式
-@property (nonatomic,assign,readonly) UITableViewCellStyle rowSystemStyle;      // 系统row（cell）的样式
+/** 目标UITableView */
+@property (nonatomic,weak,readonly) UITableView *tableView;
+/** TableView数据 */
+@property (nonatomic,strong,readonly) NSMutableArray *sectionDatas;
 
-@property (nonatomic,assign) BOOL canSlideDelete;   /// 能否左滑动删除，默认为NO，注意设置了tableView.edit之后不能通过左滑动删除
+/** cell的自定义类型，nil使用则使用系统cell */
+@property (nonatomic,copy,nullable) NSString *cellClass;
+/** 自定义cell的加载方式，有nib和code两种方式 */
+@property (nonatomic,assign,readonly) XXtableViewShellLoadType cellLoadType;
+/** 系统cell的样式 */
+@property (nonatomic,assign,readonly) UITableViewCellStyle cellSystemStyle;
+/** cell的选中方式，默认是none */
+@property (nonatomic,assign) UITableViewCellSelectionStyle cellSelectionStyle;
+/** cell是否可以通过滑动删除，当设置tableView.edit之后无效 */
+@property (nonatomic,assign) BOOL canSlideDelete;
 
-@property (nonatomic,copy,nullable) void(^onRowClicked)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);          // row点击回调
-@property (nonatomic,copy,nullable) BOOL(^onRowEditingDelete)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);    // editing状态下，row删除编辑回调，通过返回NO：取消删除，返回YES：确认删除
+/** 点击回调，其中data是当前cell设置的数据，其类型由调用者输入时确定 */
+@property (nonatomic,copy,nullable) void(^onRowClicked)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);
+/** 删除回调，通过返回NO：取消删除，返回YES：确认删除并清除shell中数据 */
+@property (nonatomic,copy,nullable) BOOL(^onRowEditingDelete)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);
 
 /**
  设置shell的目标TableView
@@ -62,7 +72,21 @@ typedef enum : NSUInteger {
  @param systemStyle 使用系统的row（cell）时，可以指定系统样式，使用自定义类型该参数传入无效
  @param height row（cell）的高度，0：自适应，否则指定该高度
  */
-- (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellRowLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height;
+- (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height __attribute__((deprecated));
+/**
+ 配置TableView的自定义cell参数
+ @param cls cell的自定义类型
+ @param loadType 自定义cell的加载方式
+ @param height cell的高度，0：自适应，否则指定该高度
+*/
+- (void)configCellClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
+
+/**
+ 配置TableView的系统cell
+ @param style 系统cell的样式
+ @param height cell的高度，0：自适应，否则指定该高度
+ */
+- (void)configCellSystemStyle:(UITableViewCellStyle)style height:(CGFloat)height;
 
 /**
  配置TableView的所有section的数据，调用后会触发TableView的刷新，headers和footers可以为nil，若两者不为nil时，则长度需要与rows数量相同，rows的数量视作为TableView的section数量；
@@ -70,15 +94,15 @@ typedef enum : NSUInteger {
  @param rows 当中元素是每一个section的row的数据，如果该section的row数量为0
  @param footers 当中元素是每一个section的footer的数据
  */
-- (void)configSectionWithHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers;
+- (void)configSectionHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers;
 
 /**
- 配置单个TableView的section数据，调用后不会触发TableView的刷新，需要配合【XXtableViewShell configFinished】使用
+ 配置/增加单个TableView的section数据，调用后不会触发TableView的刷新，需要配合【XXtableViewShell configFinished】使用
  @param header section的header数据
  @param row section的row数据，为nil时，该section的row数量为0
  @param footer section的footer数据
  */
-- (void)configSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer;
+- (void)configSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer;
 
 /**
  配置完成，触发刷新
@@ -91,7 +115,7 @@ typedef enum : NSUInteger {
  @param row section的row数据，为nil时，该section的row数量为0
  @param footer section的footer数据
  */
-- (void)addSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer;
+- (void)addSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer;
 
 /**
  在指定位置插入一个section
