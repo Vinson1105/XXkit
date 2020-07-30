@@ -26,6 +26,8 @@
     @"Detail"：          UITableViewCell.detailTextLabel.text
     @"Image"：           UITableViewCell.imageView.image
     @"AccessoryType"：   UITableViewCell.accessoryType
+ 
+ 
  */
 
 #import <UIKit/UIKit.h>
@@ -43,6 +45,7 @@ typedef enum : NSUInteger {
 /** TableView数据 */
 @property (nonatomic,strong,readonly) NSMutableArray *sectionDatas;
 
+#pragma mark - Property For Cell
 /** cell的自定义类型，nil使用则使用系统cell */
 @property (nonatomic,copy,nullable) NSString *cellClass;
 /** 自定义cell的加载方式，有nib和code两种方式 */
@@ -54,10 +57,26 @@ typedef enum : NSUInteger {
 /** cell是否可以通过滑动删除，当设置tableView.edit之后无效 */
 @property (nonatomic,assign) BOOL canSlideDelete;
 
+#pragma mark - Property For Header
+@property (nonatomic,copy,nullable) NSString *headerClass;
+@property (nonatomic,assign,readonly) XXtableViewShellLoadType headerLoadType;
+@property (nonatomic,assign,readonly) CGFloat headerHeight;
+
+#pragma mark - Property For Footer
+@property (nonatomic,copy,nullable) NSString *footerClass;
+@property (nonatomic,assign,readonly) XXtableViewShellLoadType footerLoadType;
+@property (nonatomic,assign,readonly) CGFloat footerHeight;
+
+#pragma mark - Property For TableView Handle Block
 /** 点击回调，其中data是当前cell设置的数据，其类型由调用者输入时确定 */
 @property (nonatomic,copy,nullable) void(^onRowClicked)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);
 /** 删除回调，通过返回NO：取消删除，返回YES：确认删除并清除shell中数据 */
 @property (nonatomic,copy,nullable) BOOL(^onRowEditingDelete)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);
+
+#pragma mark - Property For Cell/Header/Footer Event Handle Block
+@property (nonatomic,copy,nullable) void(^onCellEvent)(XXtableViewShell *shell, NSIndexPath *indexPath, NSString *event, id data);
+@property (nonatomic,copy,nullable) void(^onHeaderEvent)(XXtableViewShell *shell, NSUInteger section, NSString *event, id data);
+@property (nonatomic,copy,nullable) void(^onFooterEvent)(XXtableViewShell *shell, NSUInteger section, NSString *event, id data);
 
 /**
  设置shell的目标TableView
@@ -65,14 +84,6 @@ typedef enum : NSUInteger {
  */
 - (void)shell:(UITableView*)tableView;
 
-/**
- 配置TableView的row（cell）参数
- @param type TableView的row（cell）的类型，自定义则传入自定义的类名；系统则传入nil
- @param loadType TableView的row（cell）的自定义方式，有【xib、code】两种类型，使用系统类型该参数传入无效
- @param systemStyle 使用系统的row（cell）时，可以指定系统样式，使用自定义类型该参数传入无效
- @param height row（cell）的高度，0：自适应，否则指定该高度
- */
-- (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height __attribute__((deprecated));
 /**
  配置TableView的自定义cell参数
  @param cls cell的自定义类型
@@ -87,6 +98,10 @@ typedef enum : NSUInteger {
  @param height cell的高度，0：自适应，否则指定该高度
  */
 - (void)configCellSystemStyle:(UITableViewCellStyle)style height:(CGFloat)height;
+
+- (void)configHeaderClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
+- (void)configFooterClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
+
 
 /**
  配置TableView的所有section的数据，调用后会触发TableView的刷新，headers和footers可以为nil，若两者不为nil时，则长度需要与rows数量相同，rows的数量视作为TableView的section数量；
@@ -176,6 +191,7 @@ typedef enum : NSUInteger {
 
 @protocol XXtableViewCellDelegate
 @required
+@property (nonatomic,copy,nullable) void(^onEvent)(id<XXtableViewCellDelegate> obj, NSString *event, id info);
 @property (nonatomic,weak) XXtableViewShell *tableViewShell;
 @property (nonatomic,strong) NSIndexPath *indexPath;
 - (void)resetData:(id)data;

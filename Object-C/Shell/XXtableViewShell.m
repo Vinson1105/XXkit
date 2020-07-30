@@ -1,6 +1,6 @@
 #import "XXtableViewShell.h"
 
-#define kReuseRowDefault @"ReuseRowDefault"
+#define kReuseRowDefault    @"ReuseRowDefault"
 #define kReuseHeaderDefault @"ReuseHeaderDefault"
 #define kReuseFooterDefault @"ReuseFooterDefault"
 
@@ -36,21 +36,18 @@
     _tableView.dataSource = self;
     _tableView.estimatedRowHeight = 30;//_rowHeight;
 }
-- (void)configRowType:(nullable NSString*)type loadType:(XXtableViewShellLoadType)loadType systemStyle:(UITableViewCellStyle)systemStyle height:(CGFloat)height{
-    _cellClass = type;
+- (void)configCellClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height{
+    _cellClass = cls;
     _cellLoadType = loadType;
-    _cellSystemStyle = systemStyle;
     
-    if(nil != type){
-        if(XXtableViewShellLoadTypeNib == loadType){
-            [_tableView registerNib:[UINib nibWithNibName:_cellClass bundle:nil] forCellReuseIdentifier:_cellClass];
-        }
-        else if(XXtableViewShellLoadTypeCode == loadType){
-            [_tableView registerClass:NSClassFromString(_cellClass) forCellReuseIdentifier:_cellClass];
-        }
-        else{
-            
-        }
+    if(XXtableViewShellLoadTypeNib == loadType){
+        [_tableView registerNib:[UINib nibWithNibName:_cellClass bundle:nil] forCellReuseIdentifier:_cellClass];
+    }
+    else if(XXtableViewShellLoadTypeCode == loadType){
+        [_tableView registerClass:NSClassFromString(_cellClass) forCellReuseIdentifier:_cellClass];
+    }
+    else{
+        
     }
     
     if(height <= 0){
@@ -60,8 +57,28 @@
         _tableView.rowHeight = height;
     }
 }
+- (void)configCellSystemStyle:(UITableViewCellStyle)style height:(CGFloat)height{
+    _cellSystemStyle = style;
+    _cellClass = nil;
+    if(height <= 0){
+        _tableView.estimatedRowHeight = 30;
+    }
+    else{
+        _tableView.rowHeight = height;
+    }
+}
+- (void)configHeaderClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height{
+    self.headerClass = cls;
+    _headerLoadType = loadType;
+    _headerHeight = height;
+}
+- (void)configFooterClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height{
+    self.footerClass = cls;
+    _footerLoadType = loadType;
+    _footerHeight = height;
+}
+
 - (void)configSectionHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers{
-    
     int sectionCount = (int)rows.count;
     for (int index = 0; index < sectionCount; index++) {
         NSMutableDictionary *section = [NSMutableDictionary new];
@@ -200,12 +217,18 @@
 }
 
 #pragma mark - <Private>
-- (nullable NSMutableArray*)getRowWithSection:(int)section{
+- (nullable NSMutableArray*)getRowWithSection:(NSUInteger)section{
     return [[_sectionDatas objectAtIndex:section] objectForKey:kRow];
 }
-- (id)getRowDataWithSection:(int)section row:(int)row{
+- (id)getRowDataWithSection:(NSUInteger)section row:(NSUInteger)row{
     NSMutableArray *rows = [self getRowWithSection:section];
     return [rows objectAtIndex:row];
+}
+- (nullable id)getHeaderWithSection:(NSUInteger)section{
+    return [[_sectionDatas objectAtIndex:section] objectForKey:kHeader];
+}
+- (nullable id)getFooterWithSection:(NSUInteger)section{
+    return [[_sectionDatas objectAtIndex:section] objectForKey:kFooter];
 }
 
 #pragma mark - <UITableViewDataSource>
@@ -280,6 +303,11 @@
     return cell;
 }
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
+    if(nil!=_headerClass){
+        /// 如果有使用自定义header，则直接返回nil
+        return nil;
+    }
+    
     NSDictionary *sectionData = _sectionDatas[section];
     id headerData = [sectionData objectForKey:kHeader];
     if(nil == headerData){
@@ -296,6 +324,11 @@
     }
 }
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section{
+    if(nil!=_headerClass){
+        /// 如果有使用自定义footer，则直接返回nil
+        return nil;
+    }
+    
     NSDictionary *sectionData = _sectionDatas[section];
     id headerData = [sectionData objectForKey:kFooter];
     if(nil == headerData){
@@ -353,6 +386,92 @@
         id rowData                  = [rowsData objectAtIndex:indexPath.row];
         _onRowClicked(self, indexPath, rowData);
     }
+}
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    if(nil==_headerClass){
+        return nil;
+    }
+    
+    /// 取出对应header的数据
+    id headerData = [self getHeaderWithSection:section];
+    
+    /// 获取复用header或者创建新的view
+    UIView *view = [tableView dequeueReusableHeaderFooterViewWithIdentifier:_headerClass];
+    if(nil==view){
+        if(XXtableViewShellLoadTypeNib == _headerLoadType){
+            view = [[[NSBundle mainBundle] loadNibNamed:_headerClass owner:nil options:nil].lastObject initWithReuseIdentifier:_headerClass];
+        }
+        else if(XXtableViewShellLoadTypeCode == _headerLoadType){
+            view = [[NSClassFromString(_headerClass) alloc] initWithReuseIdentifier:_headerClass];
+        }
+        else{
+            
+        }
+    }
+    if(nil==view){
+        NSLog(@"[XXtableViewShell] [viewForHeaderInSection] failure to VIEW");
+        return nil;
+    }
+    
+    /// view协议转换
+    if(![view conformsToProtocol:@protocol(XXtableViewCellDelegate)]){
+        NSLog(@"[XXtableViewShell] [viewForFooterInSection] cell没有遵循协议‘XXtableViewCellDelegate’。");
+        return view;
+    }
+    id<XXtableViewCellDelegate> xxheader = (id<XXtableViewCellDelegate>)view;
+    [xxheader resetData:headerData];
+    xxheader.indexPath = [NSIndexPath indexPathForRow:-1 inSection:section];
+    
+    return view;
+}
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
+    if(nil==_footerClass){
+        return nil;
+    }
+    
+    /// 取出对应header的数据
+    id footerData = [self getFooterWithSection:section];
+    
+    /// 获取复用header或者创建新的view
+    UIView *view = [tableView dequeueReusableHeaderFooterViewWithIdentifier:_footerClass];
+    if(nil==view){
+        if(XXtableViewShellLoadTypeNib == _footerLoadType){
+            view = [[[NSBundle mainBundle] loadNibNamed:_footerClass owner:nil options:nil].lastObject initWithReuseIdentifier:_footerClass];
+        }
+        else if(XXtableViewShellLoadTypeCode == _footerLoadType){
+            view = [[NSClassFromString(_footerClass) alloc] initWithReuseIdentifier:_footerClass];
+        }
+        else{
+            
+        }
+    }
+    if(nil==view){
+        NSLog(@"[XXtableViewShell] [viewForFooterInSection] failure to VIEW");
+        return nil;
+    }
+    
+    /// view协议转换
+    if(![view conformsToProtocol:@protocol(XXtableViewCellDelegate)]){
+        NSLog(@"[XXtableViewShell] [viewForFooterInSection] cell没有遵循协议‘XXtableViewCellDelegate’。");
+        return view;
+    }
+    id<XXtableViewCellDelegate> xxfooter = (id<XXtableViewCellDelegate>)view;
+    [xxfooter resetData:footerData];
+    xxfooter.indexPath = [NSIndexPath indexPathForRow:-1 inSection:section];
+    
+    return view;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    /// TODO: 不同的Row又不同的高度，其中返回-1可以使用自适应
+    return -1;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    /// TODO: 不同的Header又不同的高度，其中返回-1可以使用自适应
+    return -1;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
+    /// TODO: 不同的Footer又不同的高度，其中返回-1可以使用自适应
+    return -1;
 }
 @end
 
