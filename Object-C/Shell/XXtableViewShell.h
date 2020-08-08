@@ -17,16 +17,20 @@
  1、内部管理cell（header、row、footer）
  2、动态增删section
  
+ -- CELL --
  在使用自定义cell时，需要实现遵循协议<XXtableViewCellDelegate>
     nib自定义时，[awakeFromNib]中初始化
     code自定义时，[initWithStyle: reuseIdentifier:]中初始化
  
  在使用系统cell是，可以使用以下的'标识'来设置对应的值
-    @"Title"：           UITableViewCell.textLabel.text
-    @"Detail"：          UITableViewCell.detailTextLabel.text
-    @"Image"：           UITableViewCell.imageView.image
-    @"AccessoryType"：   UITableViewCell.accessoryType
+    Title - UITableViewCell.textLabel.text
+    Detail -  UITableViewCell.detailTextLabel.text
+    Image - UITableViewCell.imageView.image
+    AccessoryType -  UITableViewCell.accessoryType
+    Height - 用于某一行高度，若没有该键值，则使用通过config设置的rowHeight
  
+ -- HEADER/FOOTER --
+ 不太建议使用约束动态更改高度，建议使用heightForHeader、heightForFooter返回对其动态修改
  
  */
 
@@ -88,18 +92,31 @@ typedef enum : NSUInteger {
  配置TableView的自定义cell参数
  @param cls cell的自定义类型
  @param loadType 自定义cell的加载方式
- @param height cell的高度，0：自适应，否则指定该高度
+ @param height 全局cell高度，0：自适应，否则指定该高度
 */
 - (void)configCellClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
 
 /**
  配置TableView的系统cell
  @param style 系统cell的样式
- @param height cell的高度，0：自适应，否则指定该高度
+ @param height 全局cell高度，0：自适应，否则指定该高度（可以通过）
  */
 - (void)configCellSystemStyle:(UITableViewCellStyle)style height:(CGFloat)height;
 
+/**
+ 配置TableView的自定义header
+ @param cls 自定义header的类名
+ @param loadType 自定义header的加载方式
+ @param height 全局header的高度（不建议使用更改约束自适应动态修改高度）
+ */
 - (void)configHeaderClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
+
+/**
+ 配置TableView的自定义footer
+ @param cls 自定义footer的类名
+ @param loadType 自定义footer的加载方式
+ @param height 全局footer的高度（不建议使用更改约束自适应动态修改高度）
+ */
 - (void)configFooterClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
 
 
