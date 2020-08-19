@@ -1,37 +1,38 @@
 /**
- 2020.05.28
- 1、新增row的editing状态删除处理、回调
- 
- 2020.05.10
- 1、新增对section中的row数据追加接口
- 2、addRow和resetRow的参数section为当前section编号的最大值+1，则创建一个新section
- 
- 2020.04.20
- 1、新增[XXtableViewShell resetData:(id)data atIndexPath:(NSIndexPath*)indexPath]，用于重置对应row
- 2、新增<XXtableViewCellDelegate>，主要是规范自定义cell的接口
- 3、对于[cell resetData:data]中的data，如果是需要在cell中对数据进行修改，则这个data需要是Mutable，这可能跟原生的设计有点出入
-    （原生在数据修改是由Table这层控制的，但是XXtable可能是偏向的cell中管理自己的数据）
- 
- 2020.04.08
- UITableView的封装（第三版），集成以下功能
- 1、内部管理cell（header、row、footer）
- 2、动态增删section
- 
- -- CELL --
- 在使用自定义cell时，需要实现遵循协议<XXtableViewCellDelegate>
+ -- Cell --
+ 1 在使用自定义cell时，需要实现遵循协议<XXtableViewCellDelegate>，并可以通过config配置rowHeight为-1时，可以通过计算自定义Cell约束高度，
+ 并可以修改约束去动态更新Cell的高度
     nib自定义时，[awakeFromNib]中初始化
     code自定义时，[initWithStyle: reuseIdentifier:]中初始化
  
- 在使用系统cell是，可以使用以下的'标识'来设置对应的值
+    Height - 用于某一行高度，若没有该键值，则使用通过config设置的height
+ 
+ 2 在使用系统cell是，可以使用以下的'键'来初始化，并可以通过config配置rowHeight为-1时，若titlelabel有换行，可以根据Cell中titlelabel内容自适应高度
     Title - UITableViewCell.textLabel.text
     Detail -  UITableViewCell.detailTextLabel.text
     Image - UITableViewCell.imageView.image
     AccessoryType -  UITableViewCell.accessoryType
-    Height - 用于某一行高度，若没有该键值，则使用通过config设置的rowHeight
+    Height - 用于某一行高度，若没有该键值，则使用通过config设置的height
+  
+ -- Section Header/Footer --
+ 1 Header/Footer没有对应方法去动态刷新，reloadData、reloadSection、reloadRows都不能触发viewForHeader/Footer,
+    不太建议在Header/Footer动态修改高度，但是生成时初始化高度还是可以使用自适应
  
- -- HEADER/FOOTER --
- 不太建议使用约束动态更改高度，建议使用heightForHeader、heightForFooter返回对其动态修改
+ 2 在使用自定义Header/Footer，需要继承UITableViewHeaderFooterView，并遵循协议<XXtableViewCellDelegate>
  
+ 3 在使用系统Header/Footer，可以使用以下的'键'来初始化
+    Title - 通过titleForHeader、titleForFooter返回显示
+ 
+ // TODO: 目前需要完善的功能
+ 1 cell/header/footer如何修改自身数据
+    - 引用数据表（在JSON数据输入时如何把数据转换到Mutable）
+    - 回调到shell中
+    - 通知
+ 2 不同row/header/footer可以使用不同的自定义类型，是以一整个section为单位？还是每一个row都可以设置？
+ 3 供调用者使用的接口简化，调用者进行row/header/footer部分数据更新
+    reset - 重置
+    update - 部分覆盖
+ 4 JSON数据接口，用户数据和配置数据的划分
  */
 
 #import <UIKit/UIKit.h>
@@ -62,13 +63,19 @@ typedef enum : NSUInteger {
 @property (nonatomic,assign) BOOL canSlideDelete;
 
 #pragma mark - Property For Header
+/** sectionHeader的自定义类型，nil使用则使用系统sectionHeader */
 @property (nonatomic,copy,nullable) NSString *headerClass;
+/** 自定义sectionHeader的加载方式，有nib和code两种方式 */
 @property (nonatomic,assign,readonly) XXtableViewShellLoadType headerLoadType;
+/** sectionHeader的统一高度，设置-1可以使用自适应 */
 @property (nonatomic,assign,readonly) CGFloat headerHeight;
 
 #pragma mark - Property For Footer
+/** sectionFooter的自定义类型，nil使用则使用系统sectionFooter */
 @property (nonatomic,copy,nullable) NSString *footerClass;
+/** 自定义sectionFooter的加载方式，有nib和code两种方式 */
 @property (nonatomic,assign,readonly) XXtableViewShellLoadType footerLoadType;
+/** sectionFooter的统一高度，设置-1可以使用自适应 */
 @property (nonatomic,assign,readonly) CGFloat footerHeight;
 
 #pragma mark - Property For TableView Handle Block
