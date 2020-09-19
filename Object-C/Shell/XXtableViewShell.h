@@ -19,13 +19,17 @@
     Height - 用于某一行高度，若没有该键值，则使用通过config设置的height
   
  ===== Section Header/Footer =====
- 1 Header/Footer没有对应方法去动态刷新，reloadData、reloadSection、reloadRows都不能触发viewForHeader/Footer,
+ 1 Header/Footer没有对应方法去动态刷新，reloadData、reloadSection、reloadRows都不能触发viewForHeader/Footer；
     不太建议在Header/Footer动态修改高度，但是生成时初始化高度还是可以使用自适应；
  
- 2 在使用自定义Header/Footer，需要继承UITableViewHeaderFooterView，并遵循协议<XXtableViewCellDelegate>
+ 2 在使用自定义Header/Footer，需要继承UITableViewHeaderFooterView，并遵循协议<XXtableViewCellDelegate>；
  
  3 在使用系统Header/Footer，可以使用以下的'键'来初始化
     Title - 通过titleForHeader、titleForFooter返回显示
+ 
+ ===== 关于Shell和Section Header/Footer/Row之间的调用关系 =====
+ Header/Footer/Row的数据由自身修改发起者，Shell为数据的最终存放点，即当Header/Footer/Row有数据修改的需求时，需要将数据更新到Shell中；
+ 当数据修改的同时，有约束更新的需求同时，Row可以在内部直接reload，而Header/Footer则不能亦无法很好地动态刷新；（暂时没有找到方法）
  
  // TODO: 目前需要完善的功能
  1 cell/header/footer如何修改自身数据
@@ -79,15 +83,15 @@ extern NSString * const kXXtableViewShellKeySectionFooter;
 /** 自定义SectionHeader的加载方式，有nib和code两种方式 */
 @property (nonatomic,assign,readonly) XXtableViewShellLoadType sectionHeaderLoadType;
 /** SectionHeader的统一高度，设置0可以使用单次自适应（注意不能动态自适应） */
-@property (nonatomic,assign,readonly) CGFloat headerHeight;
+@property (nonatomic,assign,readonly) CGFloat sectionHeaderHeight;
 
 #pragma mark - SectionFooter的相关属性
 /** SectionFooter的自定义类型，nil使用则使用系统SectionFooter */
 @property (nonatomic,copy,nullable) NSString *sectionFooterClass;
 /** 自定义SectionFooter的加载方式，有nib和code两种方式 */
 @property (nonatomic,assign,readonly) XXtableViewShellLoadType sectionFooterLoadType;
-/** SectionFooter的统一高度，设置0可以使用单次自适应（注意不能动态自适应） */
-@property (nonatomic,assign,readonly) CGFloat footerHeight;
+/** SectionFooter的统一高度，设置-1可以使用单次自适应（注意不能动态自适应） */
+@property (nonatomic,assign,readonly) CGFloat sectionFooterHeight;
 
 #pragma mark - SectionRow的相关事件回调
 /** SectionRow点击回调，其中data是当前SectionRow的数据 */
@@ -117,14 +121,14 @@ extern NSString * const kXXtableViewShellKeySectionFooter;
  配置TableView的自定义SectionRow参数
  @param cls SectionRow的自定义类型
  @param loadType 自定义SectionRow的加载方式
- @param height 全局SectionRow高度，0：自适应，否则指定该高度
+ @param height 全局SectionRow高度，-1：自适应，否则指定该高度
 */
 - (void)configSectionRowClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
 
 /**
  配置TableView的系统SectionRow
  @param style 系统SectionRow的样式
- @param height 全局SectionRow高度，0：自适应，否则指定该高度
+ @param height 全局SectionRow高度，-1：自适应，否则指定该高度
  */
 - (void)configSectionRowSystemStyle:(UITableViewCellStyle)style height:(CGFloat)height;
 
@@ -133,7 +137,7 @@ extern NSString * const kXXtableViewShellKeySectionFooter;
  配置TableView的自定义SectionHeader
  @param cls 自定义SectionHeader的类名
  @param loadType 自定义SectionHeader的加载方式
- @param height 全局SectionHeader的高度，0：单次自适应，否则指定该高度
+ @param height 全局SectionHeader的高度，-1：单次自适应，否则指定该高度
  */
 - (void)configSectionHeaderClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
 
@@ -142,7 +146,7 @@ extern NSString * const kXXtableViewShellKeySectionFooter;
  配置TableView的自定义SectionFooter
  @param cls 自定义SectionFooter的类名
  @param loadType 自定义SectionFooter的加载方式
- @param height 全局SectionFooter的高度，0：单次自适应，否则指定该高度
+ @param height 全局SectionFooter的高度，-1：单次自适应，否则指定该高度
  */
 - (void)configSectionFooterClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
 

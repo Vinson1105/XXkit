@@ -30,8 +30,8 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         _sectionRowSlideDeletable = NO;
         _sectionRowSelectionStyle = UITableViewCellSelectionStyleNone;
         
-        _footerHeight = -1;
-        _headerHeight = -1;
+        _sectionFooterHeight = -1;
+        _sectionHeaderHeight = -1;
     }
     return self;
 }
@@ -82,7 +82,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
 - (void)configSectionHeaderClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height{
     self.sectionHeaderClass = cls;
     _sectionHeaderLoadType = loadType;
-    _headerHeight = height;
+    _sectionHeaderHeight = height;
     
     if(XXtableViewShellLoadTypeNib == loadType){
         [_tableView registerNib:[UINib nibWithNibName:cls bundle:nil] forHeaderFooterViewReuseIdentifier:cls];
@@ -94,9 +94,10 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         
     }
     if(height <= 0){
-        _tableView.estimatedSectionHeaderHeight = 0.01;
+        _tableView.estimatedSectionHeaderHeight = UITableViewAutomaticDimension;
     }
     else{
+        _tableView.estimatedSectionHeaderHeight = height;
         _tableView.sectionHeaderHeight = height;
     }
 }
@@ -105,7 +106,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
 - (void)configSectionFooterClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height{
     self.sectionFooterClass = cls;
     _sectionFooterLoadType = loadType;
-    _footerHeight = height;
+    _sectionFooterHeight = height;
     
     if(XXtableViewShellLoadTypeNib == loadType){
         [_tableView registerNib:[UINib nibWithNibName:cls bundle:nil] forHeaderFooterViewReuseIdentifier:cls];
@@ -117,9 +118,10 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         
     }
     if(height <= 0){
-        _tableView.estimatedSectionFooterHeight = 0.01;
+        _tableView.estimatedSectionFooterHeight = UITableViewAutomaticDimension;
     }
     else{
+        _tableView.estimatedSectionFooterHeight = height;
         _tableView.sectionFooterHeight = height;
     }
 }
@@ -488,6 +490,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
     }
 }
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    NSLog(@"[GWX] viewForHeaderInSection");
     if(nil==_sectionHeaderClass){
         return nil;
     }
@@ -562,25 +565,30 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
     return view;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    // Row的高度暂时只能自适应或者config的时候统一配置，返回-1
     return -1;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    NSLog(@"[GWX] heightForHeaderInSection");
+    /// 取出SectionHeader中的数据，如果没有使用同
     id headerData = [self getHeaderWithSection:section];
     if(nil == headerData){
-        return _headerHeight;
+        return _sectionHeaderHeight;
     }
+    
+    ///
     if([headerData isKindOfClass:[NSDictionary class]]){
         NSDictionary *data = headerData;
         if(nil != data[kHeight]){
             return [data[kHeight] floatValue];
         }
     }
-    return _headerHeight;
+    return _sectionHeaderHeight;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
     id footerData = [self getFooterWithSection:section];
     if(nil == footerData){
-        return _footerHeight;
+        return _sectionFooterHeight;
     }
     if([footerData isKindOfClass:[NSDictionary class]]){
         NSDictionary *data = footerData;
@@ -588,7 +596,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
             return [data[kHeight] floatValue];
         }
     }
-    return _footerHeight;
+    return _sectionFooterHeight;
 }
 @end
 
