@@ -204,40 +204,63 @@ extern NSString * const kXXtableViewShellKeySectionFooter;
  */
 - (void)removeSectionAtIndex:(int)index;
 
+/**
+ 修改指定的Section数据
+ @param header SectionHeader的数据
+ @param row SectionRow的数据
+ @param footer SectionFooter的数据
+ @param index 指定的SectionIndex
+ */
+- (void)setSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer atIndex:(NSInteger)index;
+
+/**
+ 获取指定SectionData，并同步使用Block返回
+ @param index 指定的SectionIndex
+ @param ret 同步回调的block
+ */
+- (void)getSectionSyncAtIndex:(NSInteger)index ret:(void(^)(id header, NSArray *row, id footer))ret;
+
 #pragma mark - Section中某一个或者多个Row的增删改查
 /**
- 在指定section中增加若干个row
- @param row 追加的row的数据
- @param section 目标section的位置
+ 在指定index中的增Section加若干个Row
+ @param rows 追加的row的数据
+ @param index 目标section的位置
  */
-- (void)addRow:(NSArray*)row atSection:(int)section;
+- (void)addSectionRows:(NSArray*)rows atIndex:(NSInteger)index;
 
 /**
- 移除指定indexPath的row
- @param indexPath 需要删除row的位置
+ 在指定index中的Section中删除所有Row
+ @param index 指定的Section的index
  */
-- (void)removeRowAtIndexPath:(NSIndexPath*)indexPath;
+- (void)removeSectionRowsAtIndex:(NSInteger)index;
 
 /**
- 重置指定indexPath的row数据
- @param data 单个row（cell）的数据
+ 删除指定indexPath的SectionRow
+ @param indexPath 需要删除SectionRow的位置
+ */
+- (void)removeSectionRowAtIndexPath:(NSIndexPath*)indexPath;
+
+/**
+ 设置指定indexPath的SectionRow数据
+ @param row 单个SectionRow的数据
  @param indexPath 需要重置row（cell）的位置
  */
-- (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath;
+- (void)setSectionRow:(id)row atIndexPath:(NSIndexPath*)indexPath;
 
 /**
- 重置指定section的中所有row数据
- @param row 重置后的数据，为nil时，该section的row数量为0
- @param section 目标section的位置
+ 在指定index的Section设置所有Row的数据
+ @param rows 重置后的数据，为nil时，该section的row数量为0
+ @param index 目标section的位置
  */
-- (void)resetRow:(nullable NSArray*)row atSection:(int)section;
+- (void)setSectionRows:(nullable NSArray*)rows atIndex:(NSInteger)index;
 
 /**
- 获取指定indexPath的row数据
+ 获取指定indexPath的Row数据
  @param indexPath 需要重置row（cell）的位置
  */
-- (id)getDataAtIndexPath:(NSIndexPath*)indexPath;
+- (id)getSectionRowAtIndexPath:(NSIndexPath*)indexPath;
 
+#pragma mark - SectionHeader/SectionRow/SectionFooter的执行任务
 /**
  要求row进行某些操作，这个跟resetData有所区别，resetData意指需要重置或者设置row的本身数据，
  doSomething需要执行某些动作，shell的本身不会对data进行修改，需要又row/cell本身去判断这个操作是否需要进行data修改
@@ -255,6 +278,6 @@ extern NSString * const kXXtableViewShellKeySectionFooter;
 @property (nonatomic,weak) XXtableViewShell *tableViewShell;
 @property (nonatomic,strong) NSIndexPath *indexPath;
 - (void)resetData:(id)data;
-- (void)doSomething:(NSString*)event info:(nullable id)info;
+- (void)event:(NSString*)event info:(nullable id)info;
 @end
 NS_ASSUME_NONNULL_END

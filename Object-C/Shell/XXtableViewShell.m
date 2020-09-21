@@ -229,15 +229,43 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
     [_sectionDatas removeObjectAtIndex:index];
     [_tableView reloadData];
 }
+- (void)setSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer atIndex:(NSInteger)index{
+    if(self.sectionDatas.count<=index){
+        NSLog(@"[XXtableViewShell] [setSectionHeader] 无效index。（count:%d index:%d）", (int)self.sectionDatas.count, (int)index);
+        return;
+    }
+    
+    NSMutableDictionary *section = [NSMutableDictionary new];
+    if(nil != header) [section setObject:header forKey:kXXtableViewShellKeySectionHeader];
+    if(nil != footer) [section setObject:footer forKey:kXXtableViewShellKeySectionFooter];
+    if(nil != row) [section setObject:row forKey:kXXtableViewShellKeySectionRow];
+    
+    self.sectionDatas[index] = section;
+}
+- (void)getSectionSyncAtIndex:(NSInteger)index ret:(void (^)(id _Nonnull, NSArray * _Nonnull, id _Nonnull))ret{
+    if(self.sectionDatas.count<=index){
+        NSLog(@"[XXtableViewShell] [setSectionHeader] 无效index。（count:%d index:%d）", (int)self.sectionDatas.count, (int)index);
+        return;
+    }
+    
+    NSMutableDictionary *section = self.sectionDatas[index];
+    id header = section[kXXtableViewShellKeySectionHeader];
+    NSArray *row = section[kXXtableViewShellKeySectionRow];
+    id footer = section[kXXtableViewShellKeySectionFooter];
+    
+    if(ret){
+        ret(header, row, footer);
+    }
+}
 
 #pragma mark - Section中某一个或者多个Row的增删改查
-- (void)addRow:(NSArray*)row atSection:(int)section{
-    NSMutableDictionary *sectionData = section < _sectionDatas.count?_sectionDatas[section]:nil;
+- (void)addSectionRows:(NSArray*)row atIndex:(NSInteger)index{
+    NSMutableDictionary *sectionData = index < self.sectionDatas.count?self.sectionDatas[index]:nil;
     if(nil == sectionData){
-        if(section == _sectionDatas.count){
+        if(index == self.sectionDatas.count){
             /// 指定的section为当前最大section编号+1，则直接创建一个新section（section是有序的）
             sectionData = [NSMutableDictionary new];
-            _sectionDatas[section] = sectionData;
+            self.sectionDatas[index] = sectionData;
         }
         else{
             /// 指定的section并不是最大section编号+1，暂时不支持创建多个中间section
@@ -254,7 +282,17 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
     }
     [_tableView reloadData];
 }
-- (void)removeRowAtIndexPath:(NSIndexPath*)indexPath{
+- (void)removeSectionRowsAtIndex:(NSInteger)index{
+    if(self.sectionDatas.count<=index){
+        NSLog(@"[XXtableViewShell] [setSectionHeader] 无效index。（count:%d index:%d）", (int)self.sectionDatas.count, (int)index);
+        return;
+    }
+    
+    NSMutableDictionary *sec = self.sectionDatas[index];
+    [sec removeObjectForKey:kXXtableViewShellKeySectionRow];
+    [self.tableView reloadData];
+}
+- (void)removeSectionRowAtIndexPath:(NSIndexPath*)indexPath{
     NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
     if(nil == rows){
         return;
@@ -264,7 +302,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         [_tableView reloadData];
     }
 }
-- (void)resetData:(id)data atIndexPath:(NSIndexPath*)indexPath{
+- (void)setSectionRow:(id)data atIndexPath:(NSIndexPath*)indexPath{
     NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
     if(nil == rows){
         return;
@@ -272,7 +310,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
     [rows replaceObjectAtIndex:indexPath.row withObject:data];
     [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
 }
-- (void)resetRow:(nullable NSArray*)row atSection:(int)section{
+- (void)setSectionRows:(nullable NSArray*)row atIndex:(int)section{
     NSMutableDictionary *sectionData = section < _sectionDatas.count?_sectionDatas[section]:nil;
     if(nil == sectionData){
         if(section == _sectionDatas.count){
@@ -294,7 +332,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
     }
     [_tableView reloadData];
 }
-- (id)getDataAtIndexPath:(NSIndexPath*)indexPath{
+- (id)getSectionRowAtIndexPath:(NSIndexPath*)indexPath{
     NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
     if(nil == rows){
         return nil;
@@ -315,7 +353,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
     }
     
     id<XXtableViewCellDelegate> xxcell = (id<XXtableViewCellDelegate>)cell;
-    [xxcell doSomething:event info:info];
+    [xxcell event:event info:info];
 }
 
 #pragma mark - 一些私有函数
@@ -473,7 +511,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         }
         
         if(toDelete){
-            [self removeRowAtIndexPath:indexPath];
+            [self removeSectionRowAtIndexPath:indexPath];
         }
     }
 }
