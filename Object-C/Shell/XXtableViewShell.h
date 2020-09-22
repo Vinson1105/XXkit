@@ -32,15 +32,15 @@
  当数据修改的同时，有约束更新的需求同时，Row可以在内部直接reload，而Header/Footer则不能亦无法很好地动态刷新；（暂时没有找到方法）
  
  // TODO: 目前需要完善的功能
- 1 cell/header/footer如何修改自身数据
+ 1 row/header/footer如何修改自身数据
     - 引用数据表（在JSON数据输入时如何把数据转换到Mutable）
     - 回调到shell中
     - 通知
- 2 不同row/header/footer可以使用不同的自定义类型，是以一整个section为单位？还是每一个row都可以设置？
+ 2 不同row/header/footer可以使用不同的自定义类型，是以一整个section为单位？还是每一个row都可以设置？？
  3 供调用者使用的接口简化，调用者进行row/header/footer部分数据更新
     reset - 重置
     update - 部分覆盖
- 4 JSON数据接口，用户数据和配置数据的划分
+ 4 JSON数据接口，用户数据和配置数据的划分？
  */
 
 #import <UIKit/UIKit.h>
@@ -56,6 +56,11 @@ extern NSString * const kXXtableViewShellKeySectionHeader;
 extern NSString * const kXXtableViewShellKeySectionRow;
 extern NSString * const kXXtableViewShellKeySectionFooter;
 
+extern NSString * const kXXtableViewShellKeyTitle;
+extern NSString * const kXXtableViewShellKeyDetail;
+extern NSString * const kXXtableViewShellKeyImage;
+extern NSString * const kXXtableViewShellKeyAccessoryType;
+extern NSString * const kXXtableViewShellKeyHeight;
 
 @interface XXtableViewShell : NSObject<UITableViewDelegate,UITableViewDataSource>
 #pragma mark - Shell的基本属性
@@ -69,13 +74,14 @@ extern NSString * const kXXtableViewShellKeySectionFooter;
 @property (nonatomic,copy,nullable) NSString *sectionRowClass;
 /** 自定义SectionRow的加载方式，有nib和code两种方式 */
 @property (nonatomic,assign,readonly) XXtableViewShellLoadType sectionRowLoadType;
+/** SectionRow的统一高度 */
+@property (nonatomic,assign,readonly) CGFloat sectionRowHeight;
 /** 系统SectionRow的样式 */
 @property (nonatomic,assign,readonly) UITableViewCellStyle sectionRowSystemStyle;
 /** SectionRow的选中方式，默认是none */
 @property (nonatomic,assign) UITableViewCellSelectionStyle sectionRowSelectionStyle;
 /** SectionRow是否可以通过滑动删除，当设置tableView.edit=YES之后无效 */
 @property (nonatomic,assign) BOOL sectionRowSlideDeletable;
-/** SectionRow的统一高度 */
 
 #pragma mark - SectionHeader的相关属性
 /** SectionHeader的自定义类型，nil使用则使用系统SectionHeader */

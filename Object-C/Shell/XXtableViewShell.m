@@ -4,23 +4,19 @@
 #define kReuseHeaderDefault @"ReuseHeaderDefault"
 #define kReuseFooterDefault @"ReuseFooterDefault"
 
-//#define kHeader @"Header"
-//#define kRow @"Row"
-//#define kFooter @"Footer"
-
-#define kTitle @"Title"
-#define kDetail @"Detail"
-#define kImage @"Image"
-#define kAccessoryType @"AccessoryType"
-#define kHeight @"Height"
-
 NSString * const kXXtableViewShellKeySectionHeader    = @"Header";
 NSString * const kXXtableViewShellKeySectionRow       = @"Row";
 NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
 
+NSString * const kXXtableViewShellKeyTitle              = @"Title";
+NSString * const kXXtableViewShellKeyDetail             = @"Detail";
+NSString * const kXXtableViewShellKeyImage              = @"Image";
+NSString * const kXXtableViewShellKeyAccessoryType      = @"AccessoryType";
+NSString * const kXXtableViewShellKeyHeight             = @"Height";
+
 
 @implementation XXtableViewShell
-#pragma mark - <Init>
+#pragma mark - shell的初始化
 - (instancetype)init{
     self = [super init];
     if (self) {
@@ -32,23 +28,23 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         
         _sectionFooterHeight = -1;
         _sectionHeaderHeight = -1;
+        _sectionRowHeight = -1;
     }
     return self;
 }
-
-#pragma mark - shell的初始化
 - (void)shell:(UITableView*)tableView{
     if(nil != _tableView) return;
     _tableView = tableView;
     _tableView.delegate = self;
     _tableView.dataSource = self;
-    _tableView.estimatedRowHeight = 30;//_rowHeight;
+    _tableView.estimatedRowHeight = 30;
 }
 
 #pragma mark - SectionRow的配置
 - (void)configSectionRowClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height{
     _sectionRowClass = cls;
     _sectionRowLoadType = loadType;
+    _sectionRowHeight = height;
     
     if(XXtableViewShellLoadTypeNib == loadType){
         [_tableView registerNib:[UINib nibWithNibName:_sectionRowClass bundle:nil] forCellReuseIdentifier:_sectionRowClass];
@@ -70,6 +66,8 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
 - (void)configSectionRowSystemStyle:(UITableViewCellStyle)style height:(CGFloat)height{
     _sectionRowSystemStyle = style;
     _sectionRowClass = nil;
+    _sectionRowHeight = height;
+    
     if(height <= 0){
         _tableView.estimatedRowHeight = 30;
     }
@@ -310,7 +308,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
     [rows replaceObjectAtIndex:indexPath.row withObject:data];
     [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
 }
-- (void)setSectionRows:(nullable NSArray*)row atIndex:(int)section{
+- (void)setSectionRows:(nullable NSArray*)row atIndex:(NSInteger)section{
     NSMutableDictionary *sectionData = section < _sectionDatas.count?_sectionDatas[section]:nil;
     if(nil == sectionData){
         if(section == _sectionDatas.count){
@@ -401,7 +399,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         cell.selectionStyle = _sectionRowSelectionStyle;
     }
     if(nil == cell){
-        NSLog(@"[XXtableViewShell] Failure to create cell.");
+        NSLog(@"[XXtableViewShell] [cellForRowAtIndexPath] 无效的Cell。");
         return cell;
     }
     
@@ -419,21 +417,21 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         }
         else if([rowData isKindOfClass:[NSDictionary class]]){
             NSDictionary *dict = rowData;
-            if(nil != [dict objectForKey:kTitle]){
-                cell.textLabel.text = dict[kTitle];
+            if(nil != [dict objectForKey:kXXtableViewShellKeyTitle]){
+                cell.textLabel.text = dict[kXXtableViewShellKeyTitle];
             }
-            if(nil != [dict objectForKey:kDetail]){
-                cell.detailTextLabel.text = dict[kDetail];
+            if(nil != [dict objectForKey:kXXtableViewShellKeyDetail]){
+                cell.detailTextLabel.text = dict[kXXtableViewShellKeyDetail];
             }
-            if(nil != [dict objectForKey:kImage]){
-                cell.imageView.image = dict[kImage];
+            if(nil != [dict objectForKey:kXXtableViewShellKeyImage]){
+                cell.imageView.image = dict[kXXtableViewShellKeyImage];
             }
-            if(nil != [dict objectForKey:kAccessoryType]){
-                cell.accessoryType = [dict[kAccessoryType] intValue];
+            if(nil != [dict objectForKey:kXXtableViewShellKeyAccessoryType]){
+                cell.accessoryType = [dict[kXXtableViewShellKeyAccessoryType] intValue];
             }
         }
         else{
-            NSLog(@"[XXtableViewShell] Unknown type(%@) of row data(%@).", NSStringFromClass([rowData class]), rowData);
+            NSLog(@"[XXtableViewShell] [cellForRowAtIndexPath] 未知SectionRow的数据类型（%@）。", NSStringFromClass([rowData class]));
         }
     }
     else{
@@ -444,7 +442,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
 }
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
     if(nil!=_sectionHeaderClass){
-        /// 如果有使用自定义header，则直接返回nil
+        /// 如果有使用自定义则SectionHeader，则直接返回nil
         return nil;
     }
     
@@ -457,7 +455,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         return headerData;
     }
     else if([headerData isKindOfClass:[NSDictionary class]]){
-        return [headerData objectForKey:kTitle];
+        return [headerData objectForKey:kXXtableViewShellKeyTitle];
     }
     else{
         return nil;
@@ -465,7 +463,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
 }
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section{
     if(nil!=_sectionFooterClass){
-        /// 如果有使用自定义footer，则直接返回nil
+        /// 如果有使用自定义SecionFooter，则直接返回nil
         return nil;
     }
     
@@ -478,7 +476,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         return headerData;
     }
     else if([headerData isKindOfClass:[NSDictionary class]]){
-        return [headerData objectForKey:kTitle];
+        return [headerData objectForKey:kXXtableViewShellKeyTitle];
     }
     else{
         return nil;
@@ -528,7 +526,6 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
     }
 }
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
-    NSLog(@"[GWX] viewForHeaderInSection");
     if(nil==_sectionHeaderClass){
         return nil;
     }
@@ -550,7 +547,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         }
     }
     if(nil==view){
-        NSLog(@"[XXtableViewShell] [viewForHeaderInSection] failure to VIEW");
+        NSLog(@"[XXtableViewShell] [viewForHeaderInSection] 创建HeaderView失败。");
         return nil;
     }
     
@@ -587,7 +584,7 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
         }
     }
     if(nil==view){
-        NSLog(@"[XXtableViewShell] [viewForFooterInSection] failure to VIEW");
+        NSLog(@"[XXtableViewShell] [viewForFooterInSection] 创建FooterView失败。");
         return nil;
     }
     
@@ -603,35 +600,46 @@ NSString * const kXXtableViewShellKeySectionFooter    = @"Footer";
     return view;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    // Row的高度暂时只能自适应或者config的时候统一配置，返回-1
-    return -1;
+    /// 判断SectionRow中的Data是否为NSDictionary，且有‘Height’的键值时，直接使用该值，否则使用配置时的高度
+    id rowData = [self getRowDataWithSection:indexPath.section row:indexPath.row];
+    if(nil == rowData){
+        return self.sectionRowHeight;
+    }
+    
+    if([rowData isKindOfClass:[NSDictionary class]]){
+        NSDictionary *data = rowData;
+        if(nil != data[kXXtableViewShellKeyHeight]){
+            return [data[kXXtableViewShellKeyHeight] floatValue];
+        }
+    }
+    
+    return self.sectionRowHeight;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
-    NSLog(@"[GWX] heightForHeaderInSection");
-    /// 取出SectionHeader中的数据，如果没有使用同
+    /// 判断SectionHeader中的Data是否为NSDictionary，且有‘Height’的键值时，直接使用该值，否则使用配置时的高度
     id headerData = [self getHeaderWithSection:section];
     if(nil == headerData){
         return _sectionHeaderHeight;
     }
     
-    ///
     if([headerData isKindOfClass:[NSDictionary class]]){
         NSDictionary *data = headerData;
-        if(nil != data[kHeight]){
-            return [data[kHeight] floatValue];
+        if(nil != data[kXXtableViewShellKeyHeight]){
+            return [data[kXXtableViewShellKeyHeight] floatValue];
         }
     }
     return _sectionHeaderHeight;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
+    /// 判断SectionFooter中的Data是否为NSDictionary，且有‘Height’的键值时，直接使用该值，否则使用配置时的高度
     id footerData = [self getFooterWithSection:section];
     if(nil == footerData){
         return _sectionFooterHeight;
     }
     if([footerData isKindOfClass:[NSDictionary class]]){
         NSDictionary *data = footerData;
-        if(nil != data[kHeight]){
-            return [data[kHeight] floatValue];
+        if(nil != data[kXXtableViewShellKeyHeight]){
+            return [data[kXXtableViewShellKeyHeight] floatValue];
         }
     }
     return _sectionFooterHeight;
