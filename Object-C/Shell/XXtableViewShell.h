@@ -99,6 +99,8 @@ extern NSString * const kXXtableViewShellKeyHeight;
 /** SectionFooter的统一高度，设置-1可以使用单次自适应（注意不能动态自适应） */
 @property (nonatomic,assign,readonly) CGFloat sectionFooterHeight;
 
+#pragma mark - 
+
 #pragma mark - SectionRow的相关事件回调
 /** SectionRow点击回调，其中data是当前SectionRow的数据 */
 @property (nonatomic,copy,nullable) void(^onSectionRowClicked)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);
@@ -155,6 +157,26 @@ extern NSString * const kXXtableViewShellKeyHeight;
  @param height 全局SectionFooter的高度，-1：单次自适应，否则指定该高度
  */
 - (void)configSectionFooterClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
+
+#pragma mark - 空内容时显示的配置
+/**
+ 配置TableView当数据为空时显示的提示，image和title不能二者都是nil
+ @param image 空内容图片
+ @param imageSize 图片大小
+ @param title 空内容提示
+ @param titleColor 提示字体颜色，默认是LightMode:0xcccccc DarkMode:0x333333
+ @param titleFont 提示字体，默认[UIFont system]
+ */
+- (void)configNoContentImage:(nullable UIImage*)image
+                   imageSize:(CGSize)imageSize
+                       title:(nullable NSString*)title
+                  titleColor:(nullable UIColor*)titleColor
+                   titleFont:(nullable UIFont*)titleFont;
+
+/**
+ 
+ */
+- (void)configNoContentClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType;
 
 #pragma mark - 初始数据的配置
 /**

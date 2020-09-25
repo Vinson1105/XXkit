@@ -124,6 +124,15 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     }
 }
 
+#pragma mark - 空内容时显示的配置
+- (void)configNoContentImage:(nullable UIImage*)image
+                   imageSize:(CGSize)imageSize
+                       title:(nullable NSString*)title
+                  titleColor:(nullable UIColor*)titleColor
+                   titleFont:(nullable UIFont*)titleFont{
+    
+}
+
 #pragma mark - 初始数据的配置
 - (void)configSectionHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers{
     int sectionCount = (int)rows.count;
@@ -259,7 +268,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
 #pragma mark - Section中某一个或者多个Row的增删改查
 - (void)addSectionRows:(NSArray*)row atIndex:(NSInteger)index{
     NSMutableDictionary *sectionData = index < self.sectionDatas.count?self.sectionDatas[index]:nil;
-    if(nil == sectionData){
+    if(nil == sectionData && row && row.count>0){
         if(index == self.sectionDatas.count){
             /// 指定的section为当前最大section编号+1，则直接创建一个新section（section是有序的）
             sectionData = [NSMutableDictionary new];
@@ -269,6 +278,10 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
             /// 指定的section并不是最大section编号+1，暂时不支持创建多个中间section
             return;
         }
+    }
+    if(nil == sectionData){
+        /// 当
+        return;
     }
     
     NSMutableArray *localRow = sectionData[kXXtableViewShellKeySectionRow];
