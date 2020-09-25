@@ -43,10 +43,18 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)view:(UIView*)view size:(CGSize)size;
 + (void)view:(UIView*)view margin:(CGFloat)margin fillAt:(UIView*)fillAt;
 + (void)view:(UIView*)view centerAt:(UIView*)centerAt;
-+ (void)view:(UIView*)view containsLeft:(CGFloat)left centerYAt:(UIView*)centerYAt;
-+ (void)view:(UIView*)view containsRight:(CGFloat)right centerYAt:(UIView*)centerYAt;
+
++ (void)view:(UIView*)view left:(CGFloat)left centerYAt:(UIView*)centerYAt;
++ (void)view:(UIView*)view right:(CGFloat)right centerYAt:(UIView*)centerYAt;
++ (void)view:(UIView*)view top:(CGFloat)top centerXAt:(UIView*)centerXAt;
++ (void)view:(UIView*)view bottom:(CGFloat)bottom centerXAt:(UIView*)centerXAt;
+
 + (void)view:(UIView*)view appendLeft:(CGFloat)left centerYAt:(UIView*)centerYAt;
-+ (void)view:(UIView*)view appendRight:(CGFloat)right centerYAt:(UIView*)centerYAt;
++ (void)view:(UIView*)view appendRight:(CGFloat)left centerYAt:(UIView*)centerYAt;
++ (void)view:(UIView*)view appendTop:(CGFloat)top centerXAt:(UIView*)centerXAt;
++ (void)view:(UIView*)view appendbottom:(CGFloat)bottom centerXAt:(UIView*)centerXAt;
+
++ (void)view:(UIView*)view adjustFillAtScrollView:(UIScrollView*)scrollView;
 
 #pragma mark - <UIButton>
 + (void)button:(UIButton*)button norImg:(UIImage*)norImg selImg:(UIImage*)selImg;

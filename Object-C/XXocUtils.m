@@ -40,21 +40,56 @@ static NSDateFormatter *_dateFormatter;
     [view.centerXAnchor constraintEqualToAnchor:centerAt.centerXAnchor].active = YES;
     [view.centerYAnchor constraintEqualToAnchor:centerAt.centerYAnchor].active = YES;
 }
-+ (void)view:(UIView*)view containsLeft:(CGFloat)left centerYAt:(UIView*)centerYAt{
+
++ (void)view:(UIView*)view left:(CGFloat)left centerYAt:(UIView*)centerYAt{
     [view.leadingAnchor constraintEqualToAnchor:centerYAt.leadingAnchor constant:left].active = YES;
     [view.centerYAnchor constraintEqualToAnchor:centerYAt.centerYAnchor].active = YES;
 }
-+ (void)view:(UIView*)view containsRight:(CGFloat)right centerYAt:(UIView*)centerYAt{
++ (void)view:(UIView*)view right:(CGFloat)right centerYAt:(UIView*)centerYAt{
     [view.trailingAnchor constraintEqualToAnchor:centerYAt.trailingAnchor constant:right].active = YES;
     [view.centerYAnchor constraintEqualToAnchor:centerYAt.centerYAnchor].active = YES;
 }
++ (void)view:(UIView*)view top:(CGFloat)top centerXAt:(UIView*)centerXAt{
+    [view.topAnchor constraintEqualToAnchor:centerXAt.topAnchor constant:top].active = YES;
+    [view.centerXAnchor constraintEqualToAnchor:centerXAt.centerXAnchor].active = YES;
+}
++ (void)view:(UIView*)view bottom:(CGFloat)bottom centerXAt:(UIView*)centerXAt{
+    [view.bottomAnchor constraintEqualToAnchor:centerXAt.bottomAnchor constant:bottom].active = YES;
+    [view.centerXAnchor constraintEqualToAnchor:centerXAt.centerXAnchor].active = YES;
+}
+
 + (void)view:(UIView*)view appendLeft:(CGFloat)left centerYAt:(UIView*)centerYAt{
-    [view.trailingAnchor constraintEqualToAnchor:centerYAt.leadingAnchor constant:left].active = YES;
+    [view.leadingAnchor constraintEqualToAnchor:centerYAt.trailingAnchor constant:left].active = YES;
     [view.centerYAnchor constraintEqualToAnchor:centerYAt.centerYAnchor].active = YES;
 }
 + (void)view:(UIView*)view appendRight:(CGFloat)right centerYAt:(UIView*)centerYAt{
-    [view.leadingAnchor constraintEqualToAnchor:centerYAt.trailingAnchor constant:right].active = YES;
+    [view.trailingAnchor constraintEqualToAnchor:centerYAt.leadingAnchor constant:right].active = YES;
     [view.centerYAnchor constraintEqualToAnchor:centerYAt.centerYAnchor].active = YES;
+}
++ (void)view:(UIView*)view appendTop:(CGFloat)top centerXAt:(UIView*)centerXAt{
+    [view.topAnchor constraintEqualToAnchor:centerXAt.bottomAnchor constant:top].active = YES;
+    [view.centerXAnchor constraintEqualToAnchor:centerXAt.centerXAnchor].active = YES;
+}
++ (void)view:(UIView*)view appendbottom:(CGFloat)bottom centerXAt:(UIView*)centerXAt{
+    [view.bottomAnchor constraintEqualToAnchor:centerXAt.topAnchor constant:bottom].active = YES;
+    [view.centerXAnchor constraintEqualToAnchor:centerXAt.centerXAnchor].active = YES;
+}
+
++ (void)view:(UIView*)view adjustFillAtScrollView:(UIScrollView*)scrollView{
+    if(@available(iOS 11.0, *)){
+        [view.leadingAnchor constraintEqualToAnchor:scrollView.frameLayoutGuide.leadingAnchor].active = YES;
+        [view.trailingAnchor constraintEqualToAnchor:scrollView.frameLayoutGuide.trailingAnchor].active = YES;
+        [view.centerXAnchor constraintEqualToAnchor:scrollView.frameLayoutGuide.centerXAnchor].active = YES;
+        
+        [view.topAnchor constraintEqualToAnchor:scrollView.contentLayoutGuide.topAnchor].active = YES;
+        [view.trailingAnchor constraintEqualToAnchor:scrollView.contentLayoutGuide.trailingAnchor].active = YES;
+        [view.leadingAnchor constraintEqualToAnchor:scrollView.contentLayoutGuide.leadingAnchor].active = YES;
+        [view.bottomAnchor constraintEqualToAnchor:scrollView.contentLayoutGuide.bottomAnchor].active = YES;
+        
+        NSLayoutConstraint *layout = [view.heightAnchor constraintEqualToAnchor:scrollView.frameLayoutGuide.heightAnchor];
+        layout.priority = 250;
+        layout.active = YES;
+    }
 }
 
 #pragma mark - <UIButton>
