@@ -374,19 +374,17 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
         return;
     }
     [rows replaceObjectAtIndex:indexPath.row withObject:data];
-    [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+    [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
 }
 - (void)updateSectionRow:(NSDictionary*)row atIndexPath:(NSIndexPath*)indexPath{
     id rowData = [self getSectionRowAtIndexPath:indexPath];
     if(nil == rowData || ![rowData isKindOfClass:NSMutableDictionary.class]){
         return;
     }
-    NSEnumerator *keyEnumer = row.keyEnumerator;
-    NSString *key = nil;
-    while (nil != (key = keyEnumer.nextObject)) {
-        rowData[key] = row[key];
-    }
-    [self.tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+    
+    NSMutableDictionary *rowDataDict = rowData;
+    [rowDataDict addEntriesFromDictionary:row];
+    [self.tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
 }
 - (void)updateSectionRow:(NSDictionary*)row key:(NSString*)key equelTo:(id)value atSectionIndex:(NSInteger)sectionIndex{
     NSMutableArray *rows = [self getSectionRowsAtIndex:sectionIndex];
@@ -403,28 +401,41 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
         }
         
         NSMutableDictionary *rowData = obj;
-        NSEnumerator *keyEnumer = rowData.keyEnumerator;
-        NSString *key = nil;
-        while (nil != (key = keyEnumer.nextObject)) {
-            rowData[key] = row[key];
-        }
+        [rowData addEntriesFromDictionary:row];
         needReload = YES;
     }
     
     if(needReload){
-        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:sectionIndex] withRowAnimation:UITableViewRowAnimationNone];
+        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:sectionIndex] withRowAnimation:UITableViewRowAnimationAutomatic];
     }
 }
 - (void)updateSectionRow:(NSDictionary*)row key:(NSString*)key equelTo:(id)value{
-    
-    NSEnumerator *sectionDataEnumer = self.sectionDatas.objectEnumerator;
-    NSMutableDictionary *sectionData = nil;
+    BOOL needReload = NO;
+    NSEnumerator *sectionDataEnumer     = self.sectionDatas.objectEnumerator;
+    NSMutableDictionary *sectionData    = nil;
     while (nil != (sectionData = sectionDataEnumer.nextObject)) {
         if(nil == sectionData[kXXtableViewShellKeySectionRow]){
             continue;
         }
         
-        i am here!
+        NSMutableArray *rowDatas = sectionData[kXXtableViewShellKeySectionRow];
+        for (id rowData in rowDatas) {
+            if(![rowData isKindOfClass:NSMutableDictionary.class]){
+                continue;
+            }
+            
+            NSMutableDictionary *rowDataDict = rowData;
+            if(nil == rowDataDict[key] || ![rowDataDict[key] isEqual:value]){
+                continue;
+            }
+            
+            [rowDataDict addEntriesFromDictionary:row];
+            needReload = YES;
+        }
+    }
+    
+    if(needReload){
+        [self.tableView reloadData];
     }
 }
 - (void)setSectionRows:(nullable NSArray*)row atIndex:(NSInteger)section{
