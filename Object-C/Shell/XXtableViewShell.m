@@ -14,7 +14,6 @@ NSString * const kXXtableViewShellKeyImage              = @"Image";
 NSString * const kXXtableViewShellKeyAccessoryType      = @"AccessoryType";
 NSString * const kXXtableViewShellKeyHeight             = @"Height";
 
-
 @implementation XXtableViewShell
 #pragma mark - shell的初始化
 - (instancetype)init{
@@ -31,6 +30,11 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
         _sectionRowHeight = -1;
     }
     return self;
+}
+- (void)dealloc{
+    if(self.noContentView){
+        [self.noContentView removeFromSuperview];
+    }
 }
 - (void)shell:(UITableView*)tableView{
     if(nil != _tableView) return;
@@ -130,7 +134,50 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
                        title:(nullable NSString*)title
                   titleColor:(nullable UIColor*)titleColor
                    titleFont:(nullable UIFont*)titleFont{
-    
+    UIView *view = nil;
+    if(nil == image){
+        
+    }
+    else if(nil == title){
+        view = [self setupDefaultNoContentViewWithImage:image imageSize:imageSize];
+    }
+    else{
+        if(nil == titleColor) titleColor = UIColor.grayColor;
+        if(nil == titleFont) titleFont = [UIFont systemFontOfSize:13];
+        view = [self setupDefaultNoContentViewWithImage:image
+                                              imageSize:imageSize
+                                                  title:title
+                                             titleColor:titleColor
+                                              titleFont:titleFont];
+    }
+    [self configNoContentView:view];
+}
+- (void)configNoContentClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType{
+    UIView *view = nil;
+    switch (loadType) {
+        case XXtableViewShellLoadTypeNib:
+            view = [[NSBundle mainBundle] loadNibNamed:cls owner:nil options:nil].firstObject;
+            break;
+        case XXtableViewShellLoadTypeCode:
+            view = [NSClassFromString(cls) new];
+            break;
+        default:
+            break;
+    }
+    [self configNoContentView:view];
+}
+- (void)configNoContentView:(UIView*)view{
+    if(nil == view || nil == self.tableView){
+        return;
+    }
+    [self.tableView addSubview:view];
+    view.translatesAutoresizingMaskIntoConstraints = NO;
+    self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
+    [view.centerXAnchor constraintEqualToAnchor:self.tableView.centerXAnchor].active = YES;
+    [view.centerYAnchor constraintEqualToAnchor:self.tableView.centerYAnchor].active = YES;
+    [view.widthAnchor constraintEqualToAnchor:self.tableView.widthAnchor multiplier:0.5].active = YES;
+    view.hidden = 0 != self.sectionDatas.count;
+    _noContentView = view;
 }
 
 #pragma mark - 初始数据的配置
@@ -236,6 +283,10 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     [_sectionDatas removeObjectAtIndex:index];
     [_tableView reloadData];
 }
+- (void)removeAllSections{
+    [self.sectionDatas removeAllObjects];
+    [self.tableView reloadData];
+}
 - (void)setSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer atIndex:(NSInteger)index{
     if(self.sectionDatas.count<=index){
         NSLog(@"[XXtableViewShell] [setSectionHeader] 无效index。（count:%d index:%d）", (int)self.sectionDatas.count, (int)index);
@@ -270,7 +321,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     NSMutableDictionary *sectionData = index < self.sectionDatas.count?self.sectionDatas[index]:nil;
     if(nil == sectionData && row && row.count>0){
         if(index == self.sectionDatas.count){
-            /// 指定的section为当前最大section编号+1，则直接创建一个新section（section是有序的）
+            /// 指定的Section为当前最大Section编号+1，则直接创建一个新Section（Section是有序的）
             sectionData = [NSMutableDictionary new];
             self.sectionDatas[index] = sectionData;
         }
@@ -280,7 +331,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
         }
     }
     if(nil == sectionData){
-        /// 当
+        /// 当SectionData为nil，表明了Shell中没有index对应的Section，并当前参数row为nil，无需对数据进行修改
         return;
     }
     
@@ -291,7 +342,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     else{
         [localRow addObjectsFromArray:row];
     }
-    [_tableView reloadData];
+    [self.tableView reloadData];
 }
 - (void)removeSectionRowsAtIndex:(NSInteger)index{
     if(self.sectionDatas.count<=index){
@@ -299,12 +350,16 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
         return;
     }
     
-    NSMutableDictionary *sec = self.sectionDatas[index];
-    [sec removeObjectForKey:kXXtableViewShellKeySectionRow];
+    NSMutableDictionary *sectionData = self.sectionDatas[index];
+    [sectionData removeObjectForKey:kXXtableViewShellKeySectionRow];
+    if(0 == sectionData.count){
+        /// 当前SectionData移除了‘Row’的键值之后，已经再没有任何键值，则应该将该SectionData在列表中移除
+        [self.sectionDatas removeObject:sectionData];
+    }
     [self.tableView reloadData];
 }
 - (void)removeSectionRowAtIndexPath:(NSIndexPath*)indexPath{
-    NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
+    NSMutableArray *rows = [self getSectionRowsAtIndex:(int)indexPath.section];
     if(nil == rows){
         return;
     }
@@ -314,18 +369,69 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     }
 }
 - (void)setSectionRow:(id)data atIndexPath:(NSIndexPath*)indexPath{
-    NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
+    NSMutableArray *rows = [self getSectionRowsAtIndex:(int)indexPath.section];
     if(nil == rows){
         return;
     }
     [rows replaceObjectAtIndex:indexPath.row withObject:data];
     [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
 }
+- (void)updateSectionRow:(NSDictionary*)row atIndexPath:(NSIndexPath*)indexPath{
+    id rowData = [self getSectionRowAtIndexPath:indexPath];
+    if(nil == rowData || ![rowData isKindOfClass:NSMutableDictionary.class]){
+        return;
+    }
+    NSEnumerator *keyEnumer = row.keyEnumerator;
+    NSString *key = nil;
+    while (nil != (key = keyEnumer.nextObject)) {
+        rowData[key] = row[key];
+    }
+    [self.tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+}
+- (void)updateSectionRow:(NSDictionary*)row key:(NSString*)key equelTo:(id)value atSectionIndex:(NSInteger)sectionIndex{
+    NSMutableArray *rows = [self getSectionRowsAtIndex:sectionIndex];
+    if(nil == rows){
+        return;
+    }
+    
+    BOOL needReload = NO;
+    NSEnumerator *rowEnumer = rows.objectEnumerator;
+    id obj = nil;
+    while (nil != (obj = rowEnumer.nextObject)) {
+        if(![obj isKindOfClass:NSMutableDictionary.class]){
+            continue;
+        }
+        
+        NSMutableDictionary *rowData = obj;
+        NSEnumerator *keyEnumer = rowData.keyEnumerator;
+        NSString *key = nil;
+        while (nil != (key = keyEnumer.nextObject)) {
+            rowData[key] = row[key];
+        }
+        needReload = YES;
+    }
+    
+    if(needReload){
+        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:sectionIndex] withRowAnimation:UITableViewRowAnimationNone];
+    }
+}
+- (void)updateSectionRow:(NSDictionary*)row key:(NSString*)key equelTo:(id)value{
+    
+    NSEnumerator *sectionDataEnumer = self.sectionDatas.objectEnumerator;
+    NSMutableDictionary *sectionData = nil;
+    while (nil != (sectionData = sectionDataEnumer.nextObject)) {
+        if(nil == sectionData[kXXtableViewShellKeySectionRow]){
+            continue;
+        }
+        
+        i am here!
+    }
+}
 - (void)setSectionRows:(nullable NSArray*)row atIndex:(NSInteger)section{
     NSMutableDictionary *sectionData = section < _sectionDatas.count?_sectionDatas[section]:nil;
     if(nil == sectionData){
-        if(section == _sectionDatas.count){
-            /// 指定的section为当前最大section编号+1，则直接创建一个新section（section是有序的）
+        if(section == _sectionDatas.count && row && row.count>0){
+            /// 指定的Section为当前最大Section编号+1，则直接创建一个新Section（Section是有序的）
             sectionData = [NSMutableDictionary new];
             _sectionDatas[section] = sectionData;
         }
@@ -334,21 +440,32 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
             return;
         }
     }
+    if(nil == sectionData){
+        /// 当SectionData为nil，表明了Shell中没有index对应的Section，并当前参数row为nil，无需对数据进行修改
+        return;
+    }
     
     if(nil == row){
         [sectionData removeObjectForKey:kXXtableViewShellKeySectionRow];
+        if(0 == sectionData.count){
+            /// 当前SectionData移除了‘Row’的键值之后，已经再没有任何键值，则应该将该SectionData在列表中移除
+            [self.sectionDatas removeObject:sectionData];
+        }
     }
     else{
         [sectionData setObject:row forKey:kXXtableViewShellKeySectionRow];
     }
-    [_tableView reloadData];
+    [self.tableView reloadData];
 }
 - (id)getSectionRowAtIndexPath:(NSIndexPath*)indexPath{
-    NSMutableArray *rows = [self getRowWithSection:(int)indexPath.section];
+    NSMutableArray *rows = [self getSectionRowsAtIndex:(int)indexPath.section];
     if(nil == rows){
         return nil;
     }
-    return [rows objectAtIndex:indexPath.row];
+    if(rows.count <= indexPath.row){
+        return nil;
+    }
+    return rows[indexPath.row];
 }
 
 - (void)rowDoSomething:(NSString*)event info:(nullable id)info atIndex:(NSIndexPath*)indexPath{
@@ -368,11 +485,14 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
 }
 
 #pragma mark - 一些私有函数
-- (nullable NSMutableArray*)getRowWithSection:(NSUInteger)section{
-    return [[_sectionDatas objectAtIndex:section] objectForKey:kXXtableViewShellKeySectionRow];
+- (nullable NSMutableArray*)getSectionRowsAtIndex:(NSUInteger)index{
+    if(self.sectionDatas.count <= index){
+        return nil;
+    }
+    return self.sectionDatas[index][kXXtableViewShellKeySectionRow];
 }
-- (id)getRowDataWithSection:(NSUInteger)section row:(NSUInteger)row{
-    NSMutableArray *rows = [self getRowWithSection:section];
+- (id)getSectionRowAtSection:(NSUInteger)section row:(NSUInteger)row{
+    NSMutableArray *rows = [self getSectionRowsAtIndex:section];
     return [rows objectAtIndex:row];
 }
 - (nullable id)getHeaderWithSection:(NSUInteger)section{
@@ -380,6 +500,47 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
 }
 - (nullable id)getFooterWithSection:(NSUInteger)section{
     return [[_sectionDatas objectAtIndex:section] objectForKey:kXXtableViewShellKeySectionFooter];
+}
+
+#pragma mark - 一些私有函数
+- (UIView*)setupDefaultNoContentViewWithImage:(UIImage*)image imageSize:(CGSize)imageSize{
+    UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
+    imageView.translatesAutoresizingMaskIntoConstraints = NO;
+    [imageView.widthAnchor constraintEqualToConstant:imageSize.width].active = YES;
+    [imageView.heightAnchor constraintEqualToConstant:imageSize.height].active = YES;
+    return imageView;
+}
+- (UIView*)setupDefaultNoContentViewWithImage:(UIImage*)image
+                                    imageSize:(CGSize)imageSize
+                                        title:(NSString*)title
+                                   titleColor:(UIColor*)titleColor
+                                    titleFont:(UIFont*)titleFont{
+    UIView *view = [UIView new];
+    view.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
+    imageView.translatesAutoresizingMaskIntoConstraints = NO;
+    [imageView.widthAnchor constraintEqualToConstant:imageSize.width].active = YES;
+    [imageView.heightAnchor constraintEqualToConstant:imageSize.height].active = YES;
+    [view addSubview:imageView];
+    [imageView.centerXAnchor constraintEqualToAnchor:view.centerXAnchor].active = YES;
+    [imageView.topAnchor constraintEqualToAnchor:view.topAnchor].active = YES;
+//    [imageView.leadingAnchor constraintGreaterThanOrEqualToAnchor:view.leadingAnchor].active = YES;
+//    [imageView.trailingAnchor constraintGreaterThanOrEqualToAnchor:view.trailingAnchor].active = YES;
+    
+    UILabel *titleLabel = [UILabel new];
+    titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    titleLabel.font = titleFont;
+    titleLabel.textColor = titleColor;
+    titleLabel.text = title;
+    titleLabel.numberOfLines = 0;
+    [view addSubview:titleLabel];
+    [titleLabel.topAnchor constraintEqualToAnchor:imageView.bottomAnchor constant:10].active = YES;
+    [titleLabel.centerXAnchor constraintEqualToAnchor:view.centerXAnchor].active = YES;
+    [titleLabel.bottomAnchor constraintEqualToAnchor:view.bottomAnchor].active = YES;
+    [titleLabel.leadingAnchor constraintLessThanOrEqualToAnchor:view.leadingAnchor].active = YES;
+    [titleLabel.trailingAnchor constraintLessThanOrEqualToAnchor:view.trailingAnchor].active = YES;
+    return view;
 }
 
 #pragma mark - UITableViewDataSource
@@ -508,7 +669,11 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     return rowsData.count;
 }
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    return _sectionDatas.count;
+    NSInteger count = nil==self.sectionDatas?0:self.sectionDatas.count;
+    if(self.noContentView){
+        self.noContentView.hidden = 0!=count;
+    }
+    return count;
 }
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath{
     return _sectionRowSlideDeletable || tableView.isEditing;
@@ -517,7 +682,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     if(editingStyle == UITableViewCellEditingStyleDelete){
         BOOL toDelete = YES;
         if(_onSectionRowEditingDelete){
-            id data = [self getRowDataWithSection:(int)indexPath.section row:(int)indexPath.row];
+            id data = [self getSectionRowAtIndexPath:indexPath];
             toDelete = _onSectionRowEditingDelete(self,indexPath,data);
         }
         
@@ -614,7 +779,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     /// 判断SectionRow中的Data是否为NSDictionary，且有‘Height’的键值时，直接使用该值，否则使用配置时的高度
-    id rowData = [self getRowDataWithSection:indexPath.section row:indexPath.row];
+    id rowData = [self getSectionRowAtIndexPath:indexPath];
     if(nil == rowData){
         return self.sectionRowHeight;
     }

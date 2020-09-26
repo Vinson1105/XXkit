@@ -99,7 +99,9 @@ extern NSString * const kXXtableViewShellKeyHeight;
 /** SectionFooter的统一高度，设置-1可以使用单次自适应（注意不能动态自适应） */
 @property (nonatomic,assign,readonly) CGFloat sectionFooterHeight;
 
-#pragma mark - 
+#pragma mark - NoContent的相关属性
+/** TableView空内容时显示的提示小页面 */
+@property (nonatomic,strong,readonly) UIView *noContentView;
 
 #pragma mark - SectionRow的相关事件回调
 /** SectionRow点击回调，其中data是当前SectionRow的数据 */
@@ -172,11 +174,8 @@ extern NSString * const kXXtableViewShellKeyHeight;
                        title:(nullable NSString*)title
                   titleColor:(nullable UIColor*)titleColor
                    titleFont:(nullable UIFont*)titleFont;
-
-/**
- 
- */
 - (void)configNoContentClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType;
+- (void)configNoContentView:(UIView*)view;
 
 #pragma mark - 初始数据的配置
 /**
@@ -233,6 +232,11 @@ extern NSString * const kXXtableViewShellKeyHeight;
 - (void)removeSectionAtIndex:(int)index;
 
 /**
+ 移除所有Section
+ */
+- (void)removeAllSections;
+
+/**
  修改指定的Section数据
  @param header SectionHeader的数据
  @param row SectionRow的数据
@@ -271,9 +275,24 @@ extern NSString * const kXXtableViewShellKeyHeight;
 /**
  设置指定indexPath的SectionRow数据
  @param row 单个SectionRow的数据
- @param indexPath 需要重置row（cell）的位置
+ @param indexPath 需要重置SectionRow的位置
  */
 - (void)setSectionRow:(id)row atIndexPath:(NSIndexPath*)indexPath;
+
+/**
+ 更新指定indexPath的SectionRow数据，只会更新参数row中的KeyValue，此外的数据不会发生改变；
+ 注意：需要目标SectionRow数据是一个Key-Value的NSDictionary结构，否则无效；
+ @param row 需要更新的SectionRow数据
+ @param indexPath 需要更新的SectionRow位置
+ */
+- (void)updateSectionRow:(NSDictionary*)row atIndexPath:(NSIndexPath*)indexPath;
+
+/**
+ 
+ */
+- (void)updateSectionRow:(NSDictionary*)row key:(NSString*)key equelTo:(id)value atSectionIndex:(NSInteger)sectionIndex;
+
+- (void)updateSectionRow:(NSDictionary*)row key:(NSString*)key equelTo:(id)value;
 
 /**
  在指定index的Section设置所有Row的数据

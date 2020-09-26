@@ -41,19 +41,19 @@ static NSDateFormatter *_dateFormatter;
     [view.centerYAnchor constraintEqualToAnchor:centerAt.centerYAnchor].active = YES;
 }
 
-+ (void)view:(UIView*)view left:(CGFloat)left centerYAt:(UIView*)centerYAt{
++ (void)view:(UIView*)view containsLeft:(CGFloat)left centerYAt:(UIView*)centerYAt{
     [view.leadingAnchor constraintEqualToAnchor:centerYAt.leadingAnchor constant:left].active = YES;
     [view.centerYAnchor constraintEqualToAnchor:centerYAt.centerYAnchor].active = YES;
 }
-+ (void)view:(UIView*)view right:(CGFloat)right centerYAt:(UIView*)centerYAt{
++ (void)view:(UIView*)view containsRight:(CGFloat)right centerYAt:(UIView*)centerYAt{
     [view.trailingAnchor constraintEqualToAnchor:centerYAt.trailingAnchor constant:right].active = YES;
     [view.centerYAnchor constraintEqualToAnchor:centerYAt.centerYAnchor].active = YES;
 }
-+ (void)view:(UIView*)view top:(CGFloat)top centerXAt:(UIView*)centerXAt{
++ (void)view:(UIView*)view containsTop:(CGFloat)top centerXAt:(UIView*)centerXAt{
     [view.topAnchor constraintEqualToAnchor:centerXAt.topAnchor constant:top].active = YES;
     [view.centerXAnchor constraintEqualToAnchor:centerXAt.centerXAnchor].active = YES;
 }
-+ (void)view:(UIView*)view bottom:(CGFloat)bottom centerXAt:(UIView*)centerXAt{
++ (void)view:(UIView*)view containsBottom:(CGFloat)bottom centerXAt:(UIView*)centerXAt{
     [view.bottomAnchor constraintEqualToAnchor:centerXAt.bottomAnchor constant:bottom].active = YES;
     [view.centerXAnchor constraintEqualToAnchor:centerXAt.centerXAnchor].active = YES;
 }
@@ -157,6 +157,23 @@ static NSDateFormatter *_dateFormatter;
                                     green:((CGFloat) ((hexint & 0xFF00) >> 8))/255
                                      blue:((CGFloat) (hexint & 0xFF))/255
                                     alpha:alpha];
+    return color;
+}
++ (UIColor *)colorFromLightHex:(NSString *)lightHex darkHex:(NSString *)darkHex{
+    UIColor *color = nil;
+    if(@available(iOS 13.0,*)){
+        color = [UIColor colorWithDynamicProvider:^UIColor *_Nonnull(UITraitCollection *_Nonnull trait){
+            if(trait.userInterfaceStyle == UIUserInterfaceStyleDark){
+                return [XXocUtils colorFromHexString:darkHex];
+            }
+            else{
+                return [XXocUtils colorFromHexString:lightHex];
+            }
+        }];
+    }
+    else{
+        color = [XXocUtils colorFromHexString:lightHex];
+    }
     return color;
 }
 
