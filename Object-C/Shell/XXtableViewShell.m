@@ -12,6 +12,7 @@ NSString * const kXXtableViewShellKeyTitle              = @"Title";
 NSString * const kXXtableViewShellKeyDetail             = @"Detail";
 NSString * const kXXtableViewShellKeyImage              = @"Image";
 NSString * const kXXtableViewShellKeyAccessoryType      = @"AccessoryType";
+
 NSString * const kXXtableViewShellKeyHeight             = @"Height";
 
 @implementation XXtableViewShell
@@ -479,7 +480,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     return rows[indexPath.row];
 }
 
-- (void)rowDoSomething:(NSString*)event info:(nullable id)info atIndex:(NSIndexPath*)indexPath{
+- (void)sectionRowDoEvent:(NSString*)event info:(nullable id)info atIndex:(NSIndexPath*)indexPath{
     UITableViewCell *cell = [_tableView cellForRowAtIndexPath:indexPath];
     if(nil == cell){
         NSLog(@"[XXtableViewShell] [rowDoSomething] indexPath（%@）对应的cell为nil。", indexPath);
