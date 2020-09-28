@@ -3,19 +3,18 @@
  XXtableViewShell *tableViewShell = [XXtableViewShell new];
  [tableViewShell shell:self.tableView];
  
- ===== Cell =====
- 1 在使用自定义cell时，需要实现遵循协议<XXtableViewCellDelegate>，并可以通过config配置rowHeight为-1时，可以通过计算自定义Cell约束高度，
- 并可以修改约束去动态更新Cell的高度；
+ ===== SectionRow =====
+ 1 在使用自定义SectionRow时，需要实现遵循协议<XXtableViewCellDelegate>，并可以通过config配置rowHeight为-1时，可以通过计算自定义SectionRow约束高度，并可以修改约束去动态更新SectionRow的高度；
     nib自定义时，[awakeFromNib]中初始化；
     code自定义时，[initWithStyle: reuseIdentifier:]中初始化；
- 
-    Height - 用于某一行高度，若没有该键值，则使用通过config设置的height；
- 
- 2 在使用系统cell是，可以使用以下的'键'来初始化，并可以通过config配置rowHeight为-1时，若titlelabel有换行，可以根据Cell中titlelabel内容自适应高度
+  
+ 2 在使用系统SectionRow是，可以使用以下的'键'来初始化，并可以通过config配置rowHeight为-1时，若titlelabel有换行，可以根据Cell中titlelabel内容自适应高度
     Title - UITableViewCell.textLabel.text
     Detail -  UITableViewCell.detailTextLabel.text
     Image - UITableViewCell.imageView.image
     AccessoryType -  UITableViewCell.accessoryType
+
+ 以下是共用的‘键’
     Height - 用于某一行高度，若没有该键值，则使用通过config设置的height
   
  ===== Section Header/Footer =====
@@ -162,7 +161,7 @@ extern NSString * const kXXtableViewShellKeyHeight;
 
 #pragma mark - 空内容时显示的配置
 /**
- 配置TableView当数据为空时显示的提示，image和title不能二者都是nil
+ 配置预置View作为当TableView的数据为空时显示的居中小组件
  @param image 空内容图片
  @param imageSize 图片大小
  @param title 空内容提示
@@ -174,7 +173,18 @@ extern NSString * const kXXtableViewShellKeyHeight;
                        title:(nullable NSString*)title
                   titleColor:(nullable UIColor*)titleColor
                    titleFont:(nullable UIFont*)titleFont;
+
+/**
+ 配置一个自定义的View作为当TableView的数据为空时显示的居中小组件
+ @param cls 自定义小组件的类名
+ @param loadType 自定义小组件的加载方式
+ */
 - (void)configNoContentClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType;
+
+/**
+ 配置一个自定义的View实例作为当TableView的数据为空时显示的居中小组件
+ @param view 自定义小组件的实例
+ */
 - (void)configNoContentView:(UIView*)view;
 
 #pragma mark - 初始数据的配置
@@ -288,17 +298,20 @@ extern NSString * const kXXtableViewShellKeyHeight;
 - (void)updateSectionRow:(NSDictionary*)row atIndexPath:(NSIndexPath*)indexPath;
 
 /**
- 更新指定Section中的符合key==value的Row数据，需要目标Row数据是一个NSMutableDictionary类型，否则无法进行数据更新
- @param row 新的部分SectionData
- @param key 需要匹配的键
- @param value 需要匹配的值
- @param sectionIndex 所在的Section
+ 在指定的Section中寻找包含‘key’==‘value’的SectionRow，并使用参数row更新对应的数据
+ @param row 需要更新的SectionRow数据
+ @param key 匹配的键
+ @param value 匹配的值
+ @param sectionIndex 指定的Section
  */
 - (void)updateSectionRow:(NSDictionary*)row key:(NSString*)key equelTo:(id)value atSectionIndex:(NSInteger)sectionIndex;
 
 /**
- 更新符合key==value的Row数据，会进行全部SectionData，需要目标Row数据是一个NSMutableDictionary类型，否则无法进行数据更新
- */
+ 在所有Section中寻找包含‘key’==‘value’的SectionRow，并使用参数row更新对应的数据
+ @param row 需要更新的SectionRow数据
+ @param key 匹配的键
+ @param value 匹配的值
+ */ 
 - (void)updateSectionRow:(NSDictionary*)row key:(NSString*)key equelTo:(id)value;
 
 /**
@@ -322,7 +335,9 @@ extern NSString * const kXXtableViewShellKeyHeight;
  @param info 执行需要携带的参数
  @param indexPath cell所在的位置
  */
-- (void)rowDoSomething:(NSString*)event info:(nullable id)info atIndex:(NSIndexPath*)indexPath;
+- (void)sectionRowDoEvent:(NSString*)event info:(nullable id)info atIndex:(NSIndexPath*)indexPath;
+- (void)sectionHeaderDoEvent:(NSString*)event info:(nullable id)info atIndex:(NSInteger)index;
+- (void)sectionFooterDoEvent:(NSString*)event info:(nullable id)info atIndex:(NSInteger)index;
 @end
 
 
