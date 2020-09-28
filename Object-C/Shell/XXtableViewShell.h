@@ -288,10 +288,17 @@ extern NSString * const kXXtableViewShellKeyHeight;
 - (void)updateSectionRow:(NSDictionary*)row atIndexPath:(NSIndexPath*)indexPath;
 
 /**
- 
+ 更新指定Section中的符合key==value的Row数据，需要目标Row数据是一个NSMutableDictionary类型，否则无法进行数据更新
+ @param row 新的部分SectionData
+ @param key 需要匹配的键
+ @param value 需要匹配的值
+ @param sectionIndex 所在的Section
  */
 - (void)updateSectionRow:(NSDictionary*)row key:(NSString*)key equelTo:(id)value atSectionIndex:(NSInteger)sectionIndex;
 
+/**
+ 更新符合key==value的Row数据，会进行全部SectionData，需要目标Row数据是一个NSMutableDictionary类型，否则无法进行数据更新
+ */
 - (void)updateSectionRow:(NSDictionary*)row key:(NSString*)key equelTo:(id)value;
 
 /**
