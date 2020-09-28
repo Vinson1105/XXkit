@@ -108,15 +108,15 @@ extern NSString * const kXXtableViewShellKeyHeight;
 /** SectionRow删除回调，通过返回NO：取消删除，返回YES：确认删除并清除shell中数据，其中data是当前SectionRow的数据 */
 @property (nonatomic,copy,nullable) BOOL(^onSectionRowEditingDelete)(XXtableViewShell *shell, NSIndexPath *indexPath, id data);
 /** SectionRow的事件回调，一般是自定义SectionRow发起的事件回调，其中event是事件标识，data是当前SectionRow的数据，info是携带的额外信息 */
-@property (nonatomic,copy,nullable) void(^onSectionRowEvent)(XXtableViewShell *shell, NSIndexPath *indexPath, NSString *event, id data);
+@property (nonatomic,copy,nullable) void(^onSectionRowEventOccoured)(XXtableViewShell *shell, NSIndexPath *indexPath, NSString *event, id data, id info);
 
 #pragma mark - SectionHeader的相关事件回调
 /** SectionHeader的事件回调，一般是自定义SectionHeader发起的事件回调，其中event是事件标识，data是当前SectionHeader的数据，info是携带的额外信息 */
-@property (nonatomic,copy,nullable) void(^onSectionHeaderEvent)(XXtableViewShell *shell, NSUInteger section, NSString *event, id data);
+@property (nonatomic,copy,nullable) void(^onSectionHeaderEventOccoured)(XXtableViewShell *shell, NSUInteger section, NSString *event, id data, id info);
 
 #pragma mark - SectionFooter的相关事件回调
 /** SectionFooter的事件回调，一般是自定义SectionFooter发起的事件回调，其中event是事件标识，data是当前SectionFooter的数据，info是携带的额外信息 */
-@property (nonatomic,copy,nullable) void(^onSectionFooterEvent)(XXtableViewShell *shell, NSUInteger section, NSString *event, id data);
+@property (nonatomic,copy,nullable) void(^onSectionFooterEventOccoured)(XXtableViewShell *shell, NSUInteger section, NSString *event, id data, id info);
 
 #pragma mark - shell的初始化
 /**
@@ -329,24 +329,32 @@ extern NSString * const kXXtableViewShellKeyHeight;
 
 #pragma mark - SectionHeader/SectionRow/SectionFooter的执行任务
 /**
- 要求row进行某些操作，这个跟resetData有所区别，resetData意指需要重置或者设置row的本身数据，
- doSomething需要执行某些动作，shell的本身不会对data进行修改，需要又row/cell本身去判断这个操作是否需要进行data修改
- @param event 需要执行的事件名称
+ 要求SectionRow进行某些操作，这个跟resetData有所区别，resetData意指需要重置或者设置row的本身数据，
+ performTask需要执行某些动作，shell的本身不会对data进行修改，需要又SectionRow本身去判断这个操作是否需要进行data修改
+ @param task 需要执行的事件名称
  @param info 执行需要携带的参数
- @param indexPath cell所在的位置
+ @param indexPath SectionRow所在的位置
  */
-- (void)sectionRowDoEvent:(NSString*)event info:(nullable id)info atIndex:(NSIndexPath*)indexPath;
-- (void)sectionHeaderDoEvent:(NSString*)event info:(nullable id)info atIndex:(NSInteger)index;
-- (void)sectionFooterDoEvent:(NSString*)event info:(nullable id)info atIndex:(NSInteger)index;
+- (void)sectionRowPerformTask:(NSString*)task info:(nullable id)info atIndex:(NSIndexPath*)indexPath;
+
+/**
+ 指定SectionHeader去执行任务，具体的执行实施又自定义SectionHeader实现
+ */
+- (void)sectionHeaderPerformTask:(NSString*)task info:(nullable id)info atIndex:(NSInteger)index;
+
+/**
+ 指定SectionFooter去执行任务，具体的执行实施又自定义SectionFooter实现
+ */
+- (void)sectionFooterPerformTask:(NSString*)task info:(nullable id)info atIndex:(NSInteger)index;
 @end
 
 
-@protocol XXtableViewCellDelegate
-@required
-@property (nonatomic,copy,nullable) void(^onEvent)(id<XXtableViewCellDelegate> obj, NSString *event, id info);
-@property (nonatomic,weak) XXtableViewShell *tableViewShell;
-@property (nonatomic,strong) NSIndexPath *indexPath;
-- (void)resetData:(id)data;
-- (void)event:(NSString*)event info:(nullable id)info;
-@end
+//@protocol XXtableViewCellDelegate
+//@required
+//@property (nonatomic,copy,nullable) void(^onEvent)(id<XXtableViewCellDelegate> obj, NSString *event, id info);
+//@property (nonatomic,weak) XXtableViewShell *tableViewShell;
+//@property (nonatomic,strong) NSIndexPath *indexPath;
+//- (void)resetData:(id)data;
+//- (void)event:(NSString*)event info:(nullable id)info;
+//@end
 NS_ASSUME_NONNULL_END

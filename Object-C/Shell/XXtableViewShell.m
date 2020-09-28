@@ -1,4 +1,5 @@
 #import "XXtableViewShell.h"
+#import "XXviewBase.h"
 
 #define kReuseRowDefault    @"ReuseRowDefault"
 #define kReuseHeaderDefault @"ReuseHeaderDefault"
@@ -480,20 +481,51 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     return rows[indexPath.row];
 }
 
-- (void)sectionRowDoEvent:(NSString*)event info:(nullable id)info atIndex:(NSIndexPath*)indexPath{
+#pragma mark - SectionHeader/SectionRow/SectionFooter的执行任务
+- (void)sectionRowPerformTask:(NSString*)task info:(nullable id)info atIndex:(NSIndexPath*)indexPath{
     UITableViewCell *cell = [_tableView cellForRowAtIndexPath:indexPath];
     if(nil == cell){
-        NSLog(@"[XXtableViewShell] [rowDoSomething] indexPath（%@）对应的cell为nil。", indexPath);
+        NSLog(@"[XXtableViewShell] [sectionRowPerformTask] indexPath（%@）对应的SectionRow为nil。", indexPath);
         return;
     }
     
-    if(![cell conformsToProtocol:@protocol(XXtableViewCellDelegate)]){
-        NSLog(@"[XXtableViewShell] [rowDoSomething] cell没有遵循协议‘XXtableViewCellDelegate’。");
+    if(![cell conformsToProtocol:@protocol(XXviewBase)] || ![cell respondsToSelector:@selector(performTask:info:)]){
+        NSLog(@"[XXtableViewShell] [sectionRowPerformTask] SectionRow没有遵循协议‘XXviewBase’或者没有实现函数‘performTask:info:’。");
         return;
     }
     
-    id<XXtableViewCellDelegate> xxcell = (id<XXtableViewCellDelegate>)cell;
-    [xxcell event:event info:info];
+    id<XXviewBase> xxcell = (id<XXviewBase>)cell;
+    [xxcell performTask:task info:info];
+}
+- (void)sectionHeaderPerformTask:(NSString *)task info:(id)info atIndex:(NSInteger)index{
+    UITableViewHeaderFooterView *header = [_tableView headerViewForSection:index];
+    if(nil == header){
+        NSLog(@"[XXtableViewShell] [sectionHeaderPerformTask] index（%ld）对应的SectionHeader为nil。", index);
+        return;
+    }
+    
+    if(![header conformsToProtocol:@protocol(XXviewBase)] || ![header respondsToSelector:@selector(performTask:info:)]){
+        NSLog(@"[XXtableViewShell] [sectionHeaderPerformTask] SectionHeader没有遵循协议‘XXviewBase’或者没有实现函数‘performTask:info:’。");
+        return;
+    }
+    
+    id<XXviewBase> xxheader = (id<XXviewBase>)header;
+    [xxheader performTask:task info:info];
+}
+- (void)sectionFooterPerformTask:(NSString *)task info:(id)info atIndex:(NSInteger)index{
+    UITableViewHeaderFooterView *footer = [_tableView footerViewForSection:index];
+    if(nil == footer){
+        NSLog(@"[XXtableViewShell] [sectionFooterPerformTask] index（%ld）对应的SectionFooter为nil。", index);
+        return;
+    }
+    
+    if(![footer conformsToProtocol:@protocol(XXviewBase)] || ![footer respondsToSelector:@selector(performTask:info:)]){
+        NSLog(@"[XXtableViewShell] [sectionFooterPerformTask] SectionFooter没有遵循协议‘XXviewBase’或者没有实现函数‘performTask:info:’。");
+        return;
+    }
+    
+    id<XXviewBase> xxfooter = (id<XXviewBase>)footer;
+    [xxfooter performTask:task info:info];
 }
 
 #pragma mark - 一些私有函数
@@ -565,10 +597,8 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
         cell = [tableView dequeueReusableCellWithIdentifier:kReuseRowDefault];
     }
     else{
-        id<XXtableViewCellDelegate> xxcell  = [tableView dequeueReusableCellWithIdentifier:_sectionRowClass forIndexPath:indexPath];
-        xxcell.tableViewShell       = self;
-        xxcell.indexPath            = indexPath;
-        cell                        = (UITableViewCell*)xxcell;
+        id<XXviewBase> xxcell   = [tableView dequeueReusableCellWithIdentifier:_sectionRowClass forIndexPath:indexPath];
+        cell                    = (UITableViewCell*)xxcell;
     }
     
     /// 无可重用的cell
@@ -577,10 +607,8 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
             cell = [[UITableViewCell alloc] initWithStyle:_sectionRowSystemStyle reuseIdentifier:kReuseRowDefault];
         }
         else{
-            id<XXtableViewCellDelegate> xxcell  = [[NSClassFromString(_sectionRowClass) alloc] initWithReuseIdentifier:_sectionRowClass];
-            xxcell.tableViewShell       = self;
-            xxcell.indexPath            = indexPath;
-            cell                        = (UITableViewCell*)xxcell;
+            id<XXviewBase> xxcell   = [[NSClassFromString(_sectionRowClass) alloc] initWithReuseIdentifier:_sectionRowClass];
+            cell                    = (UITableViewCell*)xxcell;
         }
         cell.selectionStyle = _sectionRowSelectionStyle;
     }
@@ -621,7 +649,22 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
         }
     }
     else{
-        id<XXtableViewCellDelegate> xxcell = (id<XXtableViewCellDelegate>)cell;
+        __weak typeof(self) ws = self;
+        
+        id<XXviewBase> xxcell = (id<XXviewBase>)cell;
+        xxcell.indexPath = indexPath;
+        xxcell.onEventOccured = ^(id<XXviewBase>  _Nonnull source, NSString * _Nonnull event, id  _Nonnull info) {
+            __strong typeof(ws) ss = ws;
+            if(ss.onSectionRowEventOccoured){
+                id sectionRowData = [self getSectionRowAtIndexPath:indexPath];
+                ss.onSectionRowEventOccoured(ss, indexPath, event, sectionRowData, info);
+            }
+        };
+        xxcell.onDataPost = ^(id<XXviewBase>  _Nonnull source, id  _Nonnull data) {
+            __strong typeof(ws) ss = ws;
+            NSMutableArray *rows = [ss getSectionRowsAtIndex:indexPath.section];
+            [rows replaceObjectAtIndex:indexPath.row withObject:data];
+        };
         [xxcell resetData:rowData];
     }
     return cell;
@@ -742,11 +785,11 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     }
     
     /// view协议转换
-    if(![view conformsToProtocol:@protocol(XXtableViewCellDelegate)]){
-        NSLog(@"[XXtableViewShell] [viewForFooterInSection] cell没有遵循协议‘XXtableViewCellDelegate’。");
+    if(![view conformsToProtocol:@protocol(XXviewBase)]){
+        NSLog(@"[XXtableViewShell] [viewForFooterInSection] SectionHeader没有遵循协议‘XXviewBase’。");
         return view;
     }
-    id<XXtableViewCellDelegate> xxheader = (id<XXtableViewCellDelegate>)view;
+    id<XXviewBase> xxheader = (id<XXviewBase>)view;
     xxheader.indexPath = [NSIndexPath indexPathForRow:-1 inSection:section];
     [xxheader resetData:headerData];
     
@@ -779,12 +822,12 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     }
     
     /// view协议转换
-    if(![view conformsToProtocol:@protocol(XXtableViewCellDelegate)]){
-        NSLog(@"[XXtableViewShell] [viewForFooterInSection] cell没有遵循协议‘XXtableViewCellDelegate’。");
+    if(![view conformsToProtocol:@protocol(XXviewBase)]){
+        NSLog(@"[XXtableViewShell] [viewForFooterInSection] SectionFooter没有遵循协议‘XXviewBase’。");
         return view;
     }
-    id<XXtableViewCellDelegate> xxfooter = (id<XXtableViewCellDelegate>)view;
-    xxfooter.indexPath = [NSIndexPath indexPathForRow:-1 inSection:section];
+    id<XXviewBase> xxfooter = (id<XXviewBase>)view;
+    xxfooter.indexPath = [NSIndexPath indexPathForRow:-2 inSection:section];
     [xxfooter resetData:footerData];
     
     return view;
