@@ -11,12 +11,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol XXquickComponentDelegate <NSObject>
+-(NSString*)targetClass;
 -(BOOL)quick:(id)obj kvdata:(NSDictionary*)kvdate;
 @end
 
 @interface XXquickFactory : NSObject
 +(BOOL)quick:(id)obj data:(id)data;
-+(void)installComponent:(id<XXquickComponentDelegate>)component forClass:(NSString*)cls;
++(void)installComponent:(id<XXquickComponentDelegate>)component;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -14,5 +14,15 @@
 @end
 
 @implementation QuickComponentBase
-
+- (BOOL)quick:(id)obj kvdata:(NSDictionary *)kvdata{
+    NSEnumerator *keyEnumer = kvdata.keyEnumerator;
+    NSString *key = nil;
+    while (nil != (key = keyEnumer.nextObject)) {
+        [self obj:obj key:key value:kvdata[key]];
+    }
+    return YES;
+}
+-(void)obj:(id)obj key:(NSString*)key value:(id)value{
+    @throw [NSExpression expressionWithFormat:@"[QuickComponentBase] [obj: key: value:] 需要重载。"];
+}
 @end

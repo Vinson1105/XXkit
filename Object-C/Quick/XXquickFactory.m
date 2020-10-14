@@ -7,6 +7,7 @@
 //
 
 #import "XXquickFactory.h"
+#import "QuickComponentUILabel.h"
 
 static XXquickFactory *_instance = nil;
 
@@ -19,6 +20,8 @@ static XXquickFactory *_instance = nil;
     self = [super init];
     if (self) {
         self.classToComponent = [NSMutableDictionary new];
+        id<XXquickComponentDelegate> component = [QuickComponentUILabel new];
+        self.classToComponent[component.targetClass] = component;
     }
     return self;
 }
@@ -61,7 +64,7 @@ static XXquickFactory *_instance = nil;
         return NO;
     }
 }
-+(void)installComponent:(id<XXquickComponentDelegate>)component forClass:(NSString*)cls{
-    [XXquickFactory factory].classToComponent[cls] = component;
++(void)installComponent:(id<XXquickComponentDelegate>)component{
+    [XXquickFactory factory].classToComponent[[component targetClass]] = component;
 }
 @end

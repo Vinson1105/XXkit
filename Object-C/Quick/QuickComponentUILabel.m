@@ -15,6 +15,9 @@ static NSString * const kColor = @"Color";
 static NSString * const kFont = @"Font";
 
 @implementation QuickComponentUILabel
+- (NSString *)targetClass{
+    return NSStringFromClass(UILabel.class);
+}
 - (BOOL)quick:(id)obj kvdata:(NSDictionary *)kvdata{
     UILabel *label = obj;
     

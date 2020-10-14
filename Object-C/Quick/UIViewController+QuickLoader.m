@@ -71,7 +71,8 @@
             dict[view.quick_name] = view;
         }
         
-        objc_setAssociatedObject(self, "QuickLoader_nameToView", dict, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        value = dict;
+        objc_setAssociatedObject(self, "QuickLoader_nameToView", value, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     return value;
 }

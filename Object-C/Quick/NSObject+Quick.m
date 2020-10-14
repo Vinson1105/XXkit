@@ -11,7 +11,6 @@
 #import "XXquickFactory.h"
 
 @implementation NSObject(Quick)
-@dynamic quick_name;
 -(void)quick_reset:(id)data{
     if([self isKindOfClass:XXquickFactory.class]){
         NSLog(@"[NSObject+Quick] [quick_reset] 此实例不能使用。self:%@", self);
@@ -19,5 +18,11 @@
     }
     
     [XXquickFactory quick:self data:data];
+}
+- (void)setQuick_name:(NSString *)quick_name{
+    objc_setAssociatedObject(self, "quick_name", quick_name, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+- (NSString *)quick_name{
+    return objc_getAssociatedObject(self, "quick_name");
 }
 @end
