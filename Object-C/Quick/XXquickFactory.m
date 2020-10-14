@@ -20,6 +20,9 @@ static XXquickFactory *_instance = nil;
     self = [super init];
     if (self) {
         self.classToComponent = [NSMutableDictionary new];
+        
+        NSString *path = [[NSBundle mainBundle] pathForResource:@"XXquickFactory.h" ofType:nil];
+        
         id<XXquickComponentDelegate> component = [QuickComponentUILabel new];
         self.classToComponent[component.targetClass] = component;
     }
