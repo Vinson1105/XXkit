@@ -21,10 +21,24 @@ static XXquickFactory *_instance = nil;
     if (self) {
         self.classToComponent = [NSMutableDictionary new];
         
-        NSString *path = [[NSBundle mainBundle] pathForResource:@"XXquickFactory.h" ofType:nil];
-        
-        id<XXquickComponentDelegate> component = [QuickComponentUILabel new];
-        self.classToComponent[component.targetClass] = component;
+        NSString *path = [[NSBundle mainBundle] pathForResource:@"QuickInitScript" ofType:@"plist"];
+        if(nil != path){
+            NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:path];
+            
+            id value = dict[@"Component"];
+            if([value isKindOfClass:NSArray.class]){
+                NSArray *components = value;
+                for (NSString *componentClass in components) {
+                    Class cls = NSClassFromString(componentClass);
+                    if(nil == cls){
+                        continue;
+                    }
+                    
+                    id<XXquickComponentDelegate> component = [cls new];
+                    self.classToComponent[component.targetClass] = component;
+                }
+            }
+        }
     }
     return self;
 }
