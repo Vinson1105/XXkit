@@ -21,76 +21,61 @@ static NSString * const kTextAlignment = @"TextAlignment";
 static NSString * const kNumberOfLines = @"NumberOfLines";
 
 @implementation QuickComponentUILabel
-- (NSString *)targetClass{
++ (NSString *)targetClass{
     return NSStringFromClass(UILabel.class);
 }
-- (BOOL)quick:(id)obj kvdata:(NSDictionary *)kvdata{
+
++ (void)obj:(id)obj key:(NSString *)key value:(id)value{
     UILabel *label = obj;
-    
-    NSEnumerator *keyEnumer = kvdata.keyEnumerator;
-    NSString *key = nil;
-    while (nil != (key = keyEnumer.nextObject)) {
-        id value = kvdata[key];
-        
+    if([key isEqualToString:kText]){
         // MARK: Text
-        if([key isEqualToString:kText]){
-            label.text = value;
-        }
+        label.text = value;
+    }
+    else if([key isEqualToString:kTextColor]){
         // MARK: TextColor
-        else if([key isEqualToString:kTextColor]){
-            if([value isKindOfClass:UIColor.class]){
-                label.textColor = value;
-            }
-            else if([value isKindOfClass:NSString.class]){
-                UIColor *color = [XXocUtils colorFromHexString:value];
-                label.textColor = color;
-            }
-            else{
-                NSLog(@"[QuickComponentUILabel] [quick] 未处理键值。key:%@ value:%@",key, value);
-            }
-        }
+        UIColor *color = [XXocUtils autoColor:value];
+        label.textColor = color;
+    }
+    else if([key isEqualToString:kFont]){
         // MARK: Font
-        else if([key isEqualToString:kFont]){
-            if([value isKindOfClass:NSNumber.class]){
-                label.font = [UIFont systemFontOfSize:[value floatValue]];
-            }
-            else{
-                NSLog(@"[QuickComponentUILabel] [quick] 未处理键值。key:%@ value:%@",key, value);
-            }
-        }
-        // MARK: TextAlignment
-        else if([key isEqualToString:kTextAlignment]){
-            if([value isKindOfClass:NSString.class]){
-                NSLog(@"[QuickComponentUILabel] [quick] 未处理键值。key:%@ value:%@",key, value);
-            }
-            else{
-                if ([value isEqualToString:kTextAlignmentCenter]) {
-                    label.textAlignment = NSTextAlignmentCenter;
-                }
-                else if([value isEqualToString:kTextAlignmentLeft]){
-                    label.textAlignment = NSTextAlignmentLeft;
-                }
-                else if([value isEqualToString:kTextAlignmentRight]){
-                    label.textAlignment = NSTextAlignmentRight;
-                }
-                else {
-                    NSLog(@"[QuickComponentUILabel] [quick] 未处理键值。key:%@ value:%@",key, value);
-                }
-            }
-        }
-        // MARK: NumberOfLines
-        else if([key isEqualToString:kNumberOfLines]){
-            if([value isKindOfClass:NSNumber.class]){
-                label.numberOfLines = [value intValue];
-            }
-            else{
-                NSLog(@"[QuickComponentUILabel] [quick] 未处理键值。key:%@ value:%@",key, value);
-            }
+        if([value isKindOfClass:NSNumber.class]){
+            label.font = [UIFont systemFontOfSize:[value floatValue]];
         }
         else{
-            NSLog(@"[QuickComponentUILabel] [quick] 未处理键值。key:%@ value:%@",key, value);
+            NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
         }
     }
-    return YES;
+    else if([key isEqualToString:kTextAlignment]){
+        // MARK: TextAlignment
+        if([value isKindOfClass:NSString.class]){
+            NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
+        }
+        else{
+            if ([value isEqualToString:kTextAlignmentCenter]) {
+                label.textAlignment = NSTextAlignmentCenter;
+            }
+            else if([value isEqualToString:kTextAlignmentLeft]){
+                label.textAlignment = NSTextAlignmentLeft;
+            }
+            else if([value isEqualToString:kTextAlignmentRight]){
+                label.textAlignment = NSTextAlignmentRight;
+            }
+            else {
+                NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
+            }
+        }
+    }
+    else if([key isEqualToString:kNumberOfLines]){
+        // MARK: NumberOfLines
+        if([value isKindOfClass:NSNumber.class]){
+            label.numberOfLines = [value intValue];
+        }
+        else{
+            NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
+        }
+    }
+    else{
+        NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
+    }
 }
 @end
