@@ -7,14 +7,13 @@
 //
 
 #import "QuickComponentBase.h"
-#import "XXquickFactory.h"
 
 @interface QuickComponentBase() <XXquickComponentDelegate>
 
 @end
 
 @implementation QuickComponentBase
-- (BOOL)quick:(id)obj kvdata:(NSDictionary *)kvdata{
++ (BOOL)quick:(id)obj kvdata:(NSDictionary *)kvdata{
     NSEnumerator *keyEnumer = kvdata.keyEnumerator;
     NSString *key = nil;
     while (nil != (key = keyEnumer.nextObject)) {
@@ -22,7 +21,12 @@
     }
     return YES;
 }
--(void)obj:(id)obj key:(NSString*)key value:(id)value{
+
++ (NSString *)targetClass{
+    @throw [NSExpression expressionWithFormat:@"[QuickComponentBase] [targetClass] 需要重载。"];
+    return nil;
+}
++ (void)obj:(id)obj key:(NSString*)key value:(id)value{
     @throw [NSExpression expressionWithFormat:@"[QuickComponentBase] [obj: key: value:] 需要重载。"];
 }
 @end
