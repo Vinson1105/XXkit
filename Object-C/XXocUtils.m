@@ -143,6 +143,17 @@ static NSDateFormatter *_dateFormatter;
     [scanner scanHexInt:&hexInt];
     return hexInt;
 }
++ (UIColor *)autoColor:(id)obj{
+    if([obj isKindOfClass:NSString.class]){
+        return [self colorFromHexString:obj];
+    }
+    else if([obj isKindOfClass:UIColor.class]){
+        return obj;
+    }
+    else{
+        return nil;
+    }
+}
 + (UIColor*)colorFromHexString:(NSString*)hexString{
     unsigned int hexint = [XXocUtils intFromHexString:hexString];
     UIColor *color =[UIColor colorWithRed:((CGFloat) ((hexint & 0xFF0000) >> 16))/255

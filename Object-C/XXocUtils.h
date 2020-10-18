@@ -68,6 +68,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)button:(UIButton*)button norTxt:(NSString*)norTxt selTxt:(NSString*)selTxt disNorTxt:(NSString*)disNorTxt disSelTxt:(NSString*)disSelTxt;
 
 #pragma mark - <UIColor>
++ (UIColor*)autoColor:(id)obj;
 + (UIColor*)colorFromHexString:(NSString*)hexString;
 + (UIColor*)colorFromHexString:(NSString*)hexString alpha:(CGFloat)alpha;
 + (UIColor*)colorFromLightHex:(NSString*)lightHex darkHex:(NSString*)darkHex;
