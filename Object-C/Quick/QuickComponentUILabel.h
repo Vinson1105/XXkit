@@ -7,11 +7,11 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "QuickComponentBase.h"
+#import "QuickComponentUIView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface QuickComponentUILabel : QuickComponentBase
+@interface QuickComponentUILabel : QuickComponentUIView
 
 @end
 

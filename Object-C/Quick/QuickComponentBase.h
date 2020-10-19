@@ -18,6 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface QuickComponentBase : NSObject
 +(NSString *)targetClass;
 +(void)obj:(id)obj key:(NSString*)key value:(id)value;
++(void)unexecutedKey:(NSString*)key value:(id)value;
 @end
 
 NS_ASSUME_NONNULL_END

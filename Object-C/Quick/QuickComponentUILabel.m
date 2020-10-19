@@ -27,30 +27,30 @@ static NSString * const kNumberOfLines = @"NumberOfLines";
 
 + (void)obj:(id)obj key:(NSString *)key value:(id)value{
     UILabel *label = obj;
+    // MARK: Text
     if([key isEqualToString:kText]){
-        // MARK: Text
         label.text = value;
     }
+    
+    // MARK: TextColor
     else if([key isEqualToString:kTextColor]){
-        // MARK: TextColor
         UIColor *color = [XXocUtils autoColor:value];
         label.textColor = color;
     }
+    
+    // MARK: Font
     else if([key isEqualToString:kFont]){
-        // MARK: Font
         if([value isKindOfClass:NSNumber.class]){
             label.font = [UIFont systemFontOfSize:[value floatValue]];
         }
         else{
-            NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
+            [self unexecutedKey:key value:value];
         }
     }
+    
+    // MARK: TextAlignment
     else if([key isEqualToString:kTextAlignment]){
-        // MARK: TextAlignment
         if([value isKindOfClass:NSString.class]){
-            NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
-        }
-        else{
             if ([value isEqualToString:kTextAlignmentCenter]) {
                 label.textAlignment = NSTextAlignmentCenter;
             }
@@ -61,21 +61,25 @@ static NSString * const kNumberOfLines = @"NumberOfLines";
                 label.textAlignment = NSTextAlignmentRight;
             }
             else {
-                NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
+                [self unexecutedKey:key value:value];
             }
         }
+        else{
+            [self unexecutedKey:key value:value];
+        }
     }
+    
+    // MARK: NumberOfLines
     else if([key isEqualToString:kNumberOfLines]){
-        // MARK: NumberOfLines
         if([value isKindOfClass:NSNumber.class]){
             label.numberOfLines = [value intValue];
         }
         else{
-            NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
+            [self unexecutedKey:key value:value];
         }
     }
     else{
-        NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
+        [super obj:obj key:key value:value];
     }
 }
 @end

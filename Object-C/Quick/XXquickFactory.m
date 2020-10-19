@@ -7,7 +7,7 @@
 //
 
 #import "XXquickFactory.h"
-#import "QuickComponentUILabel.h"
+#import "QuickComponentBase.h"
 
 static XXquickFactory *_instance = nil;
 
@@ -28,14 +28,14 @@ static XXquickFactory *_instance = nil;
             id value = dict[@"Component"];
             if([value isKindOfClass:NSArray.class]){
                 NSArray *components = value;
-                for (NSString *componentClass in components) {
-                    Class cls = NSClassFromString(componentClass);
-                    if(nil == cls){
-                        continue;
+                for (NSString *component in components) {
+                    Class cls = NSClassFromString(component);
+                    if(![cls respondsToSelector:@selector(targetClass)]){
+                        NSLog(@"[%@] [init] 无效Component。（Component:%@）", NSStringFromClass(self.class), component);
+                        continue;;
                     }
                     
-                    id<XXquickComponentDelegate> component = [cls new];
-                    self.classToComponent[component.targetClass] = component;
+                    self.classToComponent[[cls targetClass]] = cls;
                 }
             }
         }
@@ -81,7 +81,13 @@ static XXquickFactory *_instance = nil;
         return NO;
     }
 }
-+(void)installComponent:(id<XXquickComponentDelegate>)component{
-    [XXquickFactory factory].classToComponent[[component targetClass]] = component;
++(void)installComponentClass:(NSString*)component{
+    Class cls = NSClassFromString(component);
+    if(![cls instancesRespondToSelector:@selector(targetClass)]){
+        NSLog(@"[%@] [installComponentClass] 无效Component。（Component:%@）", NSStringFromClass(self.class), component);
+        return;
+    }
+    
+    [XXquickFactory factory].classToComponent[[cls targetClass]] = cls;
 }
 @end

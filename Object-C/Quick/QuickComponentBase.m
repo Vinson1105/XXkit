@@ -23,10 +23,20 @@
 }
 
 + (NSString *)targetClass{
-    @throw [NSExpression expressionWithFormat:@"[QuickComponentBase] [targetClass] 需要重载。"];
+    if([self isMemberOfClass:QuickComponentBase.class]){
+        @throw [NSExpression expressionWithFormat:@"[QuickComponentBase] [targetClass] 需要重载。"];
+    }
     return nil;
 }
 + (void)obj:(id)obj key:(NSString*)key value:(id)value{
-    @throw [NSExpression expressionWithFormat:@"[QuickComponentBase] [obj: key: value:] 需要重载。"];
+    if([self isMemberOfClass:QuickComponentBase.class]){
+        @throw [NSExpression expressionWithFormat:@"[QuickComponentBase] [obj: key: value:] 需要重载。"];
+    }
+    else{
+        [self unexecutedKey:key value:value];
+    }
+}
++(void)unexecutedKey:(NSString*)key value:(id)value{
+    NSLog(@"[%@] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
 }
 @end

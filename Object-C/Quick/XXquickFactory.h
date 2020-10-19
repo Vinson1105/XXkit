@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface XXquickFactory : NSObject
 +(BOOL)quick:(id)obj data:(id)data;
-+(void)installComponent:(id<XXquickComponentDelegate>)component;
++(void)installComponentClass:(NSString*)component;
 @end
 
 NS_ASSUME_NONNULL_END

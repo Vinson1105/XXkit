@@ -36,7 +36,7 @@ static NSString * const kBackgroundColor = @"BackgroundColor";
             view.layer.borderColor = [value CGColor];
         }
         else{
-            NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
+            [self unexecutedKey:key value:value];
         }
     }
     else if([key isEqualToString:kBackgroundColor]){
@@ -46,13 +46,11 @@ static NSString * const kBackgroundColor = @"BackgroundColor";
             view.backgroundColor = color;
         }
         else{
-            NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
+            [self unexecutedKey:key value:value];
         }
     }
     else{
-        if([self isMemberOfClass:QuickComponentUIView.class]){
-            NSLog(@"[%@] [quick] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
-        }
+        [super obj:obj key:key value:value];
     }
 }
 @end
