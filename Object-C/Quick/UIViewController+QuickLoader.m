@@ -11,7 +11,7 @@
 #import <objc/runtime.h>
 
 @interface UIViewController()
-@property (nonatomic,strong,readonly) NSMutableDictionary *nameToView;
+@property (nonatomic,strong,readonly) NSMutableDictionary *nameToObj;
 @end
 
 @implementation UIViewController(QuickLoader)
@@ -48,7 +48,7 @@
     while (nil != (key = keyEnumer.nextObject)) {
         id value = jdict[key];
         
-        UIView *view = self.nameToView[key];
+        UIView *view = self.nameToObj[key];
         if(nil == view){
             continue;
         }
@@ -57,23 +57,30 @@
     }
 }
 
-- (NSMutableDictionary *)nameToView{
-    id value = objc_getAssociatedObject(self, "QuickLoader_nameToView");
+- (NSMutableDictionary *)nameToObj{
+    id value = objc_getAssociatedObject(self, "QuickLoader_nameToObj");
     if(nil == value){
         NSMutableDictionary *dict = [NSMutableDictionary new];
         
-        NSArray *subviews = self.view.subviews;
-        for (UIView *view in subviews) {
-            if(nil == view.quick_name){
-                continue;
-            }
-            
-            dict[view.quick_name] = view;
-        }
+        self addViews:self. toNameToObj:<#(NSMutableDictionary *)#>
+        
         
         value = dict;
-        objc_setAssociatedObject(self, "QuickLoader_nameToView", value, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(self, "QuickLoader_nameToObj", value, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     return value;
+}
+-(void)addViews:(NSArray<UIView*>*)views toNameToObj:(NSMutableDictionary*)nameToObj{
+    if(nil == views || 0 == views.count){
+        return;
+    }
+    for (UIView *view in views) {
+        [self addViews:view.subviews toNameToObj:nameToObj];
+        
+        if(nil == view.quick_name){
+            continue;
+        }
+        nameToObj[view.quick_name] = view;
+    }
 }
 @end
