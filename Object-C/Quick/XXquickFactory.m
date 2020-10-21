@@ -8,8 +8,15 @@
 
 #import "XXquickFactory.h"
 #import "QuickComponentBase.h"
+#import "NSObject+Quick.h"
+#import <objc/runtime.h>
 
 static XXquickFactory *_instance = nil;
+
+struct simulation_objc_class {
+    Class _Nonnull isa;
+    Class _Nullable superclass;
+};
 
 static NSString * const kDefaulteScript = @"QuickInitScript";
 
@@ -56,10 +63,28 @@ static NSString * const kDefaulteScript = @"QuickInitScript";
     return _instance;
 }
 + (BOOL)quick:(id)obj data:(nonnull id)data{
-    NSString *cls = NSStringFromClass([obj class]);
-    id<XXquickComponentDelegate> component = [XXquickFactory factory].classToComponent[cls];
+    NSString *cls = [obj quick_class];
+    if(nil == cls){
+        cls = NSStringFromClass([obj class]);
+    }
+    NSString *quickCls = [self findRelationshipClass:cls AtClasss:[XXquickFactory factory].classToComponent.allKeys];
+    if(nil == quickCls){
+        NSLog(@"[XXquickFactory] [quick] 没有对应的QuickClass。obj:%@ obj.class:%@ obj.quick_class:%@ data:%@",
+              obj,
+              NSStringFromClass([obj class]),
+              [obj quick_class],
+              data);
+        return NO;
+    }
+    
+    
+    id<XXquickComponentDelegate> component = [XXquickFactory factory].classToComponent[quickCls];
     if(nil == component){
-        NSLog(@"[XXquickFactory] [quick] 没有对应的Component。obj:%@ data:%@", obj, data);
+        NSLog(@"[XXquickFactory] [quick] 没有对应的Component。obj:%@ obj.class:%@ obj.quick_class:%@ data:%@",
+              obj,
+              NSStringFromClass([obj class]),
+              [obj quick_class],
+              data);
         return NO;
     }
     
@@ -95,5 +120,31 @@ static NSString * const kDefaulteScript = @"QuickInitScript";
     }
     
     [XXquickFactory factory].classToComponent[[cls targetClass]] = cls;
+}
+
++ (nullable NSString*)findRelationshipClass:(NSString*)class AtClasss:(NSArray<NSString*>*)classStrings{
+    NSString *member = nil;
+    NSString *kind = nil;
+    
+    Class srcClass = NSClassFromString(class);
+    for (NSString *destString in classStrings) {
+        Class destClass = NSClassFromString(destString);
+        if(srcClass == destClass){
+            member = destString;
+            break;
+        }
+        else {
+            for(Class tcls = srcClass; tcls; tcls = ((__bridge struct simulation_objc_class *)(tcls))->superclass) {
+                if(tcls == destClass) {
+                    kind = destString;
+                    break;
+                }
+            }
+        }
+    }
+    
+    if(member) return member;
+    if(kind) return kind;
+    return nil;
 }
 @end
