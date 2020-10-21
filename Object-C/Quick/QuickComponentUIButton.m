@@ -10,6 +10,7 @@
 #import <UIKit/UIKit.h>
 
 static NSString * const kTitle = @"Title";
+static NSString * const kTitleColor = @"TitleColor";
 static NSString * const kImage = @"Image";
 
 static NSString * const kNormal = @"Normal";
@@ -32,21 +33,9 @@ static NSString * const kSelectedAndDisabled = @"SelectedDisabled";
             [button setTitle:value forState:UIControlStateNormal];
         }
         else if([value isKindOfClass:NSDictionary.class]){
-            if(value[kNormal]){
-                [button setTitle:value[kNormal] forState:UIControlStateNormal];
-            }
-            if(value[kSelected]){
-                [button setTitle:value[kSelected] forState:UIControlStateSelected];
-            }
-            if(value[kDisabled]){
-                [button setTitle:value[kDisabled] forState:UIControlStateDisabled];
-            }
-            if(value[kNormalAndDisabled]){
-                [button setTitle:value[kNormalAndDisabled] forState:UIControlStateNormal|UIControlStateDisabled];
-            }
-            if(value[kSelectedAndDisabled]){
-                [button setTitle:value[kSelectedAndDisabled] forState:UIControlStateSelected|UIControlStateDisabled];
-            }
+            [self dictionary:value containsBlock:^(id valueForKey, UIControlState state) {
+                [button setTitle:valueForKey forState:state];
+            }];
         }
         else{
             
@@ -62,61 +51,17 @@ static NSString * const kSelectedAndDisabled = @"SelectedDisabled";
             [button setImage:value forState:UIControlStateNormal];
         }
         else if([value isKindOfClass:NSDictionary.class]){
-            if(value[kNormal]){
-                if([value[kNormal] isKindOfClass:NSString.class]){
-                    [button setImage:[UIImage imageNamed:value] forState:UIControlStateNormal];
+            [self dictionary:value containsBlock:^(id valueForKey, UIControlState state) {
+                if([valueForKey isKindOfClass:NSString.class]){
+                    [button setImage:[UIImage imageNamed:valueForKey] forState:UIControlStateNormal];
                 }
-                else if([value[kNormal] isKindOfClass:UIImage.class]){
-                    [button setImage:value forState:UIControlStateNormal];
-                }
-                else{
-                    [self unexecutedKey:key value:value];
-                }
-            }
-            if(value[kSelected]){
-                if([value[kSelected] isKindOfClass:NSString.class]){
-                    [button setImage:[UIImage imageNamed:value] forState:UIControlStateSelected];
-                }
-                else if([value[kSelected] isKindOfClass:UIImage.class]){
-                    [button setImage:value forState:UIControlStateSelected];
+                else if([valueForKey isKindOfClass:UIImage.class]){
+                    [button setImage:valueForKey forState:UIControlStateNormal];
                 }
                 else{
                     [self unexecutedKey:key value:value];
                 }
-            }
-            if(value[kDisabled]){
-                if([value[kDisabled] isKindOfClass:NSString.class]){
-                    [button setImage:[UIImage imageNamed:value] forState:UIControlStateDisabled];
-                }
-                else if([value[kDisabled] isKindOfClass:UIImage.class]){
-                    [button setImage:value forState:UIControlStateDisabled];
-                }
-                else{
-                    [self unexecutedKey:key value:value];
-                }
-            }
-            if(value[kNormalAndDisabled]){
-                if([value[kNormalAndDisabled] isKindOfClass:NSString.class]){
-                    [button setImage:[UIImage imageNamed:value] forState:UIControlStateNormal|UIControlStateDisabled];
-                }
-                else if([value[kNormalAndDisabled] isKindOfClass:UIImage.class]){
-                    [button setImage:value forState:UIControlStateNormal|UIControlStateDisabled];
-                }
-                else{
-                    [self unexecutedKey:key value:value];
-                }
-            }
-            if(value[kSelectedAndDisabled]){
-                if([value[kSelectedAndDisabled] isKindOfClass:NSString.class]){
-                    [button setImage:[UIImage imageNamed:value] forState:UIControlStateSelected|UIControlStateDisabled];
-                }
-                else if([value[kSelectedAndDisabled] isKindOfClass:UIImage.class]){
-                    [button setImage:value forState:UIControlStateSelected|UIControlStateDisabled];
-                }
-                else{
-                    
-                }
-            }
+            }];            
         }
         else {
             [self unexecutedKey:key value:value];
@@ -125,6 +70,27 @@ static NSString * const kSelectedAndDisabled = @"SelectedDisabled";
     else{
         [super obj:obj key:key value:value];
     }
+}
++(void)dictionary:(NSDictionary*)dict containsBlock:(void(^)(id valueForKey, UIControlState state))block{
     
+    NSEnumerator *keyEnumer = dict.keyEnumerator;
+    NSString *key = nil;
+    while (nil != (key = keyEnumer.nextObject)) {
+        if([key isEqualToString:kNormal]){
+            block(dict[key], UIControlStateNormal);
+        }
+        else if([key isEqualToString:kSelected]){
+            block(dict[key], UIControlStateSelected);
+        }
+        else if([key isEqualToString:kNormalAndDisabled]){
+            block(dict[key], UIControlStateNormal|UIControlStateDisabled);
+        }
+        else if([key isEqualToString:kSelectedAndDisabled]){
+            block(dict[key], UIControlStateSelected|UIControlStateDisabled);
+        }
+        else{
+            
+        }
+    }
 }
 @end

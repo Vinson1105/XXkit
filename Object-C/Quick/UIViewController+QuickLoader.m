@@ -61,10 +61,7 @@
     id value = objc_getAssociatedObject(self, "QuickLoader_nameToObj");
     if(nil == value){
         NSMutableDictionary *dict = [NSMutableDictionary new];
-        
-        self addViews:self. toNameToObj:<#(NSMutableDictionary *)#>
-        
-        
+        [self addViews:self.view.subviews toNameToObj:dict];
         value = dict;
         objc_setAssociatedObject(self, "QuickLoader_nameToObj", value, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }

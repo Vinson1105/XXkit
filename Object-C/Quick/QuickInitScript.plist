@@ -5,6 +5,8 @@
 	<key>Component</key>
 	<array>
 		<string>QuickComponentUILabel</string>
+		<string>QuickComponentUIView</string>
+		<string>QuickComponentUIButton</string>
 	</array>
 </dict>
 </plist>
