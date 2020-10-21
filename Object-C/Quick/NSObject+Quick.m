@@ -43,4 +43,10 @@
 - (NSString *)quick_name{
     return objc_getAssociatedObject(self, "quick_name");
 }
+- (void)setQuick_class:(NSString *)quick_class{
+    objc_setAssociatedObject(self, "quick_class", quick_class, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+- (NSString *)quick_class{
+    return objc_getAssociatedObject(self, "quick_class");
+}
 @end
