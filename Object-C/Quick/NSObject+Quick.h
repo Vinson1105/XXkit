@@ -13,6 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NSObject(Quick)
 @property (nonatomic,copy) NSString *quick_name;
 -(void)quick_reset:(id)data;
+-(void)quick_resetFromJFile:(NSString*)file bundle:(nullable NSBundle*)bundle;
 @end
 
 NS_ASSUME_NONNULL_END

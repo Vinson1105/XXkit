@@ -4,6 +4,7 @@
 <dict>
 	<key>Component</key>
 	<array>
+		<string>QuickComponentUIViewController</string>
 		<string>QuickComponentUILabel</string>
 		<string>QuickComponentUIView</string>
 		<string>QuickComponentUIButton</string>

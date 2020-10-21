@@ -11,6 +11,8 @@
 
 static XXquickFactory *_instance = nil;
 
+static NSString * const kDefaulteScript = @"QuickInitScript";
+
 @interface XXquickFactory()
 @property (nonatomic,strong) NSMutableDictionary *classToComponent;
 @end
@@ -20,27 +22,31 @@ static XXquickFactory *_instance = nil;
     self = [super init];
     if (self) {
         self.classToComponent = [NSMutableDictionary new];
-        
-        NSString *path = [[NSBundle mainBundle] pathForResource:@"QuickInitScript" ofType:@"plist"];
-        if(nil != path){
-            NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:path];
-            
-            id value = dict[@"Component"];
-            if([value isKindOfClass:NSArray.class]){
-                NSArray *components = value;
-                for (NSString *component in components) {
-                    Class cls = NSClassFromString(component);
-                    if(![cls respondsToSelector:@selector(targetClass)]){
-                        NSLog(@"[%@] [init] 无效Component。（Component:%@）", NSStringFromClass(self.class), component);
-                        continue;;
-                    }
-                    
-                    self.classToComponent[[cls targetClass]] = cls;
-                }
-            }
-        }
+        [self loadDefaultComponentFromPlist:kDefaulteScript toComponentDict:self.classToComponent];
     }
     return self;
+}
+-(void)loadDefaultComponentFromPlist:(NSString*)filename toComponentDict:(NSMutableDictionary*)componentDict{
+    NSString *path = [[NSBundle mainBundle] pathForResource:filename ofType:@"plist"];
+    if(nil == path){
+        return;
+    }
+    
+    NSDictionary *script = [[NSDictionary alloc] initWithContentsOfFile:path];
+    
+    id value = script[@"Component"];
+    if([value isKindOfClass:NSArray.class]){
+        NSArray *components = value;
+        for (NSString *component in components) {
+            Class cls = NSClassFromString(component);
+            if(![cls respondsToSelector:@selector(targetClass)]){
+                NSLog(@"[%@] [init] 无效Component。（Component:%@）", NSStringFromClass(self.class), component);
+                continue;;
+            }
+            
+            componentDict[[cls targetClass]] = cls;
+        }
+    }
 }
 +(XXquickFactory*)factory{
     static dispatch_once_t onceToken;

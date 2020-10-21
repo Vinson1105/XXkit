@@ -8,6 +8,7 @@
 
 #import "QuickComponentUIButton.h"
 #import <UIKit/UIKit.h>
+#import "../XXocUtils.h"
 
 static NSString * const kTitle = @"Title";
 static NSString * const kTitleColor = @"TitleColor";
@@ -39,6 +40,24 @@ static NSString * const kSelectedAndDisabled = @"SelectedDisabled";
         }
         else{
             
+        }
+    }
+    
+    // MARK: TitleColor
+    else if([key isEqualToString:kTitleColor]){
+        if([value isKindOfClass:NSString.class] || [value isKindOfClass:UIColor.class]){
+            UIColor * color = [XXocUtils autoColor:value];
+            if(color){
+                [button setTitleColor:color forState:UIControlStateNormal];
+            }
+        }
+        else if([value isKindOfClass:NSDictionary.class]){
+            [self dictionary:value containsBlock:^(id valueForKey, UIControlState state) {
+                [button setTitleColor:[XXocUtils autoColor:valueForKey] forState:state];
+            }];
+        }
+        else {
+            [self unexecutedKey:key value:value];
         }
     }
     

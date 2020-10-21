@@ -9,6 +9,7 @@
 #import "UIViewController+QuickLoader.h"
 #import "NSObject+Quick.h"
 #import <objc/runtime.h>
+#import "../XXocUtils.h"
 
 @interface UIViewController()
 @property (nonatomic,strong,readonly) NSMutableDictionary *nameToObj;
