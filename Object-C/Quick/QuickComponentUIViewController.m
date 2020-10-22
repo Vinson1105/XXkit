@@ -10,6 +10,9 @@
 #import <UIKit/UIKit.h>
 #import "NSObject+Quick.h"
 
+static NSString * const kTitle = @"Title";
+
+static NSString * const kNavigationBar = @"NavigationBar";
 static NSString * const kView = @"View";
 static NSString * const kSubView = @"SubView";
 
@@ -20,9 +23,32 @@ static NSString * const kSubView = @"SubView";
 + (void)obj:(id)obj key:(NSString *)key value:(id)value{
     UIViewController *viewController = obj;
     
-    if([key isEqualToString:kView]){
+    // MARK: Title
+    if([key isEqualToString:kTitle]){
+        if([value isKindOfClass:NSString.class]){
+            viewController.title = value;
+        }
+        else{
+            [self unexecutedKey:key value:value];
+        }
+    }
+    
+    // MARK: NavigationBar
+    else if([key isEqualToString:kNavigationBar]){
+        if([value isKindOfClass:NSDictionary.class]){
+            [viewController.navigationController.navigationBar quick_reset:value];
+        }
+        else{
+            [self unexecutedKey:key value:value];
+        }
+    }
+    
+    // MARK: View
+    else if([key isEqualToString:kView]){
         [viewController.view quick_reset:value];
     }
+    
+    // MARK: SubView
     else if([key isEqualToString:kSubView]){
         if([value isKindOfClass:NSDictionary.class]){
             NSDictionary *nameToData = value;

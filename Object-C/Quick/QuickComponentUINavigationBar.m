@@ -9,20 +9,21 @@
 #import "QuickComponentUINavigationBar.h"
 #import <UIKit/UIKit.h>
 
-static NSString * const kBackImage = @"BackImage";
+static NSString * const kTranslucent = @"Translucent";
 
 @implementation QuickComponentUINavigationBar
 + (NSString *)targetClass{
     return NSStringFromClass(UINavigationBar.class);
 }
 + (void)obj:(id)obj key:(NSString *)key value:(id)value{
-    UINavigationBar *nav = obj;
+    UINavigationBar *navigationBar = obj;
     
-    if([key isEqualToString:kBackImage]){
-        
+    // MARK: TransLucent
+    if([key isEqualToString:kTranslucent]){
+        navigationBar.translucent = [value boolValue];
     }
     else{
-        
+        [super obj:obj key:key value:value];
     }
 }
 @end
