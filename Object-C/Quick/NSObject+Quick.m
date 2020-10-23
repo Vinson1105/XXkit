@@ -8,17 +8,17 @@
 
 #import "NSObject+Quick.h"
 #import <objc/runtime.h>
-#import "XXquickFactory.h"
+#import "QuickLoader.h"
 #import "../Category/NSString+JSON.h"
 
 @implementation NSObject(Quick)
 -(void)quick_reset:(id)data{
-    if([self isKindOfClass:XXquickFactory.class]){
+    if([self isKindOfClass:QuickLoader.class]){
         NSLog(@"[NSObject+Quick] [quick_reset] 此实例不能使用。self:%@", self);
         return;
     }
     
-    [XXquickFactory quick:self data:data];
+    [QuickLoader item:self data:data];
 }
 -(void)quick_resetFromJFile:(NSString*)file bundle:(nullable NSBundle*)bundle{
     if(nil == bundle){

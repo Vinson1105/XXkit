@@ -1,17 +1,17 @@
 //
-//  XXquickFactory.m
+//  QuickLoader.m
 //  XXkitProject
 //
 //  Created by 郭文轩 on 2020/10/12.
 //  Copyright © 2020 郭文轩. All rights reserved.
 //
 
-#import "XXquickFactory.h"
+#import "QuickLoader.h"
 #import "QuickComponentBase.h"
 #import "NSObject+Quick.h"
 #import <objc/runtime.h>
 
-static XXquickFactory *_instance = nil;
+static QuickLoader *_instance = nil;
 
 struct simulation_objc_class {
     Class _Nonnull isa;
@@ -19,12 +19,15 @@ struct simulation_objc_class {
 };
 
 static NSString * const kDefaulteScript = @"QuickInitScript";
+static NSString * const kComponent = @"Component";
+static NSString * const kMainFile = @"MainFile";
 
-@interface XXquickFactory()
+@interface QuickLoader()
 @property (nonatomic,strong) NSMutableDictionary *classToComponent;
+@property (nonatomic,copy) NSString *mainQuickFile;
 @end
 
-@implementation XXquickFactory
+@implementation QuickLoader
 - (instancetype)init{
     self = [super init];
     if (self) {
@@ -33,6 +36,11 @@ static NSString * const kDefaulteScript = @"QuickInitScript";
     }
     return self;
 }
+-(void)setMainFile:(NSString*)mainFile{
+    _mainFile = [mainFile copy];
+    
+    // FIXME: 加载 ‘APP Quick Data’
+}
 -(void)loadDefaultComponentFromPlist:(NSString*)filename toComponentDict:(NSMutableDictionary*)componentDict{
     NSString *path = [[NSBundle mainBundle] pathForResource:filename ofType:@"plist"];
     if(nil == path){
@@ -40,8 +48,8 @@ static NSString * const kDefaulteScript = @"QuickInitScript";
     }
     
     NSDictionary *script = [[NSDictionary alloc] initWithContentsOfFile:path];
-    
-    id value = script[@"Component"];
+    self.mainQuickFile = script[kMainFile];
+    id value = script[kComponent];
     if([value isKindOfClass:NSArray.class]){
         NSArray *components = value;
         for (NSString *component in components) {
@@ -55,21 +63,24 @@ static NSString * const kDefaulteScript = @"QuickInitScript";
         }
     }
 }
-+(XXquickFactory*)factory{
++(QuickLoader*)defaultLoader{
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        _instance = [XXquickFactory new];
+        _instance = [QuickLoader new];
     });
     return _instance;
+}
++ (void)setMainFile:(NSString*)mainFile{
+    [QuickLoader defaultLoader].mainFile = mainFile;
 }
 + (BOOL)quick:(id)obj data:(nonnull id)data{
     NSString *cls = [obj quick_class];
     if(nil == cls){
         cls = NSStringFromClass([obj class]);
     }
-    NSString *quickCls = [self findRelationshipClass:cls AtClasss:[XXquickFactory factory].classToComponent.allKeys];
+    NSString *quickCls = [self findRelationshipClass:cls AtClasss:[QuickLoader defaultLoader].classToComponent.allKeys];
     if(nil == quickCls){
-        NSLog(@"[XXquickFactory] [quick] 没有对应的QuickClass。obj:%@ obj.class:%@ obj.quick_class:%@ data:%@",
+        NSLog(@"[QuickLoader] [quick] 没有对应的QuickClass。obj:%@ obj.class:%@ obj.quick_class:%@ data:%@",
               obj,
               NSStringFromClass([obj class]),
               [obj quick_class],
@@ -78,9 +89,9 @@ static NSString * const kDefaulteScript = @"QuickInitScript";
     }
     
     
-    id<XXquickComponentDelegate> component = [XXquickFactory factory].classToComponent[quickCls];
+    id<XXquickComponentDelegate> component = [QuickLoader defaultLoader].classToComponent[quickCls];
     if(nil == component){
-        NSLog(@"[XXquickFactory] [quick] 没有对应的Component。obj:%@ obj.class:%@ obj.quick_class:%@ data:%@",
+        NSLog(@"[QuickLoader] [quick] 没有对应的Component。obj:%@ obj.class:%@ obj.quick_class:%@ data:%@",
               obj,
               NSStringFromClass([obj class]),
               [obj quick_class],
@@ -94,12 +105,12 @@ static NSString * const kDefaulteScript = @"QuickInitScript";
         NSError *error = nil;
         id jobj = [NSJSONSerialization JSONObjectWithData:jdata options:kNilOptions error:&error];
         if(error){
-            NSLog(@"[XXquickFactory] [quick] 转换到JSON失败。obj:%@ data:%@ error:%@", obj, data, error);
+            NSLog(@"[QuickLoader] [quick] 转换到JSON失败。obj:%@ data:%@ error:%@", obj, data, error);
             return NO;
         }
         
         if(![jobj isKindOfClass:NSDictionary.class]){
-            NSLog(@"[XXquickFactory] [quick] JOBJ并不是NSDictionary类型。");
+            NSLog(@"[QuickLoader] [quick] JOBJ并不是NSDictionary类型。");
             return NO;
         }
         
@@ -119,7 +130,7 @@ static NSString * const kDefaulteScript = @"QuickInitScript";
         return;
     }
     
-    [XXquickFactory factory].classToComponent[[cls targetClass]] = cls;
+    [QuickLoader defaultLoader].classToComponent[[cls targetClass]] = cls;
 }
 
 + (nullable NSString*)findRelationshipClass:(NSString*)class AtClasss:(NSArray<NSString*>*)classStrings{

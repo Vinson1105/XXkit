@@ -8,8 +8,11 @@
 
 #import "QuickComponentUINavigationBar.h"
 #import <UIKit/UIKit.h>
+#import "../XXocUtils.h"
 
 static NSString * const kTranslucent = @"Translucent";
+static NSString * const kBackgroundColor = @"BackgroundColor";
+static NSString * const kBackItemColor = @"BackItemColor";
 
 @implementation QuickComponentUINavigationBar
 + (NSString *)targetClass{
@@ -22,6 +25,17 @@ static NSString * const kTranslucent = @"Translucent";
     if([key isEqualToString:kTranslucent]){
         navigationBar.translucent = [value boolValue];
     }
+    
+    // MARK: BackgroundColor
+    else if([key isEqualToString:kBackgroundColor]){
+        navigationBar.barTintColor = [XXocUtils autoColor:value];
+    }
+    
+    // MARK: BackItemColor
+    else if([key isEqualToString:kBackItemColor]){
+        navigationBar.tintColor = [XXocUtils autoColor:value];
+    }
+    
     else{
         [super obj:obj key:key value:value];
     }
