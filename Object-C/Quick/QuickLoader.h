@@ -14,9 +14,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface QuickLoader : NSObject
 +(UIViewController*)createViewController:(NSString*)cls;
 
-+(void)setMainFile:(NSString*)mainFile;
++(void)setMainQuickDataWithFileName:(NSString*)fileName bundle:(nullable NSBundle*)bundle;
++(void)setQuickComponentWithClass:(NSString*)component;
+
++(BOOL)page:(UIViewController*)obj;
 +(BOOL)item:(id)obj data:(id)data;
-+(void)installComponentClass:(NSString*)component;
 @end
 
 NS_ASSUME_NONNULL_END
