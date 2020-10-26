@@ -12,8 +12,16 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface QuickLoader : NSObject
+/**
+ 根据类名创建UIViewController，会尝试UIStoryboard和一般加载，UIStoryboard仅支持NSBundle.mainBundle。
+ */
 +(UIViewController*)createViewController:(NSString*)cls;
 
+/**
+ 设置多UIViewController的Quick配置数据文件。
+ @param fileName 文件名称
+ @param bundle 文件包
+ */
 +(void)setMainQuickDataWithFileName:(NSString*)fileName bundle:(nullable NSBundle*)bundle;
 +(void)setQuickComponentWithClass:(NSString*)component;
 
