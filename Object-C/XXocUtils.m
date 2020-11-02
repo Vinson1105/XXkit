@@ -150,6 +150,22 @@ static NSDateFormatter *_dateFormatter;
     else if([obj isKindOfClass:UIColor.class]){
         return obj;
     }
+    else if([obj isKindOfClass:NSArray.class]&&[obj count]>0){
+        // 0:非暗黑模式下 1:暗黑模式下
+        UIColor *color = nil;
+        if (@available(iOS 13.0, *)) {
+            color = [UIColor colorWithDynamicProvider:^UIColor * _Nonnull(UITraitCollection * _Nonnull trait) {
+                if (trait.userInterfaceStyle == UIUserInterfaceStyleDark && [obj count]>1) {
+                    return [XXocUtils autoColor:obj[1]];
+                } else {
+                    return [XXocUtils autoColor:obj[0]];
+                }
+            }];
+        } else {
+            color = [XXocUtils autoColor:obj[0]];
+        }
+        return color;
+    }
     else{
         return nil;
     }
@@ -401,6 +417,30 @@ static NSDateFormatter *_dateFormatter;
     UIGraphicsEndImageContext();
     
     return image;
+}
++ (UIImage*)autoImage:(id)obj{
+    if([obj isKindOfClass:NSString.class]){
+        return [UIImage imageNamed:obj];
+    }
+    else if([obj isKindOfClass:NSArray.class]){
+        // 0:非暗黑模式下 1:暗黑模式下
+        if (@available(iOS 13.0, *)) {
+            if(UITraitCollection.currentTraitCollection.userInterfaceStyle==UIUserInterfaceStyleDark && [obj count]>1){
+                return [XXocUtils autoImage:obj[1]];
+            }
+            else{
+                return [XXocUtils autoImage:obj[0]];
+            }
+        } else {
+            return [XXocUtils autoImage:obj[0]];
+        }
+    }
+    else if([obj isKindOfClass:UIImage.class]){
+        return obj;
+    }
+    else{
+        return nil;
+    }
 }
 
 #pragma mark - <权限>

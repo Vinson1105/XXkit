@@ -134,6 +134,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - <Image>
 + (UIImage*)imageFromColor:(UIColor*)color size:(CGSize)size;
++ (UIImage*)autoImage:(id)obj;
 
 #pragma mark - <权限>
 + (void)anthorizedCameraCheckAtViewController:(UIViewController*)viewController

@@ -13,8 +13,11 @@
 static NSString * const kTitle = @"Title";
 
 static NSString * const kNavigationBar = @"NavigationBar";
+static NSString * const kNavigationbarHidden = @"NavigationBarHidden";
+static NSString * const kNavigationItem = @"NavigationItem";
 static NSString * const kView = @"View";
 static NSString * const kSubView = @"SubView";
+static NSString * const kBottomBarHidden = @"BottomBarHidden";
 
 @implementation QuickComponentUIViewController
 + (NSString *)targetClass{
@@ -37,6 +40,26 @@ static NSString * const kSubView = @"SubView";
     else if([key isEqualToString:kNavigationBar]){
         if([value isKindOfClass:NSDictionary.class]){
             [viewController.navigationController.navigationBar quick_reset:value];
+        }
+        else{
+            [self unexecutedKey:key value:value];
+        }
+    }
+    
+    // MARK: NavigationBarHidden
+    else if([key isEqualToString:kNavigationbarHidden]){
+        if([value isKindOfClass:NSNumber.class]){
+            viewController.navigationController.navigationBarHidden = [value boolValue];
+        }
+        else{
+            [self unexecutedKey:key value:value];
+        }
+    }
+        
+    // MARK: NavigationItem
+    else if([key isEqualToString:kNavigationItem]){
+        if([value isKindOfClass:NSDictionary.class]){
+            [viewController.navigationItem quick_reset:value];
         }
         else{
             [self unexecutedKey:key value:value];
@@ -71,6 +94,17 @@ static NSString * const kSubView = @"SubView";
             [self unexecutedKey:key value:value];
         }
     }
+    
+    // MARK: BottomBarHidden
+    else if([key isEqualToString:kBottomBarHidden]){
+        if([value isKindOfClass:NSNumber.class]){
+            viewController.hidesBottomBarWhenPushed = [value boolValue];
+        }
+        else{
+            [self unexecutedKey:key value:value];
+        }
+    }
+    
     else{
         [super obj:obj key:key value:value];
     }

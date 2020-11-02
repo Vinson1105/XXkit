@@ -9,5 +9,10 @@
 #import "QuickComponentXXtextFieldShell.h"
 
 @implementation QuickComponentXXtextFieldShell
-
++ (NSString *)targetClass{
+    return NSStringFromClass()
+}
++ (void)obj:(id)obj key:(NSString *)key value:(id)value{
+    
+}
 @end
