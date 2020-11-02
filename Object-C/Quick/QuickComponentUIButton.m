@@ -10,8 +10,8 @@
 #import <UIKit/UIKit.h>
 #import "../XXocUtils.h"
 
-static NSString * const kTitle = @"Title";
-static NSString * const kTitleColor = @"TitleColor";
+static NSString * const kText = @"Text";
+static NSString * const kTextColor = @"TextColor";
 static NSString * const kImage = @"Image";
 
 static NSString * const kNormal = @"Normal";
@@ -29,7 +29,7 @@ static NSString * const kSelectedAndDisabled = @"SelectedDisabled";
     UIButton *button = obj;
     
     // MARK: Title
-    if([key isEqualToString:kTitle]){
+    if([key isEqualToString:kText]){
         if([value isKindOfClass:NSString.class]){
             [button setTitle:value forState:UIControlStateNormal];
         }
@@ -44,7 +44,7 @@ static NSString * const kSelectedAndDisabled = @"SelectedDisabled";
     }
     
     // MARK: TitleColor
-    else if([key isEqualToString:kTitleColor]){
+    else if([key isEqualToString:kTextColor]){
         if([value isKindOfClass:NSString.class] || [value isKindOfClass:UIColor.class]){
             UIColor * color = [XXocUtils autoColor:value];
             if(color){
