@@ -10,7 +10,7 @@
 
 @implementation QuickComponentXXtextFieldShell
 + (NSString *)targetClass{
-    return NSStringFromClass()
+    return @"";
 }
 + (void)obj:(id)obj key:(NSString *)key value:(id)value{
     
