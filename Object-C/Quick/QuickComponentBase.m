@@ -9,7 +9,6 @@
 #import "QuickComponentBase.h"
 
 @interface QuickComponentBase() <XXquickComponentDelegate>
-
 @end
 
 @implementation QuickComponentBase
