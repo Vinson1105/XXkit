@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol XXquickComponentDelegate <NSObject>
+@protocol QuickComponentDelegate <NSObject>
 +(NSString*)targetClass;
 +(BOOL)quick:(id)obj kvdata:(NSDictionary*)kvdate;
 @end
