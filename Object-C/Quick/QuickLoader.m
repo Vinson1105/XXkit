@@ -223,6 +223,7 @@ static NSString * const kMainQuickFile = @"MainQuickFile";
             break;
         }
         else {
+            // 在
             for(Class tcls = srcClass; tcls; tcls = ((__bridge struct simulation_objc_class *)(tcls))->superclass) {
                 if(tcls == destClass) {
                     kind = destString;
@@ -232,8 +233,8 @@ static NSString * const kMainQuickFile = @"MainQuickFile";
         }
     }
     
-    if(member) return member;
-    if(kind) return kind;
+    if(member) return member;   // 优先同一类型
+    if(kind) return kind;       // 其次基类
     return nil;
 }
 
