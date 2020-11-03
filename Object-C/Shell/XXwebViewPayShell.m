@@ -127,7 +127,7 @@
 }
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler{
     NSString *urlString = [navigationAction.request.URL.absoluteString stringByRemovingPercentEncoding];
-    NSLog(@"\n[XXwebViewPayShell] (backcount:%d) %@", webView.backForwardList.backList.count, urlString);
+    NSLog(@"\n[XXwebViewPayShell] (backcount:%lu) %@", (unsigned long)webView.backForwardList.backList.count, urlString);
     
     if([urlString hasPrefix:_rootUrlSuffix]){
         self.indexForBeforePay = -1;
