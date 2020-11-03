@@ -145,7 +145,12 @@ static NSDateFormatter *_dateFormatter;
 }
 + (UIColor *)autoColor:(id)obj{
     if([obj isKindOfClass:NSString.class]){
-        return [self colorFromHexString:obj];
+        if(NSOrderedSame == [obj compare:@"transparent" options:NSCaseInsensitiveSearch]){
+            return UIColor.clearColor;
+        }
+        else{
+            return [self colorFromHexString:obj];
+        }
     }
     else if([obj isKindOfClass:UIColor.class]){
         return obj;
@@ -472,5 +477,24 @@ static NSDateFormatter *_dateFormatter;
         }];
         
     }
+}
+
+#pragma mark - <AttributeString>
++ (void)attributeString:(NSMutableAttributedString*)aString color:(id)color matchString:(nullable NSString*)mString{
+    UIColor *c = [XXocUtils autoColor:color];
+    NSRange range = NSMakeRange(0, aString.string.length);
+    if(mString){
+        range = [aString.string rangeOfString:mString];
+    }
+    if(c){
+        [aString addAttribute:NSForegroundColorAttributeName value:c range:range];
+    }
+}
++ (void)attributeString:(NSMutableAttributedString*)aString font:(UIFont*)font matchString:(nullable NSString*)mString{
+    NSRange range = NSMakeRange(0, aString.string.length);
+    if(mString){
+        range = [aString.string rangeOfString:mString];
+    }
+    [aString addAttribute:NSFontAttributeName value:font range:range];
 }
 @end

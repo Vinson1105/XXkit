@@ -141,6 +141,10 @@ NS_ASSUME_NONNULL_BEGIN
                                         title:(NSString*)title
                                       message:(NSString*)message
                                       succeed:(void(^)(void))succeed;
+
+#pragma mark - <AttributeString>
++ (void)attributeString:(NSMutableAttributedString*)aString color:(id)color matchString:(nullable NSString*)mString;
++ (void)attributeString:(NSMutableAttributedString*)aString font:(UIFont*)font matchString:(nullable NSString*)mString;
 @end
 
 NS_ASSUME_NONNULL_END
