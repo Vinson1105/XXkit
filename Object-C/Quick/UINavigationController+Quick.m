@@ -13,15 +13,9 @@
 @implementation UINavigationController(Quick)
 + (void)load{
     [XXocUtils replaceMethod:[self class] src:@selector(pushViewController:animated:) dest:@selector(quick_pushViewController:animated:)];
-    [XXocUtils replaceMethod:[self class] src:@selector(initWithRootViewController:) dest:@selector(quick_initWithRootViewController:)];
 }
 - (void)quick_pushViewController:(UIViewController *)viewController animated:(BOOL)animated{
-    [QuickLoader page:viewController];
     [self quick_pushViewController:viewController animated:animated];
-}
-- (instancetype)quick_initWithRootViewController:(UIViewController *)rootViewController{
-    id obj = [self quick_initWithRootViewController:rootViewController];
-    [QuickLoader page:rootViewController];
-    return obj;
+    [QuickLoader page:viewController];
 }
 @end
