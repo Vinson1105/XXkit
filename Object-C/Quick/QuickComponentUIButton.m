@@ -9,10 +9,14 @@
 #import "QuickComponentUIButton.h"
 #import <UIKit/UIKit.h>
 #import "../XXocUtils.h"
+#import "../Category/UIButton+StateSettings.h"
 
 static NSString * const kText = @"Text";
 static NSString * const kTextColor = @"TextColor";
 static NSString * const kImage = @"Image";
+static NSString * const kBackgroundColor = @"BackgroundColor";
+static NSString * const kBorderColor = @"BorderColor";
+static NSString * const kFont = @"Font";
 
 static NSString * const kNormal = @"Normal";
 static NSString * const kSelected = @"Selected";
@@ -86,6 +90,41 @@ static NSString * const kSelectedAndDisabled = @"SelectedDisabled";
             [self unexecutedKey:key value:value];
         }
     }
+    
+    // MARK: BackgroundColor
+    else if([key isEqualToString:kBackgroundColor]){
+        if([value isKindOfClass:NSDictionary.class]){
+            [self dictionary:value containsBlock:^(id valueForKey, UIControlState state) {
+                [button setBackgroundColor:[XXocUtils autoColor:valueForKey] forState:state];
+            }];
+        }
+        else{
+            [super obj:obj key:key value:value];
+        }
+    }
+    
+    // MARK: BorderColor
+    else if([key isEqualToString:kBorderColor]){
+        if([value isKindOfClass:NSDictionary.class]){
+            [self dictionary:value containsBlock:^(id valueForKey, UIControlState state) {
+                [button setBorderColor:[XXocUtils autoColor:valueForKey] forState:state];
+            }];
+        }
+        else{
+            [super obj:obj key:key value:value];
+        }
+    }
+    
+    // MARK: Font
+    else if([key isEqualToString:kFont]){
+        if([value isKindOfClass:NSNumber.class]){
+            button.titleLabel.font = [UIFont systemFontOfSize:[value floatValue]];
+        }
+        else{
+            [self unexecutedKey:key value:value];
+        }
+    }
+    
     else{
         [super obj:obj key:key value:value];
     }
