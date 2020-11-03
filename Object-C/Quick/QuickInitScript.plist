@@ -6,6 +6,7 @@
 	<string>app.json</string>
 	<key>QuickComponent</key>
 	<array>
+		<string>QuickComponentUITextField</string>
 		<string>QuickComponentUIImageView</string>
 		<string>QuickComponentUINavigationBar</string>
 		<string>QuickComponentUIViewController</string>
