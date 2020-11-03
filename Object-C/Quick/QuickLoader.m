@@ -177,7 +177,7 @@ static NSString * const kMainQuickFile = @"MainQuickFile";
     }
     
     
-    id<XXquickComponentDelegate> component = [QuickLoader defaultLoader].classToComponent[quickCls];
+    id<QuickComponentDelegate> component = [QuickLoader defaultLoader].classToComponent[quickCls];
     if(nil == component){
         NSLog(@"[QuickLoader] [quick] 没有对应的Component。obj:%@ obj.class:%@ obj.quick_class:%@ data:%@",
               obj,
