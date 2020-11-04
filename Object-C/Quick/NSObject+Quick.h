@@ -23,8 +23,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,copy) NSString *quick_name;
 
 /**
- 标识对象的使用‘QuickComponent’，根据此值，选择匹配的‘QuickComponent.targetClass’进行加载数据。
- 缺省时，将根据对象的类型，优先匹配相等的‘QuickComponent.targetClass’，再去匹配‘isKindOfClass’。
+ NSObject.quick_class需要是匹配的Component.targetClass的基类或者同类。优先匹配同类，其次匹配其基类。
+ NSObject.quick_class缺省时，使用NSObject.class。
+ 
  component1.targetClass{
     return NSStringFromClass(UILabel.class);
  }
@@ -32,13 +33,18 @@ NS_ASSUME_NONNULL_BEGIN
     return NSStringFromClass(UIView.class);
  }
  component3.targetClass{
-    return NSStringFromClass(UIButton.class);
+    return NSStringFromClass(CustomLabel.class);
  }
  
- CustomLabel.quick_class = @"UILabel"，则匹配到component1；
- CustomLabel.quick_class = nil，则优先匹配到component1，如果没有则匹配到component2；
+ CustomLabel.quick_class = @"UILabel"，则匹配到component1，其次是component2；
+ CustomLabel.quick_class = nil，则匹配到component3，若是派生自UILabel则其次是component1，若是派生自UIView则其次是component2；
  */
 @property (nonatomic,copy) NSString *quick_class;
+
+/**
+ 保存自身的子对象
+ */
+@property (nonatomic,strong,readonly) NSDictionary *quick_nameToSubObject;
 
 /**
  使用QuickData进行重置配置
@@ -51,6 +57,21 @@ NS_ASSUME_NONNULL_BEGIN
  @param bundle 文件所在的bundle，默认是用[NSBundle mainBundle]；
  */
 -(void)quick_resetFromJFile:(NSString*)file bundle:(nullable NSBundle*)bundle;
+
+/**
+ 添加子对象，obj需要具有有效的quick_name
+ */
+-(void)quick_addSubObject:(id)obj;
+
+/**
+ 移除子对象，obj需要具有有效的quick_name
+ */
+-(void)quick_removeSubObject:(id)obj;
+
+/**
+ 移除子对象
+ */
+-(void)quick_removeSubObjectWithName:(NSString*)name;
 @end
 
 NS_ASSUME_NONNULL_END

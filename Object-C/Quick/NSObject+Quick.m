@@ -37,6 +37,30 @@
     
     [self quick_reset:jobj];
 }
+-(void)quick_addSubObject:(id)obj{
+    NSString *name = [obj quick_name];
+    if(nil == name){
+        return;
+    }
+    NSMutableDictionary *dict = (NSMutableDictionary*)self.quick_nameToSubObject;
+    dict[name] = obj;
+}
+-(void)quick_removeSubObject:(id)obj{
+    NSString *name = [obj quick_name];
+    if(nil == name){
+        return;
+    }
+    NSMutableDictionary *dict = (NSMutableDictionary*)self.quick_nameToSubObject;
+    [dict removeObjectForKey:name];
+}
+-(void)quick_removeSubObjectWithName:(NSString*)name{
+    if(nil == name){
+        return;
+    }
+    NSMutableDictionary *dict = (NSMutableDictionary*)self.quick_nameToSubObject;
+    [dict removeObjectForKey:name];
+}
+
 - (void)setQuick_name:(NSString *)quick_name{
     objc_setAssociatedObject(self, "quick_name", quick_name, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
@@ -48,5 +72,14 @@
 }
 - (NSString *)quick_class{
     return objc_getAssociatedObject(self, "quick_class");
+}
+- (NSDictionary *)quick_nameToSubObject{
+    id obj = objc_getAssociatedObject(self, "quick_nameToSubObject");
+    if(nil == obj){
+        NSMutableDictionary *dict = [NSMutableDictionary new];
+        obj = dict;
+        objc_setAssociatedObject(self, "quick_nameToSubObject", obj, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return obj;
 }
 @end
