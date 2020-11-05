@@ -37,7 +37,7 @@ static NSString * const kQuickClass = @"quick_class";
     if([self isMemberOfClass:QuickComponentBase.class]){
         @throw [NSExpression expressionWithFormat:@"[%@] [obj: key: value:] 需要重载。", NSStringFromClass(self.class)];
     }
-    else if([key isEqualToString:kSubObject] || [value isKindOfClass:NSArray.class]){
+    else if([key isEqualToString:kSubObject] && [value isKindOfClass:NSArray.class]){
         NSArray *array = value;
         for (id info in array) {
             id obj = [self instanceObject:info];

@@ -8,6 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
+#define CONST_STR(name) static NSString * const k##name = @ #name;
+#define IS_KEY_MATCH(str) [key isEqualToString:str]
+#define IS_VALUE_KIND(cls) [value isKindOfClass:cls.class]
+
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol QuickComponentDelegate <NSObject>
