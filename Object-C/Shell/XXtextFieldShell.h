@@ -14,10 +14,11 @@
  */
 
 #import <UIKit/UIKit.h>
+#import "../Quick/QuickComponentUITextField.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface XXtextFieldShell : NSObject<UITextFieldDelegate>
+@interface XXtextFieldShell : QuickComponentUITextField<UITextFieldDelegate>
 /** 目标UITextField */
 @property (nonatomic,readonly,strong) UITextField *target;
 /** 正则表达式 */

@@ -1,6 +1,22 @@
 #import "XXtextFieldShell.h"
 #import "XXocUtils.h"
 
+CONST_STR(Expression)
+CONST_STR(StrongMatchMode)
+CONST_STR(MaxLength)
+CONST_STR(Shell)
+
+CONST_STR(LeftView)
+CONST_STR(RightView)
+    CONST_STR(Image)
+    CONST_STR(Size)
+    CONST_STR(Margin)
+    CONST_STR(Spacing)
+    CONST_STR(SecureON)
+    CONST_STR(SecureOFF)
+    CONST_STR(Clear)
+
+
 @interface XXtextFieldShell()
 @property (nonatomic,copy,nullable) NSString *lastText;     // 上一次string
 @property (nonatomic,strong) NSPredicate *predicate;        // 需要匹配的正则表达式
@@ -218,6 +234,81 @@
     }
     if(_onEditEnd){
         _onEditEnd(self);
+    }
+}
+
+#pragma mark - <Quick>
++ (NSString *)targetClass{
+    return NSStringFromClass(XXtextFieldShell.class);
+}
++ (void)obj:(id)obj key:(NSString *)key value:(id)value{
+    XXtextFieldShell *shell = obj;
+    
+    // MARK: Expression
+    if(IS_KEY_MATCH(kExpression)){
+        if([value isKindOfClass:NSString.class]){
+            shell.expression = value;
+        }
+        else{
+            [self unexecutedKey:key value:value];
+        }
+    }
+    
+    // MARK: StrongMatchMode
+    else if(IS_KEY_MATCH(kStrongMatchMode)){
+        if(IS_VALUE_KIND(NSNumber)){
+            shell.strongMatchMode = [value boolValue];
+        }
+        else{
+            [self unexecutedKey:key value:value];
+        }
+    }
+    
+    // MARK: Shell
+    else if(IS_KEY_MATCH(kShell)){
+        if(IS_VALUE_KIND(UITextField)){
+            [shell shell:value];
+        }
+        else{
+            [self unexecutedKey:key value:value];
+        }
+    }
+    
+    // MARK: LeftView
+    else if(IS_KEY_MATCH(kLeftView)){
+        if(IS_VALUE_KIND(NSDictionary)){
+            NSDictionary *dict = value;
+        }
+        else{
+            [super obj:obj key:key value:value];
+        }
+    }
+    
+    // MARK: RightView
+    else if (IS_KEY_MATCH(kRightView)){
+        if(IS_VALUE_KIND(NSDictionary)){
+            NSDictionary *dict = value;
+            UIImage *clearImage = dict[kClear] ? [XXocUtils autoImage:dict[kClear]] : nil;
+            UIImage *secureONImage = dict[kSecureON] ? [XXocUtils autoImage:dict[kSecureON]] : nil;
+            UIImage *secureOFFImage = dict[kSecureOFF] ? [XXocUtils autoImage:dict[kSecureOFF]] : nil;
+            CGSize size = dict[kSize] ? CGSizeFromString(dict[kSize]) : CGSizeMake(30, 30);
+            CGFloat margin = dict[kMargin] ? [dict[kMargin] floatValue] : 0;
+            CGFloat spacing = dict[kSpacing] ? [dict[kSpacing] floatValue] : 0;
+            
+            [shell configClear:clearImage
+                      secureON:secureONImage
+                     secureOFF:secureOFFImage
+                          size:size
+                        margin:margin
+                       spacing:spacing];
+        }
+        else{
+            [super obj:obj key:key value:value];
+        }
+    }
+    
+    else{
+        [super obj:obj key:key value:value];
     }
 }
 @end
