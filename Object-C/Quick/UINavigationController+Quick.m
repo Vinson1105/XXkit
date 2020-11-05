@@ -14,6 +14,10 @@
 + (void)load{
     [XXocUtils replaceMethod:[self class] src:@selector(pushViewController:animated:) dest:@selector(quick_pushViewController:animated:)];
 }
+
+/**
+ 由于在initWithRoot方法中也会调用pushViewController，所以在无需在init中实现
+ */
 - (void)quick_pushViewController:(UIViewController *)viewController animated:(BOOL)animated{
     [self quick_pushViewController:viewController animated:animated];
     [QuickLoader page:viewController];
