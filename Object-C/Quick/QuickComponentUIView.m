@@ -10,10 +10,10 @@
 #import <UIKit/UIKit.h>
 #import "../XXocUtils.h"
 
-static NSString * const kCornerRadius = @"CornerRadius";
-static NSString * const kBorderWidth = @"BorderWidth";
-static NSString * const kBorderColor = @"BorderColor";
-static NSString * const kBackgroundColor = @"BackgroundColor";
+CONST_STR(BackgroundColor)
+CONST_STR(BorderColor)
+CONST_STR(BorderWidth)
+CONST_STR(CornerRadius)
 
 @implementation QuickComponentUIView
 + (NSString *)targetClass{
@@ -21,16 +21,19 @@ static NSString * const kBackgroundColor = @"BackgroundColor";
 }
 + (void)obj:(id)obj key:(NSString*)key value:(id)value{
     UIView *view = obj;
+    
+    // MARK: CornerRadius
     if([key isEqualToString:kCornerRadius]){
-        // MARK: CornerRadius
         view.layer.cornerRadius = [value floatValue];
     }
+    
+    // MARK: BorderWidth
     else if([key isEqualToString:kBorderWidth]){
-        // MARK: BorderWidth
         view.layer.borderWidth = [value floatValue];
     }
+    
+    // MARK: BorderColor
     else if([key isEqualToString:kBorderColor]){
-        // MARK: BorderColor
         UIColor *color = [XXocUtils autoColor:value];
         if(color){
             view.layer.borderColor = [value CGColor];
@@ -39,8 +42,9 @@ static NSString * const kBackgroundColor = @"BackgroundColor";
             [self unexecutedKey:key value:value];
         }
     }
+    
+    // MARK: BackgroundColor
     else if([key isEqualToString:kBackgroundColor]){
-        // MARK: BackgroundColor
         UIColor *color = [XXocUtils autoColor:value];
         if(color){
             view.backgroundColor = color;
@@ -50,6 +54,7 @@ static NSString * const kBackgroundColor = @"BackgroundColor";
         }
     }
     else{
+        NSString * string = kBackgroundColor;
         [super obj:obj key:key value:value];
     }
 }
