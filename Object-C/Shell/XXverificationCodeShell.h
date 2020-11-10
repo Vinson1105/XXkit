@@ -9,7 +9,7 @@ typedef enum : NSUInteger {
     XXverificationCodeShellModePhoneNumber,
 } XXverificationCodeShellMode;
 
-@interface XXverificationCodeShell : NSObject
+@interface XXverificationCodeShell : QuickComponentBase
 @property (nonatomic,strong,readonly) XXtextFieldShell *accountShell;
 @property (nonatomic,strong,readonly) XXtextFieldShell *codeShell;
 @property (nonatomic,strong,readonly) XXbuttonLimitShell *requestShell;

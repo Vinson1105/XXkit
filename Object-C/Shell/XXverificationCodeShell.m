@@ -4,6 +4,12 @@
 #define kEmaillExpression @"[\\w!#$%&'*+/=?^_`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\\w](?:[\\w-]*[\\w])?\\.)+[\\w](?:[\\w-]*[\\w])?"
 #define kPhoneNumberExpression @""
 
+CONST_STR(Shell)
+CONST_STR(Account)
+CONST_STR(Code)
+CONST_STR(Request)
+CONST_STR(Mode)
+
 @implementation XXverificationCodeShell
 - (void)shellAccount:(UITextField*)account code:(UITextField*)code request:(UIButton*)request mode:(XXverificationCodeShellMode)mode{
     XXOC_WS
@@ -45,6 +51,27 @@
 - (void)onButtonTouchUpInside:(UIButton*)sender{
     if(_onRequest){
         self.onRequest(self, self.accountShell.target.text);
+    }
+}
+
+#pragma mark - <Quick>
++ (NSString *)targetClass{
+    return NSStringFromClass([self class]);
+}
++ (void)obj:(id)obj key:(NSString *)key value:(id)value{
+    XXverificationCodeShell *shell = obj;
+    
+    // MARK: Shell
+    if(IS_KEY_MATCH(kShell) && IS_VALUE_KIND(NSDictionary)){
+        if(value[kAccount] && value[kCode] && value[kRequest] && value[kMode]){
+            
+        }
+        else{
+            [super obj:obj key:key value:value];
+        }
+    }
+    else{
+        [super obj:obj key:key value:value];
     }
 }
 @end

@@ -16,6 +16,11 @@ CONST_STR(BorderWidth)
 CONST_STR(CornerRadius)
 
 @implementation QuickComponentUIView
+QUICK_PROPERTY(BackgroundColor, color)
+QUICK_PROPERTY(BorderColor, color)
+QUICK_PROPERTY(BorderWith, float)
+QUICK_PROPERTY(CornerRadius, float)
+
 + (NSString *)targetClass{
     return NSStringFromClass(UIView.class);
 }

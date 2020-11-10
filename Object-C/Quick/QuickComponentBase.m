@@ -9,6 +9,8 @@
 #import "QuickComponentBase.h"
 #import "NSObject+Quick.h"
 
+#define QUICK_Q_SEL(name) @selector(q_##name)
+
 static NSString * const kSubObject = @"SubObject";
 static NSString * const kClass = @"Class";
 static NSString * const kQuickName = @"quick_name";
@@ -34,6 +36,9 @@ static NSString * const kQuickClass = @"quick_class";
     return nil;
 }
 + (void)obj:(id)obj key:(NSString*)key value:(id)value{
+#ifdef UsingQuickPMInterface
+
+#else
     if([self isMemberOfClass:QuickComponentBase.class]){
         @throw [NSExpression expressionWithFormat:@"[%@] [obj: key: value:] 需要重载。", NSStringFromClass(self.class)];
     }
@@ -52,6 +57,7 @@ static NSString * const kQuickClass = @"quick_class";
     else{
         [self unexecutedKey:key value:value];
     }
+#endif
 }
 +(void)unexecutedKey:(NSString*)key value:(id)value{
     NSLog(@"[%@] 未处理键值。key:%@ value:%@", NSStringFromClass(self.class), key, value);
@@ -79,4 +85,5 @@ static NSString * const kQuickClass = @"quick_class";
     }
     return nil;
 }
+
 @end

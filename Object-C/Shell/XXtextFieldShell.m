@@ -6,15 +6,15 @@ CONST_STR(StrongMatchMode)
 CONST_STR(MaxLength)
 CONST_STR(Shell)
 
+CONST_STR(Image)
+CONST_STR(Size)
+CONST_STR(Margin)
+CONST_STR(Spacing)
+CONST_STR(SecureON)
+CONST_STR(SecureOFF)
+CONST_STR(Clear)
 CONST_STR(LeftView)
 CONST_STR(RightView)
-    CONST_STR(Image)
-    CONST_STR(Size)
-    CONST_STR(Margin)
-    CONST_STR(Spacing)
-    CONST_STR(SecureON)
-    CONST_STR(SecureOFF)
-    CONST_STR(Clear)
 
 
 @interface XXtextFieldShell()
@@ -276,8 +276,11 @@ CONST_STR(RightView)
     
     // MARK: LeftView
     else if(IS_KEY_MATCH(kLeftView)){
-        if(IS_VALUE_KIND(NSDictionary)){
-            NSDictionary *dict = value;
+        if(IS_VALUE_KIND(NSDictionary) && value[kImage] && value[kSize]){
+            UIImage *image = [XXocUtils autoImage:value[kImage]];
+            CGSize size = CGSizeFromString(value[kSize]);
+            
+            [shell configLogo:image size:size];
         }
         else{
             [super obj:obj key:key value:value];
@@ -295,12 +298,17 @@ CONST_STR(RightView)
             CGFloat margin = dict[kMargin] ? [dict[kMargin] floatValue] : 0;
             CGFloat spacing = dict[kSpacing] ? [dict[kSpacing] floatValue] : 0;
             
-            [shell configClear:clearImage
-                      secureON:secureONImage
-                     secureOFF:secureOFFImage
-                          size:size
-                        margin:margin
-                       spacing:spacing];
+            if(secureONImage && secureOFFImage){
+                [shell configClear:clearImage
+                          secureON:secureONImage
+                         secureOFF:secureOFFImage
+                              size:size
+                            margin:margin
+                           spacing:spacing];
+            }
+            else{
+                [shell configClear:clearImage size:size margin:margin];
+            }            
         }
         else{
             [super obj:obj key:key value:value];

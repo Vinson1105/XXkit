@@ -2,6 +2,13 @@
 #import "../Utility/XXtimer.h"
 #import "../XXocUtils.h"
 
+CONST_STR(Shell)
+CONST_STR(Enabled)
+CONST_STR(Format)
+CONST_STR(ClickEnterLimit)
+CONST_STR(Limit)
+CONST_STR(Duration)
+
 @interface XXbuttonLimitShell()
 @property (nonatomic,strong) XXtimer *timer;
 @end
@@ -102,6 +109,48 @@
 - (void)updateLimitText:(int)times{
     if(_format){
         [_button setTitle:[NSString stringWithFormat:_format, times] forState:UIControlStateDisabled];
+    }
+}
+
+#pragma mark - <Quick>
++ (NSString *)targetClass{
+    return NSStringFromClass(XXbuttonLimitShell.class);
+}
++ (void)obj:(id)obj key:(NSString *)key value:(id)value{
+    XXbuttonLimitShell *shell = obj;
+    
+    // MARK: Shell
+    if(IS_KEY_MATCH(kShell)){
+        [shell shell:value];
+    }
+    
+    // MARK: Enabled
+    else if(IS_KEY_MATCH(kEnabled)){
+        shell.enabled = [value boolValue];
+    }
+    
+    // MARK: Format
+    else if(IS_KEY_MATCH(kFormat)){
+        shell.format = value;
+    }
+    
+    // MARK: clickEnterLimit
+    else if(IS_KEY_MATCH(kClickEnterLimit)){
+        shell.clickEnterLimit = [value boolValue];
+    }
+    
+    // MARK: Limited
+    else if(IS_KEY_MATCH(kLimit)){
+        shell.limited = [value boolValue];
+    }
+    
+    // MARK: Duration
+    else if(IS_KEY_MATCH(kDuration)){
+        shell.duration = [value floatValue];
+    }
+    
+    else{
+        
     }
 }
 @end

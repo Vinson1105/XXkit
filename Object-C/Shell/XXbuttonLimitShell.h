@@ -12,10 +12,11 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import "../Quick/QuickComponentBase.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface XXbuttonLimitShell : NSObject
+@interface XXbuttonLimitShell : QuickComponentBase
 @property (nonatomic,strong,readonly) UIButton *button; // 目标button
 @property (nonatomic,assign) BOOL enabled;              // 使能按键，不等于limit，limit的优先级大于enabled
 @property (nonatomic,copy) NSString *format;            // 限制时倒计时的显示格式，如："%ds重新获取"，其中‘%d’是必要字符
