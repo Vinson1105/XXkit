@@ -64,7 +64,6 @@ CONST_STR(Mode)
     // MARK: Shell
     if(IS_KEY_MATCH(kShell) && IS_VALUE_KIND(NSDictionary)){
         if(value[kAccount] && value[kCode] && value[kRequest] && value[kMode]){
-            
         }
         else{
             [super obj:obj key:key value:value];

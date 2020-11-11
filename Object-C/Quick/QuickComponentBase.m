@@ -45,13 +45,13 @@ static NSString * const kQuickClass = @"quick_class";
     else if([key isEqualToString:kSubObject] && [value isKindOfClass:NSArray.class]){
         NSArray *array = value;
         for (id info in array) {
-            id obj = [self instanceObject:info];
-            if(nil == obj){
+            id subObj = [self instanceObject:info];
+            if(nil == subObj){
                 NSLog(@"[%@] 对象实例化失败。info:%@", NSStringFromClass(self.class), info);
                 continue;
             }
             
-            [obj quick_addSubObject:obj];
+            [obj quick_addSubObject:subObj];
         }
     }
     else{

@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,copy) NSString *quick_class;
 
 /**
- 保存自身的子对象
+ 保存自身的子对象，一般是在UIViewController才有这个SubObject
  */
 @property (nonatomic,strong,readonly) NSDictionary *quick_nameToSubObject;
 
