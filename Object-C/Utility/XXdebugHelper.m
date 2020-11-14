@@ -12,6 +12,7 @@
 #import "../Category/UIView+Touchable.m"
 #import "../Category/UIView+Movable.h"
 
+#import "../Shell/XXviewBase.h"
 
 static XXdebugHelper *_instance = nil;
 static NSString * const kSplitOfProperty = @"=";
@@ -135,12 +136,44 @@ typedef enum : NSUInteger {
 @implementation XXproperty(Enum)
 + (void)load{
     [XXocUtils replaceMethod:[self class] src:@selector(enum_reset:) dest:@selector(reset:)];
+    [XXocUtils replaceMethod:[self class] src:@selector(enum_initWithProperty:) dest:@selector(initWithProperty:)];
 }
 - (BOOL)enum_reset:(NSString*)string{
-    
+    BOOL succeed = [self enum_reset:string];
+    if(succeed && (XXpropertyTypeMultiEnum == self.type || XXpropertyTypeSingleEnum == self.type)){
+        NSString *typeString            = [string componentsSeparatedByString:kSplitOfProperty].firstObject;
+        NSRange range                   = NSMakeRange(1, typeString.length-XXpropertyTypeMultiEnum == self.type?3:2);
+        NSString *availableItemString   = [typeString substringWithRange:range];
+        NSArray *availableItems         = [availableItemString componentsSeparatedByString:kSplitOfEnum];
+        objc_setAssociatedObject(self, "enum_availableItem", availableItems, OBJC_ASSOCIATION_COPY_NONATOMIC);
+    }
+    return succeed;
 }
 - (NSArray *)enum_availableItem{
-    
+    return objc_getAssociatedObject(self, "enum_availableItem");
+}
+-(instancetype)enum_initWithProperty:(XXproperty*)property{
+    id obj = [self enum_initWithProperty:property];
+    if(obj){
+        NSArray *availableItem = [property.enum_availableItem copy];
+        objc_setAssociatedObject(self, "enum_availableItem", availableItem, OBJC_ASSOCIATION_COPY_NONATOMIC);
+    }
+    return obj;
+}
+@end
+
+// MARK: 属性专用的TableViewCell
+@interface XXpropertyTableViewCell : UITableViewCell<XXviewBase>
+@property (nonatomic,strong) UILabel *nameLabel;
+@property (nonatomic,strong) UILabel *
+@end
+@implementation XXpropertyTableViewCell
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier{
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if(self){
+        
+    }
+    return self;
 }
 @end
 
@@ -156,15 +189,20 @@ typedef enum : NSUInteger {
     }
     return self;
 }
--(void)configPropertyName:(NSString*)name type:(NSString*)type{
+-(BOOL)addPropertyName:(NSString*)name type:(NSString*)type{
     XXproperty *property = [XXproperty propertyFromString:type];
     if(nil == property){
-        return;
+        return NO;
     }
     self.nameToProperty[name] = property;
+    return YES;
 }
 -(nullable id)getPropertyValueWithName:(NSString*)name{
-    if()
+    XXproperty *property = self.nameToProperty[name];
+    if(property){
+        return property.val;
+    }
+    return nil;
 }
 @end
 
@@ -178,6 +216,7 @@ typedef enum : NSUInteger {
 @property (nonatomic,assign,readonly) BOOL popup;
 @property (nonatomic,assign) CGRect popupFromRect;
 @property (nonatomic,strong) XXtableViewShell *tableViewShell;
+@property (nonatomic,strong) DebugSettingModel *settingModel;
 @end
 @implementation DebugSettingView
 - (instancetype)init{
@@ -233,6 +272,9 @@ typedef enum : NSUInteger {
         [self.tableViewShell configSectionRowSystemStyle:UITableViewCellStyleDefault height:40];
         [self.tableViewShell configSectionHeaderClass:nil loadType:-1 height:40];
         [self.tableViewShell configSectionFooterClass:nil loadType:-1 height:0.01];
+        
+        // model
+        self.settingModel = [DebugSettingModel new];
     }
     return self;
 }
@@ -263,7 +305,7 @@ typedef enum : NSUInteger {
             [self removeFromSuperview];
         }];
 }
-- (void)setWindow:(UIWindow *)window{
+-(void)setWindow:(UIWindow *)window{
     if(window == _window) return;
     _window = window;
     if(self.popup){
@@ -289,6 +331,22 @@ typedef enum : NSUInteger {
         
     }
 }
+-(BOOL)addPropertyName:(NSString*)name type:(NSString*)type{
+    BOOL succeed = [self.settingModel addPropertyName:name type:type];
+    if(succeed){
+        XXproperty *property = self.settingModel.nameToProperty[name];
+        [self.tableViewShell addSectionRows:@[
+            @{
+                @"Title":name,
+                @"SubTitle":[NSString stringWithFormat:@"%@",property.val],
+            }]
+                                    atIndex:0];
+    }
+    return succeed;
+}
+-(nullable id)getPropertyValueWithName:(NSString*)name{
+    return [self.settingModel getPropertyValueWithName:name];
+}
 @end
 
 // MARK: 调试器主控
@@ -296,9 +354,7 @@ typedef enum : NSUInteger {
 @property (nonatomic,weak) UIWindow *window;
 @property (nonatomic,strong) UIView *indicaterView;
 @property (nonatomic,strong) DebugSettingView *settingView;
-@property (nonatomic,strong) NSMutableDictionary *nameToType;
 @end
-
 @implementation XXdebugHelper
 +(XXdebugHelper*)sharedInstance{
     static dispatch_once_t onceToken;
@@ -310,8 +366,8 @@ typedef enum : NSUInteger {
 +(void)install:(UIWindow*)window{
     [XXdebugHelper sharedInstance].window = window;
 }
-+(void)configPropertyName:(NSString*)name type:(NSString*)type{
-    [[XXdebugHelper sharedInstance] configPropertyName:name type:type];
++(void)addPropertyName:(NSString*)name type:(NSString*)type{
+    [[XXdebugHelper sharedInstance] addPropertyName:name type:type];
 }
 +(nullable id)getPropertyWithName:(NSString*)name{
     return [[XXdebugHelper sharedInstance] getPropertyWithName:name];
@@ -337,9 +393,8 @@ typedef enum : NSUInteger {
         self.settingView = [DebugSettingView new];
         
         // name to type
-        self.nameToType = [NSMutableDictionary new];
-        [self configPropertyName:@"LogServer" type:@"string=192.168.0.1:32323"];
-        [self configPropertyName:@"LogServerEnabled" type:@"bool=0"];
+        [self addPropertyName:@"LogServer" type:@"string=192.168.0.1:32323"];
+        [self addPropertyName:@"LogServerEnabled" type:@"bool=0"];
     }
     return self;
 }
@@ -354,11 +409,14 @@ typedef enum : NSUInteger {
     }
     self.settingView.window = window;
 }
--(void)configPropertyName:(NSString*)name type:(NSString*)type{
-    self.nameToType[name] = type;
+-(void)addPropertyName:(NSString*)name type:(NSString*)type{
+    if(![self.settingView addPropertyName:name type:type]){
+        NSLog(@"[%@] 配置属性失败。（name:%@ type:%@）", NSStringFromClass(self.class), name, type);
+        return;
+    }
 }
 -(nullable id)getPropertyWithName:(NSString*)name{
-    return nil;
+    return [self.settingView getPropertyValueWithName:name];
 }
 - (void)onIndicaterViewTouched{
     [self.settingView popupFromRect:self.indicaterView.frame];

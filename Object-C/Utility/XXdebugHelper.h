@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
  [A,B,C,D]*=A,B
  其中默认是都是可以缺省的
  */
-+(void)configPropertyName:(NSString*)name type:(NSString*)type;
++(void)addPropertyName:(NSString*)name type:(NSString*)type;
 +(nullable id)getPropertyWithName:(NSString*)name;
 @end
 
