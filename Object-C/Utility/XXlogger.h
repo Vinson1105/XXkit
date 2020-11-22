@@ -11,6 +11,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface XXlogger : NSObject
++(void)normal:(NSString*)msg;
++(void)raw:(NSString*)msg;
++(void)enableServerIP:(NSString*)ip serverPort:(NSInteger)port;
++(void)enableLocalPathNodes:(NSArray<NSString*>*)nodes;
 @end
 
 NS_ASSUME_NONNULL_END

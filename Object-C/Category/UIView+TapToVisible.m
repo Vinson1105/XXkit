@@ -127,8 +127,8 @@
         NSEnumerator *enumer = ss.xx_visibleViews.objectEnumerator;
         UIView *view = nil;
         while (nil != (view = enumer.nextObject)) {
-            if(view.xx_popupConstraint && view.xx_popdownConstraint){
-                view.xx_popup = visible;
+            if(view.popup_upLayoutConstraints && view.popup_downLayoutConstraints){
+                view.popup_up = visible;
             }
             else{
                 view.hidden = !visible;

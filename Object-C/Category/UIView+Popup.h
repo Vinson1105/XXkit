@@ -8,14 +8,20 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface UIView(Popup)
-@property (nonatomic,strong) NSArray *xx_popupConstraint;
-@property (nonatomic,strong) NSArray *xx_popdownConstraint;
-@property (nonatomic,assign) BOOL xx_popup;
+@property (nonatomic,strong) NSArray *popup_upLayoutConstraints;
+@property (nonatomic,strong) NSArray *popup_downLayoutConstraints;
 
-/**
- 初始化popup的初始值，不会触发constraint的改变
- */
-- (void)xx_initPopup:(BOOL)popup;
+@property (nonatomic,copy) void(^popup_blockWhenWillUp)(void);
+@property (nonatomic,copy) void(^popup_blockWhenWillDown)(void);
+
+@property (nonatomic,copy) void(^popup_blockWhenUping)(void);
+@property (nonatomic,copy) void(^popup_blockWhenDowning)(void);
+
+@property (nonatomic,copy) void(^popup_blockWhenDidUpFinished)(void);
+@property (nonatomic,copy) void(^popup_blockWhenDidDownFinished)(void);
+
+@property (nonatomic,assign) BOOL popup_up;
+@property (nonatomic,assign) BOOL popup_active;
 @end
 
 NS_ASSUME_NONNULL_END

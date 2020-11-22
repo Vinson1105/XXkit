@@ -13,6 +13,7 @@
 #import "../Category/UIView+Movable.h"
 
 #import "../Shell/XXviewBase.h"
+#import "../Category/UIView+Popup.h"
 
 static XXdebugHelper *_instance = nil;
 static NSString * const kSplitOfProperty = @"=";
@@ -163,17 +164,54 @@ typedef enum : NSUInteger {
 @end
 
 // MARK: 属性专用的TableViewCell
-@interface XXpropertyTableViewCell : UITableViewCell<XXviewBase>
-@property (nonatomic,strong) UILabel *nameLabel;
-@property (nonatomic,strong) UILabel *
+//@interface XXpropertyTableViewCell : UITableViewCell<XXviewBase>
+//@property (nonatomic,strong) UILabel *nameLabel;
+//@property (nonatomic,strong) UILabel *
+//@end
+//@implementation XXpropertyTableViewCell
+//- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier{
+//    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+//    if(self){
+//
+//    }
+//    return self;
+//}
+//@end
+
+// MARK: 属性编辑器
+@interface XXpropertyEditView : UIView
+@property (nonatomic,strong) UIButton *okButton;
+@property (nonatomic,strong) UIButton *cancelButton;
+@property (nonatomic,strong) UIScrollView *scrollView;
 @end
-@implementation XXpropertyTableViewCell
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier{
-    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-    if(self){
-        
-    }
-    return self;
+static XXpropertyEditView *_editViewInstance = nil;
+@implementation XXpropertyEditView
++(XXpropertyEditView*)sharedInstance{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _editViewInstance = [XXpropertyEditView new];
+    });
+    return _editViewInstance;
+}
++(void)popupWithProperty:(XXproperty*)property finishHandler:(void(^)(void))finishhandler{
+    
+}
++(void)popdown{
+    
+}
+
+//- (instancetype)init{
+//    self = [super init];
+//    if (self) {
+//        self.backgroundColor =
+//    }
+//    return self;
+//}
+-(void)popupWithProperty:(XXproperty*)property finishHandler:(void(^)(void))finishhandler{
+    
+}
+-(void)popdown{
+    
 }
 @end
 
@@ -269,9 +307,14 @@ typedef enum : NSUInteger {
         // table shell
         self.tableViewShell = [XXtableViewShell new];
         [self.tableViewShell shell:self.tableView];
-        [self.tableViewShell configSectionRowSystemStyle:UITableViewCellStyleDefault height:40];
+        [self.tableViewShell configSectionRowSystemStyle:UITableViewCellStyleValue1 height:40];
         [self.tableViewShell configSectionHeaderClass:nil loadType:-1 height:40];
         [self.tableViewShell configSectionFooterClass:nil loadType:-1 height:0.01];
+        self.tableViewShell.onSectionRowClicked = ^(XXtableViewShell * _Nonnull shell,
+                                                    NSIndexPath * _Nonnull indexPath,
+                                                    id  _Nonnull data) {
+            
+        };
         
         // model
         self.settingModel = [DebugSettingModel new];
@@ -339,6 +382,7 @@ typedef enum : NSUInteger {
             @{
                 @"Title":name,
                 @"SubTitle":[NSString stringWithFormat:@"%@",property.val],
+                @"Property":property
             }]
                                     atIndex:0];
     }
@@ -347,6 +391,18 @@ typedef enum : NSUInteger {
 -(nullable id)getPropertyValueWithName:(NSString*)name{
     return [self.settingModel getPropertyValueWithName:name];
 }
+//-(NSString*)editProperty:(XXproperty*)property{
+//
+//    
+//    switch (property.type) {
+//        case XXpropertyTypeInt:
+//            
+//            break;
+//            
+//        default:
+//            break;
+//    }
+//}
 @end
 
 // MARK: 调试器主控

@@ -29,6 +29,27 @@
 #define XXOC_IS_KINDOF(obj,cls) (nil != obj && [obj isKindOfClass:[cls class]])
 #define XXOC_IS_STRING(obj)     XXOC_IS_KINDOF(obj,NSString)
 #define XXOC_IS_DICTIONARY(obj) XXOC_IS_KINDOF(obj,NSDictionary)
+
+#define XXOC_ASS_PROPERTY_SET(type,Name,name,param) \
+- (void)set##Name:(type)value{ \
+    objc_setAssociatedObject(self, #name, value, param); \
+}
+#define XXOC_ASS_PROPERTY_GET(type,name) \
+- (type)name{ \
+    return objc_getAssociatedObject(self,#name); \
+}
+#define XXOC_ASS_PROPERTY_GET_BOOL(name) \
+- (BOOL)name{ \
+    return [objc_getAssociatedObject(self,#name) boolValue]; \
+}
+#define XXOC_ASS_PROPERTY_GET_INT(name) \
+- (int)name{ \
+    return [objc_getAssociatedObject(self,#name) intValue]; \
+}
+#define XXOC_ASS_PROPERTY_GET_FLOAT(name) \
+- (CGFloat)name{ \
+    return [objc_getAssociatedObject(self,#name) floatValue]; \
+}
 #endif
 
 #import <UIKit/UIKit.h>
