@@ -48,7 +48,7 @@ extern "C" {
      * @param    maxLength 最大接收长度
      * @return   返回>=0实际接收数据长度,否则失败
      */
-    ssize_t xxtcpSocket_recv(XXtcpSocketHandle handle, uint8_t *data, ssize_t length);
+    ssize_t xxtcpSocket_recv(XXtcpSocketHandle handle, uint8_t *data, ssize_t maxLength);
     
     /**
      * @brief    按照指定的尝试次数和单次等待时间来接收数据
