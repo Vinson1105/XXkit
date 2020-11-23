@@ -7,16 +7,12 @@
 //
 
 #import "XXlogger.h"
-#import "../../C/XXtcpSocket.h"
+#import "../../Object-C/XXocUtils.h"
 
 static XXlogger * _instance = nil;
 
 @interface XXlogger()
-@property (nonatomic,copy) NSString *serverIP;
-@property (nonatomic,assign) NSInteger serverPort;
-
-@property (nonatomic,copy) NSString *localPathAbs;
-@property (nonatomic,)
+@property (nonatomic,strong) NSMutableDictionary *nameToFifo;
 @end
 
 @implementation XXlogger
@@ -30,27 +26,44 @@ static XXlogger * _instance = nil;
 +(void)normal:(NSString*)msg{
     [[XXlogger sharedInstance] normal:msg];
 }
-+(void)raw:(NSString*)msg{
-    [[XXlogger sharedInstance] raw:msg];
++(void)configFifoClass:(Class)cls param:(NSDictionary*)param forName:(NSString *)name{
+    [[XXlogger sharedInstance] configFifoClass:cls param:param forName:name];
 }
-+(void)enableServerIP:(NSString*)ip serverPort:(NSInteger)port{
-    [[XXlogger sharedInstance] enableServerIP:ip serverPort:port];
-}
-+(void)enableLocalPathNodes:(NSArray<NSString*>*)nodes{
-    [[XXlogger sharedInstance] enableLocalPathNodes:nodes];
++(void)setFifoEnable:(BOOL)enable forName:(NSString*)name{
+    [[XXlogger sharedInstance] setFifoEnable:enable forName:name];
 }
 
 -(void)normal:(NSString*)msg{
-    
+    NSString *normalMsg = [NSString stringWithFormat:@"[%@] %@", [XXocUtils currentDateString], msg];
+    for (XXfifoBase *fifo in self.nameToFifo.allValues) {
+        if(fifo.enable){
+            [fifo push:[normalMsg dataUsingEncoding:NSUTF8StringEncoding]];
+        }
+    }
 }
--(void)raw:(NSString*)msg{
-    
+-(void)configFifoClass:(Class)cls param:(NSDictionary*)param forName:(NSString *)name{
+    XXfifoBase *fifo = self.nameToFifo[name];
+    if(fifo){
+        
+    }
+    else{
+        fifo = [[cls alloc] initWithParam:param];
+        self.nameToFifo[name] = fifo;
+        fifo.enable = YES;
+    }
 }
--(void)enableServerIP:(NSString*)serverIP serverPort:(NSInteger)port{
-    
+-(void)setFifoEnable:(BOOL)enable forName:(NSString*)name{
+    XXfifoBase *fifo = self.nameToFifo[name];
+    if(nil == fifo){
+        return;;
+    }
+    fifo.enable = enable;
 }
--(void)enableLocalPathNodes:(NSArray<NSString*>*)nodes{
-    NSString *home = NSHomeDirectory();
-    NSString *path = [home stringsByAppendingPaths:nodes];
+-(void)pushToEachEnabledFifo:(NSData*)data{
+    for (XXfifoBase *fifo in self.nameToFifo.allValues) {
+        if(fifo.enable){
+            [fifo push:data];
+        }
+    }
 }
 @end

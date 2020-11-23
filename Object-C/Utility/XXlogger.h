@@ -10,11 +10,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@interface XXfifoBase : NSObject
+@property (nonatomic,assign) BOOL enable;
+-(instancetype)initWithParam:(NSDictionary*)param;
+-(void)push:(NSData*)data;
+@end
+
 @interface XXlogger : NSObject
 +(void)normal:(NSString*)msg;
-+(void)raw:(NSString*)msg;
-+(void)enableServerIP:(NSString*)ip serverPort:(NSInteger)port;
-+(void)enableLocalPathNodes:(NSArray<NSString*>*)nodes;
++(void)configFifoClass:(Class)cls param:(NSDictionary*)param forName:(NSString*)name;
++(void)setFifoEnable:(BOOL)enable forName:(NSString*)name;
 @end
 
 NS_ASSUME_NONNULL_END
