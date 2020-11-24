@@ -8,6 +8,12 @@
 
 #import "XXlogger.h"
 #import "../../Object-C/XXocUtils.h"
+#import "DailyLogFileFifo.h"
+
+@implementation XXfifoBase
+- (instancetype)initWithParam:(NSDictionary *)param{return [super init];}
+- (void)push:(NSData *)data{}
+@end
 
 static XXlogger * _instance = nil;
 
@@ -23,8 +29,14 @@ static XXlogger * _instance = nil;
     });
     return _instance;
 }
-+(void)normal:(NSString*)msg{
-    [[XXlogger sharedInstance] normal:msg];
++(void)message:(NSString*)format,...{
+    va_list args;
+    if (format) {
+        va_start(args, format);
+        NSString *message = [[NSString alloc] initWithFormat:format arguments:args];
+        va_end(args);
+        [[XXlogger sharedInstance] message:message];
+    }
 }
 +(void)configFifoClass:(Class)cls param:(NSDictionary*)param forName:(NSString *)name{
     [[XXlogger sharedInstance] configFifoClass:cls param:param forName:name];
@@ -33,8 +45,15 @@ static XXlogger * _instance = nil;
     [[XXlogger sharedInstance] setFifoEnable:enable forName:name];
 }
 
--(void)normal:(NSString*)msg{
-    NSString *normalMsg = [NSString stringWithFormat:@"[%@] %@", [XXocUtils currentDateString], msg];
+- (instancetype)init{
+    self = [super init];
+    if (self) {
+        [self configFifoClass:[DailyLogFileFifo class] param:@{@"SavePath":@"XXlogger"} forName:@"XXlogger"];
+    }
+    return self;
+}
+-(void)message:(NSString*)msg{
+    NSString *normalMsg = [NSString stringWithFormat:@"[%@] %@\n", [XXocUtils currentDateString], msg];
     for (XXfifoBase *fifo in self.nameToFifo.allValues) {
         if(fifo.enable){
             [fifo push:[normalMsg dataUsingEncoding:NSUTF8StringEncoding]];
@@ -65,5 +84,11 @@ static XXlogger * _instance = nil;
             [fifo push:data];
         }
     }
+}
+- (NSMutableDictionary *)nameToFifo{
+    if(nil == _nameToFifo){
+        _nameToFifo = [NSMutableDictionary dictionary];
+    }
+    return _nameToFifo;
 }
 @end

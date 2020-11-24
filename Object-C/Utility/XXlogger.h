@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface XXlogger : NSObject
-+(void)normal:(NSString*)msg;
++(void)message:(NSString*)format,...;
 +(void)configFifoClass:(Class)cls param:(NSDictionary*)param forName:(NSString*)name;
 +(void)setFifoEnable:(BOOL)enable forName:(NSString*)name;
 @end
