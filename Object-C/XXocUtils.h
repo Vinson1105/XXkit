@@ -50,6 +50,8 @@
 - (CGFloat)name{ \
     return [objc_getAssociatedObject(self,#name) floatValue]; \
 }
+
+#define CONST_STRING(name,value) static NSString * const name = @ #value;
 #endif
 
 #import <UIKit/UIKit.h>

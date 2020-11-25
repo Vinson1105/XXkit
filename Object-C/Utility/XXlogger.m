@@ -38,8 +38,8 @@ static XXlogger * _instance = nil;
         [[XXlogger sharedInstance] message:message];
     }
 }
-+(void)configFifoClass:(Class)cls param:(NSDictionary*)param forName:(NSString *)name{
-    [[XXlogger sharedInstance] configFifoClass:cls param:param forName:name];
++(void)configFifoClassString:(NSString*)clsString param:(NSDictionary*)param forName:(NSString *)name{
+    [[XXlogger sharedInstance] configFifoClassString:clsString param:param forName:name];
 }
 +(void)setFifoEnable:(BOOL)enable forName:(NSString*)name{
     [[XXlogger sharedInstance] setFifoEnable:enable forName:name];
@@ -48,7 +48,7 @@ static XXlogger * _instance = nil;
 - (instancetype)init{
     self = [super init];
     if (self) {
-        [self configFifoClass:[DailyLogFileFifo class] param:@{@"SavePath":@"XXlogger"} forName:@"XXlogger"];
+        [self configFifoClassString:@"DailyLogFileFifo" param:@{@"SavePath":@"XXlogger"} forName:@"XXlogger"];
     }
     return self;
 }
@@ -60,16 +60,21 @@ static XXlogger * _instance = nil;
         }
     }
 }
--(void)configFifoClass:(Class)cls param:(NSDictionary*)param forName:(NSString *)name{
-    XXfifoBase *fifo = self.nameToFifo[name];
-    if(fifo){
-        
+-(void)configFifoClassString:(NSString*)clsString param:(NSDictionary*)param forName:(NSString *)name{
+    Class cls = NSClassFromString(clsString);
+    if(nil == cls){
+        return;
     }
-    else{
-        fifo = [[cls alloc] initWithParam:param];
-        self.nameToFifo[name] = fifo;
-        fifo.enable = YES;
-    }
+    
+//    XXfifoBase *fifo = self.nameToFifo[name];
+//    if(fifo){
+//
+//    }
+//    else{
+    XXfifoBase *fifo = [[cls alloc] initWithParam:param];
+    self.nameToFifo[name] = fifo;
+    fifo.enable = YES;
+//    }
 }
 -(void)setFifoEnable:(BOOL)enable forName:(NSString*)name{
     XXfifoBase *fifo = self.nameToFifo[name];

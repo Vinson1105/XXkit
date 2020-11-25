@@ -10,16 +10,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef enum : NSUInteger {
-    ModalPopupPositionCenter,
-    ModalPopupPositionBottom,
-} ModalPopupPosition;
-
 @interface UIView(ModalPopup)
+@property (nonatomic,assign) BOOL modalPopup_popup;
+@property (nonatomic,assign) BOOL modalPopup_touchBackgroundToPopdown;
+@property (nonatomic,assign) BOOL modalPopup_backgroundColorTransparent;
 @property (nonatomic,strong,readonly) UIView *modalPopup_backgroundView;
-@property (nonatomic,assign) BOOL modalPopup_up;
--(void)modalPopup_installWithPosition:(ModalPopupPosition)position;
--(void)modalPopup_uninstall;
+
+-(void)modalPopup_configPopupConstraint:(NSArray*)popup popdownConstraint:(NSArray*)popdown;
+-(void)modalPopup_configAtCenterSize:(CGSize)size margin:(CGFloat)margin;
+-(void)modalPopup_configAtBottomSize:(CGSize)size margin:(CGFloat)margin;
+-(void)modalPopup_release;  // 注意：释放view时需要手动调用release
 @end
 
 NS_ASSUME_NONNULL_END

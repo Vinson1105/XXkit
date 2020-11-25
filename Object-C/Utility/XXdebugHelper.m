@@ -182,7 +182,6 @@ typedef enum : NSUInteger {
 @interface XXpropertyEditView : UIView
 @property (nonatomic,strong) UIButton *okButton;
 @property (nonatomic,strong) UIButton *cancelButton;
-@property (nonatomic,strong) UIScrollView *scrollView;
 @end
 static XXpropertyEditView *_editViewInstance = nil;
 @implementation XXpropertyEditView
@@ -193,7 +192,7 @@ static XXpropertyEditView *_editViewInstance = nil;
     });
     return _editViewInstance;
 }
-+(void)popupWithProperty:(XXproperty*)property finishHandler:(void(^)(void))finishhandler{
++(void)popupWithProperty:(XXproperty*)property finishHandler:(void(^)(id value, BOOL changed))finishhandler{
     
 }
 +(void)popdown{
@@ -207,7 +206,7 @@ static XXpropertyEditView *_editViewInstance = nil;
 //    }
 //    return self;
 //}
--(void)popupWithProperty:(XXproperty*)property finishHandler:(void(^)(void))finishhandler{
+-(void)popupWithProperty:(XXproperty*)property finishHandler:(void(^)(id value, BOOL changed))finishhandler{
     
 }
 -(void)popdown{
@@ -307,7 +306,7 @@ static XXpropertyEditView *_editViewInstance = nil;
         // table shell
         self.tableViewShell = [XXtableViewShell new];
         [self.tableViewShell shell:self.tableView];
-        [self.tableViewShell configSectionRowSystemStyle:UITableViewCellStyleValue1 height:40];
+        [self.tableViewShell configSectionRowSystemStyle:UITableViewCellStyleValue1 height:50];
         [self.tableViewShell configSectionHeaderClass:nil loadType:-1 height:40];
         [self.tableViewShell configSectionFooterClass:nil loadType:-1 height:0.01];
         self.tableViewShell.onSectionRowClicked = ^(XXtableViewShell * _Nonnull shell,
@@ -381,7 +380,7 @@ static XXpropertyEditView *_editViewInstance = nil;
         [self.tableViewShell addSectionRows:@[
             @{
                 @"Title":name,
-                @"SubTitle":[NSString stringWithFormat:@"%@",property.val],
+                @"Detail":[NSString stringWithFormat:@"%@",property.val],
                 @"Property":property
             }]
                                     atIndex:0];
@@ -422,7 +421,7 @@ static XXpropertyEditView *_editViewInstance = nil;
 +(void)install:(UIWindow*)window{
     [XXdebugHelper sharedInstance].window = window;
 }
-+(void)addPropertyName:(NSString*)name type:(NSString*)type{
++(void)addPropertyName:(NSString*)name type:(NSString*)type title:(nullable NSString*)title atBranch:(nullable NSString*)branch{
     [[XXdebugHelper sharedInstance] addPropertyName:name type:type];
 }
 +(nullable id)getPropertyWithName:(NSString*)name{

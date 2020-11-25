@@ -7,80 +7,62 @@
 //
 
 #import "UIView+ModalPopup.h"
-#import "UIView+Popup.h"
+#import "../View/XXmodalView.h"
 #import <objc/runtime.h>
 #import "../XXocUtils.h"
 
 @interface UIView()
+@property (nonatomic,strong) XXmodalView *modalPopup_modalView;
 @end
 
 @implementation UIView(ModalPopup)
-- (void)modalPopup_installWithPosition:(ModalPopupPosition)position{
-    self.translatesAutoresizingMaskIntoConstraints = NO;
-    self.alpha = 0.0;
-    UIView *backgroundView = self.modalPopup_backgroundView;
-    [backgroundView addSubview:self];   // 这里会产生循环引用，需要手动removeFromSuperview
-    
-    NSMutableArray *upLayout = [NSMutableArray array];
-    NSMutableArray *downLayout = [NSMutableArray array];
-    if(position == ModalPopupPositionCenter){
-        [upLayout addObject:[self.centerXAnchor constraintEqualToAnchor:backgroundView.centerXAnchor]];
-        [upLayout addObject:[self.centerYAnchor constraintEqualToAnchor:backgroundView.centerYAnchor]];
-        
-        [downLayout addObject:[self.centerXAnchor constraintEqualToAnchor:backgroundView.centerXAnchor]];
-        [downLayout addObject:[self.topAnchor constraintEqualToAnchor:backgroundView.bottomAnchor constant:20]];
-    }
-    else{
-        [upLayout addObject:[self.leadingAnchor constraintEqualToAnchor:backgroundView.leadingAnchor constant:20]];
-        [upLayout addObject:[self.trailingAnchor constraintEqualToAnchor:backgroundView.trailingAnchor constant:-20]];
-        [upLayout addObject:[self.bottomAnchor constraintEqualToAnchor:backgroundView.bottomAnchor constant:-20]];
-
-        [downLayout addObject:[self.leadingAnchor constraintEqualToAnchor:backgroundView.leadingAnchor constant:20]];
-        [downLayout addObject:[self.trailingAnchor constraintEqualToAnchor:backgroundView.trailingAnchor constant:-20]];
-        [downLayout addObject:[self.topAnchor constraintEqualToAnchor:backgroundView.bottomAnchor constant:20]];
-    }
-    self.popup_upLayoutConstraints = upLayout;
-    self.popup_downLayoutConstraints = downLayout;
-    XXOC_WS;
-    self.popup_blockWhenWillUp = ^{
-        XXOC_SS;
-        ss.modalPopup_backgroundView.frame = ss.window.bounds;
-        ss.alpha = 0.0;
-        [ss.window addSubview:ss.modalPopup_backgroundView];
-    };
-    self.popup_blockWhenUping = ^{
-        XXOC_SS;
-        ss.alpha = 1.0;
-        ss.modalPopup_backgroundView.alpha = 1.0;
-    };
-    self.popup_blockWhenDowning = ^{
-        XXOC_SS;
-        ss.alpha = 0.0;
-        ss.modalPopup_backgroundView.alpha = 0.0;
-    };
-    self.popup_blockWhenDidDownFinished = ^{
-        XXOC_SS;
-        [ss.modalPopup_backgroundView removeFromSuperview];
-    };
-    self.popup_active = YES;
+- (BOOL)modalPopup_popup{
+    return self.modalPopup_modalView.popup;
 }
-- (void)modalPopup_uninstall{
-    self.popup_active = NO;
-    [self removeFromSuperview];
+- (void)setModalPopup_popup:(BOOL)modalPopup_popup{
+    self.modalPopup_modalView.popup = modalPopup_popup;
 }
-- (void)setModalPopup_up:(BOOL)modalPopup_up{
-    self.popup_up = modalPopup_up;
+- (BOOL)modalPopup_touchBackgroundToPopdown{
+    return self.modalPopup_modalView.touchToPopdown;
 }
-- (BOOL)modalPopup_up{
-    return self.popup_up;
+- (void)setModalPopup_touchBackgroundToPopdown:(BOOL)modalPopup_touchBackgroundToPopdown{
+    self.modalPopup_modalView.touchToPopdown = modalPopup_touchBackgroundToPopdown;
+}
+- (BOOL)modalPopup_backgroundColorTransparent{
+    return self.modalPopup_modalView.backgroundColorTransparent;
+}
+- (void)setModalPopup_backgroundColorTransparent:(BOOL)modalPopup_backgroundColorTransparent{
+    self.modalPopup_modalView.backgroundColorTransparent = modalPopup_backgroundColorTransparent;
 }
 - (UIView *)modalPopup_backgroundView{
-    UIView *view = objc_getAssociatedObject(self, "modalPopup_backgroundView");
+    return self.modalPopup_modalView;
+}
+
+- (XXmodalView *)modalPopup_modalView{
+    XXmodalView *view = objc_getAssociatedObject(self, "modalPopup_modalView");
     if(nil == view){
-        view = [UIView new];
-        view.backgroundColor = [UIColor colorWithWhite:0 alpha:0.0];
-        objc_setAssociatedObject(self, "modalPopup_backgroundView", view, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        view = [XXmodalView new];
+        objc_setAssociatedObject(self, "modalPopup_modalView", view, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     return view;
+}
+
+-(void)modalPopup_configPopupConstraint:(NSArray*)popup popdownConstraint:(NSArray*)popdown{
+    XXOC_WS;
+    [self.modalPopup_modalView configContentView:ws popupConstraint:popup popdownConstraint:popdown];
+}
+-(void)modalPopup_configAtCenterSize:(CGSize)size margin:(CGFloat)margin{
+    XXOC_WS;
+    [self.modalPopup_modalView configContentViewAtCenter:ws size:size margin:margin];
+}
+-(void)modalPopup_configAtBottomSize:(CGSize)size margin:(CGFloat)margin{
+    XXOC_WS;
+    [self.modalPopup_modalView configContentViewAtBottom:ws size:size margin:margin];
+}
+- (void)modalPopup_release{
+    // MARK: 必须执行，否则会循环引用
+    [self.modalPopup_modalView removeFromSuperview];
+    [self removeFromSuperview];
+    objc_setAssociatedObject(self, "modalPopup_modalView", nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 @end
