@@ -14,6 +14,7 @@
 
 #import "../Shell/XXviewBase.h"
 #import "../Category/UIView+Popup.h"
+#import "../Category/UIView+ModalPopup.h"
 
 static XXdebugHelper *_instance = nil;
 static NSString * const kSplitOfProperty = @"=";
@@ -163,25 +164,15 @@ typedef enum : NSUInteger {
 }
 @end
 
-// MARK: 属性专用的TableViewCell
-//@interface XXpropertyTableViewCell : UITableViewCell<XXviewBase>
-//@property (nonatomic,strong) UILabel *nameLabel;
-//@property (nonatomic,strong) UILabel *
-//@end
-//@implementation XXpropertyTableViewCell
-//- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier{
-//    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-//    if(self){
-//
-//    }
-//    return self;
-//}
-//@end
-
 // MARK: 属性编辑器
+@protocol XXpropertyItemDelegate
+-(void)reset:(XXproperty*)property;
+@end
+
 @interface XXpropertyEditView : UIView
 @property (nonatomic,strong) UIButton *okButton;
 @property (nonatomic,strong) UIButton *cancelButton;
+@property (nonatomic,strong) NSMutableDictionary *typeToItem;
 @end
 static XXpropertyEditView *_editViewInstance = nil;
 @implementation XXpropertyEditView
@@ -199,18 +190,69 @@ static XXpropertyEditView *_editViewInstance = nil;
     
 }
 
-//- (instancetype)init{
-//    self = [super init];
-//    if (self) {
-//        self.backgroundColor =
-//    }
-//    return self;
-//}
+- (instancetype)init{
+    self = [super init];
+    if (self) {
+        self.okButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.okButton.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.okButton setTitle:@"好的" forState:UIControlStateNormal];
+        [self.okButton addTarget:self action:@selector(onTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.okButton];
+        
+        self.cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.cancelButton.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.cancelButton setTitle:@"取消" forState:UIControlStateNormal];
+        [self.cancelButton addTarget:self action:@selector(onTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.cancelButton];
+        
+        UIView *hSplitView = [UIView new];
+        hSplitView.translatesAutoresizingMaskIntoConstraints = NO;
+        hSplitView.backgroundColor = [XXocUtils colorFromLightHex:@"#cfcfcf" darkHex:@"#1f1f1f"];
+        [self addSubview:hSplitView];
+        
+        UIView *vSplitView = [UIView new];
+        vSplitView.translatesAutoresizingMaskIntoConstraints = NO;
+        vSplitView.backgroundColor = [XXocUtils colorFromLightHex:@"#cfcfcf" darkHex:@"#1f1f1f"];
+        [self addSubview:vSplitView];
+        
+        [hSplitView.heightAnchor constraintEqualToConstant:0.8].active = YES;
+        [hSplitView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
+        [hSplitView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
+        [hSplitView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-50].active = YES;
+        
+        [vSplitView.widthAnchor constraintEqualToConstant:0.8].active = YES;
+        [vSplitView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor].active = YES;
+        [vSplitView.topAnchor constraintEqualToAnchor:hSplitView.bottomAnchor].active = YES;
+        [vSplitView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
+        
+        [self.okButton.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
+        [self.okButton.topAnchor constraintEqualToAnchor:hSplitView.bottomAnchor].active = YES;
+        [self.okButton.trailingAnchor constraintEqualToAnchor:vSplitView.leadingAnchor].active = YES;
+        [self.okButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
+        
+        [self.cancelButton.leadingAnchor constraintEqualToAnchor:vSplitView.trailingAnchor].active = YES;
+        [self.cancelButton.topAnchor constraintEqualToAnchor:hSplitView.bottomAnchor].active = YES;
+        [self.cancelButton.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
+        [self.cancelButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
+    }
+    return self;
+}
 -(void)popupWithProperty:(XXproperty*)property finishHandler:(void(^)(id value, BOOL changed))finishhandler{
     
 }
 -(void)popdown{
     
+}
+-(void)onTouchUpInside:(UIButton*)button{
+    if(button == self.okButton){
+        
+    }
+    else if(button == self.cancelButton){
+        
+    }
+    else{
+        
+    }
 }
 @end
 
