@@ -165,9 +165,29 @@ typedef enum : NSUInteger {
 @end
 
 // MARK: 属性编辑器
-@protocol XXpropertyItemDelegate
--(void)reset:(XXproperty*)property;
+@protocol XXpropertyEditItemDelegate
+@property (nonatomic,strong) XXproperty *property;
+-(UIEdgeInsets)margin;
+-(CGFloat)height;
+-(void)addValueChangedToTarget:(id)target action:(SEL)action;
 @end
+
+// string类型
+@interface StringPropertyEditItem : UITextField<XXpropertyEditItemDelegate>
+@property (nonatomic,strong) XXproperty *property;
+@end
+@implementation StringPropertyEditItem
+-(void)reset:(XXproperty*)property{
+    if(property.val)
+}
+-(UIEdgeInsets)margin{
+    return UIEdgeInsetsMake(10, 20, -10, -20);
+}
+-(CGFloat)height{
+    return 45;
+}
+@end
+
 
 @interface XXpropertyEditView : UIView
 @property (nonatomic,strong) UIButton *okButton;
