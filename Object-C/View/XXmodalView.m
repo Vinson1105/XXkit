@@ -107,20 +107,15 @@
             [commonConstraint addObject:[contentView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:margin]];
             [commonConstraint addObject:[contentView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-margin]];
         }
+        [commonConstraint addObject:[contentView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor]];
         
         // popup constraint
-        NSMutableArray *popupConstraint = [[NSMutableArray alloc] initWithArray:@[
-            [contentView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor],
-            [contentView.centerYAnchor constraintEqualToAnchor:self.centerYAnchor],
-        ]];
-        [popupConstraint addObjectsFromArray:commonConstraint];
+        NSMutableArray *popupConstraint = [[NSMutableArray alloc] initWithArray:commonConstraint];
+        [popupConstraint addObject:[contentView.centerYAnchor constraintEqualToAnchor:self.centerYAnchor]];
         
         // popdown constraint
-        NSMutableArray *popdownConstraint = [[NSMutableArray alloc] initWithArray:@[
-            [contentView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor],
-            [contentView.topAnchor constraintEqualToAnchor:self.bottomAnchor constant:20],
-        ]];
-        [popupConstraint addObjectsFromArray:commonConstraint];
+        NSMutableArray *popdownConstraint = [[NSMutableArray alloc] initWithArray:commonConstraint];
+        [popdownConstraint addObject:[contentView.topAnchor constraintEqualToAnchor:self.bottomAnchor constant:20]];
         [self configContentView:contentView popupConstraint:popupConstraint popdownConstraint:popdownConstraint];
     }
 }
@@ -144,16 +139,17 @@
         [commonConstraint addObject:[contentView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor]];
         
         // popup constraint
-        NSMutableArray *popupConstraint = [[NSMutableArray alloc] initWithArray:@[
-            [contentView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-margin],
-        ]];
-        [popupConstraint addObjectsFromArray:commonConstraint];
+        NSMutableArray *popupConstraint = [[NSMutableArray alloc] initWithArray:commonConstraint];
+        if(@available(iOS 11.0, *)){
+            [popupConstraint addObject:[contentView.bottomAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.bottomAnchor constant:-margin]];
+        }
+        else{
+            [popupConstraint addObject:[contentView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-margin]];
+        }
         
         // popdown constraint
-        NSMutableArray *popdownConstraint = [[NSMutableArray alloc] initWithArray:@[
-            [contentView.topAnchor constraintEqualToAnchor:self.bottomAnchor constant:margin],
-        ]];
-        [popdownConstraint addObjectsFromArray:commonConstraint];
+        NSMutableArray *popdownConstraint = [[NSMutableArray alloc] initWithArray:commonConstraint];
+        [popdownConstraint addObject:[contentView.topAnchor constraintEqualToAnchor:self.bottomAnchor constant:margin]];
         
         [self configContentView:contentView popupConstraint:popupConstraint popdownConstraint:popdownConstraint];
     }

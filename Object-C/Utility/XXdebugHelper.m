@@ -166,25 +166,60 @@ typedef enum : NSUInteger {
 
 // MARK: 属性编辑器
 @protocol XXpropertyEditItemDelegate
-@property (nonatomic,strong) XXproperty *property;
--(UIEdgeInsets)margin;
--(CGFloat)height;
--(void)addValueChangedToTarget:(id)target action:(SEL)action;
+@property (nonatomic,copy) XXproperty *property;
+-(UIEdgeInsets)estimatedMargin;
+-(CGFloat)estimatedHeight;
+-(void)addAction:(SEL)action forPropertyChangedAtTarget:(id)target;
 @end
 
-// string类型
-@interface StringPropertyEditItem : UITextField<XXpropertyEditItemDelegate>
-@property (nonatomic,strong) XXproperty *property;
+// string类型属性编辑Item
+@interface StringPropertyEditItem : UITextField<XXpropertyEditItemDelegate,UITextFieldDelegate>
+@property (nonatomic,copy) XXproperty *property;
+@property (nonatomic,weak) id target;
+@property (nonatomic,assign) SEL action;
 @end
 @implementation StringPropertyEditItem
--(void)reset:(XXproperty*)property{
-    if(property.val)
+- (instancetype)init{
+    self = [super init];
+    if (self) {
+        self.delegate = self;
+    }
+    return self;
 }
--(UIEdgeInsets)margin{
+- (void)setProperty:(XXproperty *)property{
+    if(nil == property){
+        _property = nil;
+    }
+    else{
+        _property = [property copy];
+    }
+    
+    if(_property.val){
+        self.text = property.val;
+    }
+    else if(_property.def){
+        self.text = property.def;
+    }
+    else {
+        self.text = @"";
+    }
+}
+-(UIEdgeInsets)estimatedMargin{
     return UIEdgeInsetsMake(10, 20, -10, -20);
 }
--(CGFloat)height{
+-(CGFloat)estimatedHeight{
     return 45;
+}
+-(void)addAction:(SEL)action forPropertyChangedAtTarget:(id)target{
+    self.target = target;
+    self.action = action;
+}
+- (void)textFieldDidEndEditing:(UITextField *)textField{
+    if((self.property.val && ![textField.text isEqualToString:self.property.val]) || ![textField.text isEqualToString:self.property.def]){
+        if(self.target && self.action){
+            self.target performSelector:<#(nonnull SEL)#> target:<#(nonnull id)#> argument:<#(nullable id)#> order:<#(NSUInteger)#> modes:<#(nonnull NSArray<NSRunLoopMode> *)#>
+        }
+    }
 }
 @end
 
