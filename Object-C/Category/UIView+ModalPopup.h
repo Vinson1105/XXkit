@@ -16,6 +16,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) BOOL modalPopup_backgroundColorTransparent;
 @property (nonatomic,strong,readonly) UIView *modalPopup_backgroundView;
 
+@property (nonatomic,copy) void(^modalPopup_blockWhenWillUp)(void);
+@property (nonatomic,copy) void(^modalPopup_blockWhenWillDown)(void);
+
+@property (nonatomic,copy) void(^modalPopup_blockWhenUping)(void);
+@property (nonatomic,copy) void(^modalPopup_blockWhenDowning)(void);
+
+@property (nonatomic,copy) void(^modalPopup_blockWhenDidUpFinished)(void);
+@property (nonatomic,copy) void(^modalPopup_blockWhenDidDownFinished)(void);
+
 -(void)modalPopup_configPopupConstraint:(NSArray*)popup popdownConstraint:(NSArray*)popdown;
 -(void)modalPopup_configAtCenterSize:(CGSize)size margin:(CGFloat)margin;
 -(void)modalPopup_configAtBottomSize:(CGSize)size margin:(CGFloat)margin;

@@ -38,6 +38,44 @@
     return self.modalPopup_modalView;
 }
 
+- (void)setModalPopup_blockWhenWillUp:(void (^)(void))modalPopup_blockWhenWillUp{
+    self.modalPopup_modalView.blockWhenWillUp = modalPopup_blockWhenWillUp;
+}
+- (void (^)(void))modalPopup_blockWhenWillUp{
+    return self.modalPopup_modalView.blockWhenWillUp;
+}
+- (void)setModalPopup_blockWhenUping:(void (^)(void))modalPopup_blockWhenUping{
+    self.modalPopup_modalView.blockWhenUping = modalPopup_blockWhenUping;
+}
+- (void (^)(void))modalPopup_blockWhenUping{
+    return self.modalPopup_modalView.blockWhenUping;
+}
+- (void)setModalPopup_blockWhenDidUpFinished:(void (^)(void))modalPopup_blockWhenDidUpFinished{
+    self.modalPopup_modalView.blockWhenDidUpFinished = modalPopup_blockWhenDidUpFinished;
+}
+- (void (^)(void))modalPopup_blockWhenDidUpFinished{
+    return self.modalPopup_modalView.blockWhenDidUpFinished;
+}
+
+- (void)setModalPopup_blockWhenWillDown:(void (^)(void))modalPopup_blockWhenWillDown{
+    self.modalPopup_modalView.blockWhenWillDown = modalPopup_blockWhenWillDown;
+}
+- (void (^)(void))modalPopup_blockWhenWillDown{
+    return self.modalPopup_modalView.blockWhenWillDown;
+}
+- (void)setModalPopup_blockWhenDowning:(void (^)(void))modalPopup_blockWhenDowning{
+    self.modalPopup_modalView.blockWhenDowning = modalPopup_blockWhenDowning;
+}
+- (void (^)(void))modalPopup_blockWhenDowning{
+    return self.modalPopup_modalView.blockWhenDowning;
+}
+- (void)setModalPopup_blockWhenDidDownFinished:(void (^)(void))modalPopup_blockWhenDidDownFinished{
+    self.modalPopup_modalView.blockWhenDidDownFinished = modalPopup_blockWhenDidDownFinished;
+}
+- (void (^)(void))modalPopup_blockWhenDidDownFinished{
+    return self.modalPopup_modalView.blockWhenDidDownFinished;
+}
+
 - (XXmodalView *)modalPopup_modalView{
     XXmodalView *view = objc_getAssociatedObject(self, "modalPopup_modalView");
     if(nil == view){
