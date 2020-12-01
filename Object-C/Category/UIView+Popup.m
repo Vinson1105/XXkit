@@ -138,7 +138,7 @@
                         ss.popup_blockWhenUping();
                     }
                 } completion:^(BOOL finished) {
-                    if(ss.popup_blockWhenDidUpFinished){
+                    if(ss.popup_blockWhenDidUpFinished&&ss.popup_up){
                         ss.popup_blockWhenDidUpFinished();
                     }
                 }];
@@ -155,7 +155,7 @@
                         ss.popup_blockWhenDowning();
                     }
                 } completion:^(BOOL finished) {
-                    if(ss.popup_blockWhenDidDownFinished){
+                    if(ss.popup_blockWhenDidDownFinished&&!ss.popup_up){
                         ss.popup_blockWhenDidDownFinished();
                     }
                 }];
