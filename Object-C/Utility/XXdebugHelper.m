@@ -129,6 +129,27 @@ typedef enum : NSUInteger {
     XXproperty *property = [[self.class allocWithZone:zone] initWithProperty:self];
     return property;
 }
+-(NSString*)stringFromPropertyType:(XXpropertyType)propertyType{
+    switch (propertyType) {
+        case XXpropertyTypeInt:
+            return @"int";
+        case XXpropertyTypeFloat:
+            return @"float";
+        case XXpropertyTypeBool:
+            return @"bool";
+        case XXpropertyTypeString:
+            return @"string";
+        case XXpropertyTypeSingleEnum:
+            return @"singleEnum";
+        case XXpropertyTypeMultiEnum:
+            return @"multiEnum";
+        default:
+            return nil;
+    }
+}
+- (NSString *)description{
+    return [NSString stringWithFormat:@"[Property] def:%@ val:%@ type:%@", self.def, self.val, [self stringFromPropertyType:self.type]];
+}
 @end
 
 // MARK: 枚举属性
@@ -167,6 +188,7 @@ typedef enum : NSUInteger {
 // MARK: 属性编辑器
 @protocol XXpropertyEditItemDelegate
 @property (nonatomic,copy) XXproperty *property;
+-(instancetype)initWithProperty:(XXproperty*)property;
 -(UIEdgeInsets)estimatedMargin;
 -(CGFloat)estimatedHeight;
 -(void)addAction:(SEL)action forPropertyChangedAtTarget:(id)target;
@@ -179,10 +201,13 @@ typedef enum : NSUInteger {
 @property (nonatomic,assign) SEL action;
 @end
 @implementation StringPropertyEditItem
-- (instancetype)init{
+-(instancetype)initWithProperty:(XXproperty*)property{
     self = [super init];
     if (self) {
         self.delegate = self;
+        self.property = property;
+        self.borderStyle = UITextBorderStyleRoundedRect;
+        self.returnKeyType = UIReturnKeyDone;
     }
     return self;
 }
@@ -216,6 +241,7 @@ typedef enum : NSUInteger {
 }
 - (void)textFieldDidEndEditing:(UITextField *)textField{
     if((self.property.val && ![textField.text isEqualToString:self.property.val]) || ![textField.text isEqualToString:self.property.def]){
+        self.property.val = textField.text;
         if(!self.target || !self.action){
             return;
         }
@@ -225,13 +251,20 @@ typedef enum : NSUInteger {
         methodPtr(self.target,self.action,self.property);
     }
 }
+- (BOOL)textFieldShouldReturn:(UITextField *)textField{
+    [textField resignFirstResponder];
+    return YES;
+}
 @end
 
 
 @interface XXpropertyEditView : UIView
+@property (nonatomic,strong) UIView *hSplitView;
+@property (nonatomic,strong) UIView *vSplitView;
 @property (nonatomic,strong) UIButton *okButton;
 @property (nonatomic,strong) UIButton *cancelButton;
 @property (nonatomic,strong) NSMutableDictionary *typeToItem;
+@property (nonatomic,strong) XXproperty *currentPropertyEditing;
 @end
 static XXpropertyEditView *_editViewInstance = nil;
 @implementation XXpropertyEditView
@@ -243,10 +276,10 @@ static XXpropertyEditView *_editViewInstance = nil;
     return _editViewInstance;
 }
 +(void)popupWithProperty:(XXproperty*)property finishHandler:(void(^)(id value, BOOL changed))finishhandler{
-    
+    [[XXpropertyEditView sharedInstance] popupWithProperty:property finishHandler:finishhandler];
 }
 +(void)popdown{
-    
+    [[XXpropertyEditView sharedInstance] popdown];
 }
 - (instancetype)init{
     self = [super init];
@@ -254,69 +287,123 @@ static XXpropertyEditView *_editViewInstance = nil;
         self.okButton = [UIButton buttonWithType:UIButtonTypeCustom];
         self.okButton.translatesAutoresizingMaskIntoConstraints = NO;
         [self.okButton setTitle:@"好的" forState:UIControlStateNormal];
+        [self.okButton setTitleColor:UIColor.systemBlueColor forState:UIControlStateNormal];
         [self.okButton addTarget:self action:@selector(onTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:self.okButton];
         
         self.cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
         self.cancelButton.translatesAutoresizingMaskIntoConstraints = NO;
         [self.cancelButton setTitle:@"取消" forState:UIControlStateNormal];
+        [self.cancelButton setTitleColor:UIColor.systemRedColor forState:UIControlStateNormal];
         [self.cancelButton addTarget:self action:@selector(onTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:self.cancelButton];
         
-        UIView *hSplitView = [UIView new];
-        hSplitView.translatesAutoresizingMaskIntoConstraints = NO;
-        hSplitView.backgroundColor = [XXocUtils colorFromLightHex:@"#cfcfcf" darkHex:@"#1f1f1f"];
-        [self addSubview:hSplitView];
+        self.hSplitView = [UIView new];
+        self.hSplitView.translatesAutoresizingMaskIntoConstraints = NO;
+        self.hSplitView.backgroundColor = [XXocUtils colorFromLightHex:@"#cfcfcf" darkHex:@"#1f1f1f"];
+        [self addSubview:self.hSplitView];
         
-        UIView *vSplitView = [UIView new];
-        vSplitView.translatesAutoresizingMaskIntoConstraints = NO;
-        vSplitView.backgroundColor = [XXocUtils colorFromLightHex:@"#cfcfcf" darkHex:@"#1f1f1f"];
-        [self addSubview:vSplitView];
+        self.vSplitView = [UIView new];
+        self.vSplitView.translatesAutoresizingMaskIntoConstraints = NO;
+        self.vSplitView.backgroundColor = [XXocUtils colorFromLightHex:@"#cfcfcf" darkHex:@"#1f1f1f"];
+        [self addSubview:self.vSplitView];
         
-        [hSplitView.heightAnchor constraintEqualToConstant:0.8].active = YES;
-        [hSplitView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
-        [hSplitView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
-        [hSplitView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-50].active = YES;
+        [self.hSplitView.heightAnchor constraintEqualToConstant:0.8].active = YES;
+        [self.hSplitView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
+        [self.hSplitView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
+        [self.hSplitView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-50].active = YES;
         
-        [vSplitView.widthAnchor constraintEqualToConstant:0.8].active = YES;
-        [vSplitView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor].active = YES;
-        [vSplitView.topAnchor constraintEqualToAnchor:hSplitView.bottomAnchor].active = YES;
-        [vSplitView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
+        [self.vSplitView.widthAnchor constraintEqualToConstant:0.8].active = YES;
+        [self.vSplitView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor].active = YES;
+        [self.vSplitView.topAnchor constraintEqualToAnchor:self.hSplitView.bottomAnchor].active = YES;
+        [self.vSplitView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
         
         [self.okButton.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
-        [self.okButton.topAnchor constraintEqualToAnchor:hSplitView.bottomAnchor].active = YES;
-        [self.okButton.trailingAnchor constraintEqualToAnchor:vSplitView.leadingAnchor].active = YES;
+        [self.okButton.topAnchor constraintEqualToAnchor:self.hSplitView.bottomAnchor].active = YES;
+        [self.okButton.trailingAnchor constraintEqualToAnchor:self.vSplitView.leadingAnchor].active = YES;
         [self.okButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
         
-        [self.cancelButton.leadingAnchor constraintEqualToAnchor:vSplitView.trailingAnchor].active = YES;
-        [self.cancelButton.topAnchor constraintEqualToAnchor:hSplitView.bottomAnchor].active = YES;
+        [self.cancelButton.leadingAnchor constraintEqualToAnchor:self.vSplitView.trailingAnchor].active = YES;
+        [self.cancelButton.topAnchor constraintEqualToAnchor:self.hSplitView.bottomAnchor].active = YES;
         [self.cancelButton.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
         [self.cancelButton.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
+        
+        self.modalPopup_backgroundColorTransparent = NO;
+        self.modalPopup_touchBackgroundToPopdown = YES;
+        [self modalPopup_configAtCenterSize:CGSizeMake(0, 200) margin:20];
+        
+        self.backgroundColor = [XXocUtils colorFromLightHex:@"ffffff" darkHex:@"#1f1f1f"];
+        self.layer.cornerRadius = 20;
     }
     return self;
 }
 -(void)popupWithProperty:(XXproperty*)property finishHandler:(void(^)(id value, BOOL changed))finishhandler{
-    id<XXpropertyEditItemDelegate> editItem = self.typeToItem[@(property.type)];
-    if(nil == editItem){
-        
+    UIView<XXpropertyEditItemDelegate> *editItem = self.typeToItem[@(property.type)];
+    if(editItem){
+        editItem.property = property;
     }
+    else{
+        editItem = [self createEditItemForProperty:property];
+        if(editItem){
+            editItem.translatesAutoresizingMaskIntoConstraints = NO;
+            self.typeToItem[@(property.type)] = editItem;
+            CGFloat height = [editItem estimatedHeight];
+            if(height>0){
+                [editItem.heightAnchor constraintEqualToConstant:height].active = YES;;
+            }
+            [editItem addAction:@selector(onPropertyChanged:) forPropertyChangedAtTarget:self];
+        }
+    }
+    if(nil == editItem){
+        return;
+    }
+    
+    UIEdgeInsets margin = [editItem estimatedMargin];
+    [self addSubview:editItem];
+    
+    [editItem.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:margin.left].active = YES;
+    [editItem.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:margin.right].active = YES;
+    if([editItem estimatedHeight]>0){
+        [editItem.centerYAnchor constraintEqualToAnchor:self.centerYAnchor constant:-20].active = YES;
+    }
+    else{
+        [editItem.topAnchor constraintEqualToAnchor:self.topAnchor constant:margin.top].active = YES;
+        [editItem.bottomAnchor constraintEqualToAnchor:self.hSplitView.topAnchor constant:margin.bottom].active = YES;
+    }
+    self.currentPropertyEditing = editItem.property;
+    
+    XXOC_WS;
+    self.modalPopup_blockWhenDidDownFinished = ^{
+        XXOC_SS;
+        ss.currentPropertyEditing = nil;
+        [editItem removeFromSuperview];
+    };
+    self.modalPopup_popup = YES;
 }
 -(void)popdown{
-    
+    self.modalPopup_popup = NO;
 }
 -(void)onTouchUpInside:(UIButton*)button{
     if(button == self.okButton){
-        
+        NSLog(@"[###] [onTouchUpInside] [ok] %@", self.currentPropertyEditing);
     }
     else if(button == self.cancelButton){
-        
+        NSLog(@"[###] [onTouchUpInside] [cancel] %@", self.currentPropertyEditing);
     }
     else{
         
     }
 }
--(id<XXpropertyEditItemDelegate>)createEditItemForType:(XXpropertyType)type{
-    
+-(nullable UIView<XXpropertyEditItemDelegate>*)createEditItemForProperty:(XXproperty*)property{
+    switch (property.type) {
+        case XXpropertyTypeString:
+            return [[StringPropertyEditItem alloc] initWithProperty:property];
+        default:
+            return nil;
+    }
+}
+-(void)onPropertyChanged:(XXproperty*)property{
+    NSLog(@"[###] [onPropertyChanged] %@", property);
 }
 @end
 
@@ -418,7 +505,12 @@ static XXpropertyEditView *_editViewInstance = nil;
         self.tableViewShell.onSectionRowClicked = ^(XXtableViewShell * _Nonnull shell,
                                                     NSIndexPath * _Nonnull indexPath,
                                                     id  _Nonnull data) {
+            XXproperty *property = data[@"Property"];
+            if(nil == property){
+                return;
+            }
             
+            [[XXpropertyEditView sharedInstance] popupWithProperty:property finishHandler:nil];
         };
         
         // model
@@ -496,18 +588,6 @@ static XXpropertyEditView *_editViewInstance = nil;
 -(nullable id)getPropertyValueWithName:(NSString*)name{
     return [self.settingModel getPropertyValueWithName:name];
 }
-//-(NSString*)editProperty:(XXproperty*)property{
-//
-//    
-//    switch (property.type) {
-//        case XXpropertyTypeInt:
-//            
-//            break;
-//            
-//        default:
-//            break;
-//    }
-//}
 @end
 
 // MARK: 调试器主控
