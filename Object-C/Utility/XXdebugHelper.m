@@ -216,9 +216,13 @@ typedef enum : NSUInteger {
 }
 - (void)textFieldDidEndEditing:(UITextField *)textField{
     if((self.property.val && ![textField.text isEqualToString:self.property.val]) || ![textField.text isEqualToString:self.property.def]){
-        if(self.target && self.action){
-            self.target performSelector:<#(nonnull SEL)#> target:<#(nonnull id)#> argument:<#(nullable id)#> order:<#(NSUInteger)#> modes:<#(nonnull NSArray<NSRunLoopMode> *)#>
+        if(!self.target || !self.action){
+            return;
         }
+        
+        IMP method = [self.target methodForSelector:self.action];
+        void (*methodPtr)(id, SEL, XXproperty*) = (void*)method;
+        methodPtr(self.target,self.action,self.property);
     }
 }
 @end
@@ -244,7 +248,6 @@ static XXpropertyEditView *_editViewInstance = nil;
 +(void)popdown{
     
 }
-
 - (instancetype)init{
     self = [super init];
     if (self) {
@@ -293,7 +296,10 @@ static XXpropertyEditView *_editViewInstance = nil;
     return self;
 }
 -(void)popupWithProperty:(XXproperty*)property finishHandler:(void(^)(id value, BOOL changed))finishhandler{
-    
+    id<XXpropertyEditItemDelegate> editItem = self.typeToItem[@(property.type)];
+    if(nil == editItem){
+        
+    }
 }
 -(void)popdown{
     
@@ -308,6 +314,9 @@ static XXpropertyEditView *_editViewInstance = nil;
     else{
         
     }
+}
+-(id<XXpropertyEditItemDelegate>)createEditItemForType:(XXpropertyType)type{
+    
 }
 @end
 
