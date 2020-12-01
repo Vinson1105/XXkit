@@ -8,12 +8,14 @@
 
 #import "XXmodalView.h"
 #import <objc/runtime.h>
+#import "../Category/UIView+Popup.h"
+#import "../XXocUtils.h"
 
 #define kAnimateDuration 0.3
 
 @interface XXmodalView()
-@property (nonatomic,strong) NSArray *popupConstraint;
-@property (nonatomic,strong) NSArray *popdownConstraint;
+//@property (nonatomic,strong) NSArray *popupConstraint;
+//@property (nonatomic,strong) NSArray *popdownConstraint;
 @property (nonatomic,strong) UITapGestureRecognizer *tapGesture;
 @end
 
@@ -61,34 +63,82 @@
 -(void)configContentView:(UIView*)contentView popupConstraint:(NSArray*)popup popdownConstraint:(NSArray*)popdown{
     if(contentView!=self.contentView && self.contentView && self.contentView.superview == self){
         [self.contentView removeFromSuperview];
+        self.contentView.popup_active = NO;
         _contentView = nil;
     }
     if(nil == contentView){
         return;
     }
     if(self.contentView == contentView){
-        [NSLayoutConstraint deactivateConstraints:self.popupConstraint];
-        [NSLayoutConstraint deactivateConstraints:self.popdownConstraint];
-        [self removeConstraints:self.popupConstraint];
-        [self removeConstraints:self.popdownConstraint];
+        [NSLayoutConstraint deactivateConstraints:self.contentView.popup_upLayoutConstraints];
+        [NSLayoutConstraint deactivateConstraints:self.contentView.popup_downLayoutConstraints];
+        [self removeConstraints:self.contentView.popup_upLayoutConstraints];
+        [self removeConstraints:self.contentView.popup_downLayoutConstraints];
     }
     
     _contentView = contentView;
     contentView.translatesAutoresizingMaskIntoConstraints = NO;
     [self addSubview:contentView];
     
-    self.popupConstraint = [popup copy];
-    self.popdownConstraint = [popdown copy];
+    self.contentView.popup_upLayoutConstraints = [popup copy];
+    self.contentView.popup_downLayoutConstraints = [popdown copy];
+    self.contentView.popup_active = YES;
     
-    [NSLayoutConstraint activateConstraints:self.popdownConstraint];
+    [NSLayoutConstraint activateConstraints:self.self.contentView.popup_downLayoutConstraints];
     if(self.popup){
-        [NSLayoutConstraint deactivateConstraints:self.popdownConstraint];
-        [NSLayoutConstraint activateConstraints:self.popupConstraint];
+        [NSLayoutConstraint deactivateConstraints:self.contentView.popup_downLayoutConstraints];
+        [NSLayoutConstraint activateConstraints:self.contentView.popup_downLayoutConstraints];
         
         [UIView animateWithDuration:0.3 animations:^{
             [self layoutIfNeeded];
         }];
     }
+    
+    XXOC_WS;
+    self.contentView.popup_blockWhenWillUp = ^{
+        XXOC_SS;
+        if(ss.blockWhenWillUp){
+            ss.blockWhenWillUp();
+        }
+    };
+    self.contentView.popup_blockWhenUping = ^{
+        XXOC_SS;
+        if(!ss.backgroundColorTransparent){
+            ss.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5];
+        }
+        if(ss.blockWhenUping){
+            ss.blockWhenUping();
+        }
+    };
+    self.contentView.popup_blockWhenDidUpFinished = ^{
+        XXOC_SS;
+        if(ss.blockWhenDidUpFinished){
+            ss.blockWhenDidUpFinished();
+        }
+    };
+    
+    self.contentView.popup_blockWhenWillDown = ^{
+        XXOC_SS;
+        if(ss.blockWhenWillDown){
+            ss.blockWhenWillDown();
+        }
+    };
+    self.contentView.popup_blockWhenDowning = ^{
+        XXOC_SS;
+        if(!ss.backgroundColorTransparent){
+            ss.backgroundColor = [UIColor colorWithWhite:0 alpha:0];
+        }
+        if(ss.blockWhenDowning){
+            ss.blockWhenDowning();
+        }
+    };
+    self.contentView.popup_blockWhenDidDownFinished = ^{
+        XXOC_SS;
+        [ss removeFromSuperview];
+        if(ss.blockWhenDidDownFinished){
+            ss.blockWhenDidDownFinished();
+        }
+    };
 }
 -(void)configContentViewAtCenter:(UIView*)contentView size:(CGSize)size margin:(CGFloat)margin{
     if(nil == contentView){
@@ -164,49 +214,10 @@
     [self.trailingAnchor constraintEqualToAnchor:window.trailingAnchor].active = YES;
     self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.0];
     [window layoutIfNeeded];
-    
-    [self willPopup];
-    [UIView animateWithDuration:kAnimateDuration animations:^{
-        if(!self.backgroundColorTransparent){
-            self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5];
-        }
-        [self popuping];
-    }];
+    self.contentView.popup_up = YES;
 }
 -(void)popdownFromFirstWindow{
-    [self willPopdown];
-    [UIView animateWithDuration:kAnimateDuration animations:^{
-        if(!self.backgroundColorTransparent){
-            self.backgroundColor = [UIColor colorWithWhite:0 alpha:0];
-        }
-        [self popdowning];
-    } completion:^(BOOL finished) {
-        if(finished)
-            [self removeFromSuperview];
-    }];
-}
-
--(void)willPopup{
-    if(self.popdownConstraint && self.popupConstraint){
-        [NSLayoutConstraint deactivateConstraints:self.popdownConstraint];
-        [NSLayoutConstraint activateConstraints:self.popupConstraint];
-    }
-}
--(void)popuping{
-    if(self.popdownConstraint && self.popupConstraint){
-        [self layoutIfNeeded];
-    }
-}
--(void)willPopdown{
-    if(self.popdownConstraint && self.popupConstraint){
-        [NSLayoutConstraint deactivateConstraints:self.popupConstraint];
-        [NSLayoutConstraint activateConstraints:self.popdownConstraint];
-    }
-}
--(void)popdowning{
-    if(self.popdownConstraint && self.popupConstraint){
-        [self layoutIfNeeded];
-    }
+    self.contentView.popup_up = NO;
 }
 
 -(void)onTapGesture:(UITapGestureRecognizer*)tap{
