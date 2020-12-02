@@ -34,6 +34,8 @@ NS_ASSUME_NONNULL_BEGIN
  [A,B,C,D]=B
  [A,B,C,D]*=A,B
  其中默认是都是可以缺省的
+ 
+ 当属性更改时会发出信号，sigDebugPropertyChanged(@{name:xxx,property:xxx})
  */
 +(void)addPropertyName:(NSString*)name type:(NSString*)type title:(nullable NSString*)title atBranch:(nullable NSString*)branch;
 +(nullable id)getPropertyWithName:(NSString*)name atBranch:(nullable NSString*)branch;

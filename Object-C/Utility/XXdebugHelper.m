@@ -147,6 +147,9 @@ typedef enum : NSUInteger {
             return nil;
     }
 }
+- (BOOL)isEqualProperty:(XXproperty*)property{
+    
+}
 - (NSString *)description{
     return [NSString stringWithFormat:@"[Property] def:%@ val:%@ type:%@", self.def, self.val, [self stringFromPropertyType:self.type]];
 }
@@ -264,7 +267,9 @@ typedef enum : NSUInteger {
 @property (nonatomic,strong) UIButton *okButton;
 @property (nonatomic,strong) UIButton *cancelButton;
 @property (nonatomic,strong) NSMutableDictionary *typeToItem;
+@property (nonatomic,strong) XXproperty *propertyBeforeEdit;
 @property (nonatomic,strong) XXproperty *currentPropertyEditing;
+@property (nonatomic,copy) void(^onFinishHandler)(XXproperty *_Nullable property, BOOL changed);
 @end
 static XXpropertyEditView *_editViewInstance = nil;
 @implementation XXpropertyEditView
@@ -371,6 +376,7 @@ static XXpropertyEditView *_editViewInstance = nil;
         [editItem.bottomAnchor constraintEqualToAnchor:self.hSplitView.topAnchor constant:margin.bottom].active = YES;
     }
     self.currentPropertyEditing = editItem.property;
+    self.propertyBeforeEdit = property;
     
     XXOC_WS;
     self.modalPopup_blockWhenDidDownFinished = ^{
@@ -379,6 +385,7 @@ static XXpropertyEditView *_editViewInstance = nil;
         [editItem removeFromSuperview];
     };
     self.modalPopup_popup = YES;
+    self.onFinishHandler = finishhandler;
 }
 -(void)popdown{
     self.modalPopup_popup = NO;
@@ -386,9 +393,16 @@ static XXpropertyEditView *_editViewInstance = nil;
 -(void)onTouchUpInside:(UIButton*)button{
     if(button == self.okButton){
         NSLog(@"[###] [onTouchUpInside] [ok] %@", self.currentPropertyEditing);
+        if(self.onFinishHandler){
+//            BOOL isEdited =
+            self.onFinishHandler(self.currentPropertyEditing, NO);
+        }
     }
     else if(button == self.cancelButton){
         NSLog(@"[###] [onTouchUpInside] [cancel] %@", self.currentPropertyEditing);
+        if(self.onFinishHandler){
+            self.onFinishHandler(nil, NO);
+        }
     }
     else{
         
@@ -610,7 +624,7 @@ static XXpropertyEditView *_editViewInstance = nil;
 +(void)addPropertyName:(NSString*)name type:(NSString*)type title:(nullable NSString*)title atBranch:(nullable NSString*)branch{
     [[XXdebugHelper sharedInstance] addPropertyName:name type:type];
 }
-+(nullable id)getPropertyWithName:(NSString*)name{
++(nullable id)getPropertyWithName:(NSString*)name atBranch:(nullable NSString *)branch{
     return [[XXdebugHelper sharedInstance] getPropertyWithName:name];
 }
 
