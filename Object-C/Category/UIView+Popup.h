@@ -22,6 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic,assign) BOOL popup_up;
 @property (nonatomic,assign) BOOL popup_active;
+
+-(void)popup_active:(BOOL)active animate:(BOOL)animate;
 @end
 
 NS_ASSUME_NONNULL_END

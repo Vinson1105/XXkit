@@ -1,6 +1,8 @@
 #import "UIView+Popup.h"
-#import "../XXocUtils.h"
+#import "XXocUtils.h"
 #import <objc/runtime.h>
+
+#define kAnimateDuration 0.3
 
 @implementation UIView(Popup)
 - (void)setPopup_upLayoutConstraints:(NSArray *)constraints{
@@ -67,7 +69,7 @@
 - (void)setPopup_active:(BOOL)active{
     if(self.popup_active==active) return;
     objc_setAssociatedObject(self, "popup_active", @(active), OBJC_ASSOCIATION_ASSIGN);
-    [self toActive:active];
+    [self toActive:active animate:NO];
 }
 - (BOOL)popup_active{
     id value = objc_getAssociatedObject(self, "popup_active");
@@ -95,7 +97,7 @@
             
         }
         
-        [UIView animateWithDuration:0.3 animations:^{
+        [UIView animateWithDuration:kAnimateDuration animations:^{
             XXOC_SS;
             if(popup && ss.popup_blockWhenUping){
                 ss.popup_blockWhenUping();
@@ -121,7 +123,7 @@
         }];
     }];
 }
-- (void)toActive:(BOOL)active{
+- (void)toActive:(BOOL)active animate:(BOOL)animate{
     XXOC_WS;
     [XXocUtils mainThreadProcess:^{
         XXOC_SS;
@@ -132,16 +134,27 @@
                 if(ss.popup_blockWhenWillUp){
                     ss.popup_blockWhenWillUp();
                 }
-                [UIView animateWithDuration:0.3 animations:^{
-                    [ss.superview layoutIfNeeded];
+                
+                if(animate){
+                    [UIView animateWithDuration:kAnimateDuration animations:^{
+                        [ss.superview layoutIfNeeded];
+                        if(ss.popup_blockWhenUping){
+                            ss.popup_blockWhenUping();
+                        }
+                    } completion:^(BOOL finished) {
+                        if(ss.popup_blockWhenDidUpFinished&&ss.popup_up){
+                            ss.popup_blockWhenDidUpFinished();
+                        }
+                    }];
+                }
+                else{
                     if(ss.popup_blockWhenUping){
                         ss.popup_blockWhenUping();
                     }
-                } completion:^(BOOL finished) {
-                    if(ss.popup_blockWhenDidUpFinished&&ss.popup_up){
+                    if(ss.popup_blockWhenDidUpFinished){
                         ss.popup_blockWhenDidUpFinished();
                     }
-                }];
+                }
             }
             else if(!ss.popup_up && ss.popup_downLayoutConstraints){
                 [NSLayoutConstraint activateConstraints:ss.popup_downLayoutConstraints];
@@ -149,16 +162,28 @@
                 if(ss.popup_blockWhenWillDown){
                     ss.popup_blockWhenWillDown();
                 }
-                [UIView animateWithDuration:0.3 animations:^{
-                    [ss.superview layoutIfNeeded];
+                
+                if(animate){
+                    [UIView animateWithDuration:kAnimateDuration animations:^{
+                        [ss.superview layoutIfNeeded];
+                        if(ss.popup_blockWhenDowning){
+                            ss.popup_blockWhenDowning();
+                        }
+                    } completion:^(BOOL finished) {
+                        if(ss.popup_blockWhenDidDownFinished&&!ss.popup_up){
+                            ss.popup_blockWhenDidDownFinished();
+                        }
+                    }];
+                }
+                else{
                     if(ss.popup_blockWhenDowning){
                         ss.popup_blockWhenDowning();
                     }
-                } completion:^(BOOL finished) {
-                    if(ss.popup_blockWhenDidDownFinished&&!ss.popup_up){
+                    if(ss.popup_blockWhenDidDownFinished){
                         ss.popup_blockWhenDidDownFinished();
                     }
-                }];
+                }
+                
             }
             else{
             }
@@ -172,5 +197,9 @@
             }
         }
     }];
+}
+
+-(void)popup_active:(BOOL)active animate:(BOOL)animate{
+    
 }
 @end
