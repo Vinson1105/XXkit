@@ -151,6 +151,7 @@
                     if(ss.popup_blockWhenUping){
                         ss.popup_blockWhenUping();
                     }
+                    [ss.superview layoutIfNeeded];
                     if(ss.popup_blockWhenDidUpFinished){
                         ss.popup_blockWhenDidUpFinished();
                     }
@@ -179,6 +180,7 @@
                     if(ss.popup_blockWhenDowning){
                         ss.popup_blockWhenDowning();
                     }
+                    [ss.superview layoutIfNeeded];
                     if(ss.popup_blockWhenDidDownFinished){
                         ss.popup_blockWhenDidDownFinished();
                     }
