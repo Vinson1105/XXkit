@@ -148,7 +148,16 @@ typedef enum : NSUInteger {
     }
 }
 - (BOOL)isEqualProperty:(XXproperty*)property{
-    
+    if(self.type != property.type){
+        return NO;
+    }
+    if(![self.def isEqual:property.def]){
+        return NO;
+    }
+    if(self.val && property.val && ![self.val isEqual:property.val]){
+        return NO;
+    }
+    return YES;
 }
 - (NSString *)description{
     return [NSString stringWithFormat:@"[Property] def:%@ val:%@ type:%@", self.def, self.val, [self stringFromPropertyType:self.type]];
@@ -394,19 +403,20 @@ static XXpropertyEditView *_editViewInstance = nil;
     if(button == self.okButton){
         NSLog(@"[###] [onTouchUpInside] [ok] %@", self.currentPropertyEditing);
         if(self.onFinishHandler){
-//            BOOL isEdited =
-            self.onFinishHandler(self.currentPropertyEditing, NO);
+            self.onFinishHandler(self.currentPropertyEditing,
+                                 ![self.currentPropertyEditing isEqualProperty:self.propertyBeforeEdit]);
         }
     }
     else if(button == self.cancelButton){
         NSLog(@"[###] [onTouchUpInside] [cancel] %@", self.currentPropertyEditing);
-        if(self.onFinishHandler){
-            self.onFinishHandler(nil, NO);
-        }
+//        if(self.onFinishHandler){
+//            self.onFinishHandler(nil, NO);
+//        }
     }
     else{
         
     }
+    [self popdown];
 }
 -(nullable UIView<XXpropertyEditItemDelegate>*)createEditItemForProperty:(XXproperty*)property{
     switch (property.type) {
@@ -447,6 +457,14 @@ static XXpropertyEditView *_editViewInstance = nil;
         return property.val;
     }
     return nil;
+}
+-(nullable XXproperty*)updatePropertyValue:(id)value forName:(NSString*)name{
+    XXproperty *property = self.nameToProperty[name];
+    if(!property){
+        return nil;
+    }
+    property.val = value;
+    return property;
 }
 @end
 
@@ -516,6 +534,8 @@ static XXpropertyEditView *_editViewInstance = nil;
         [self.tableViewShell configSectionRowSystemStyle:UITableViewCellStyleValue1 height:50];
         [self.tableViewShell configSectionHeaderClass:nil loadType:-1 height:40];
         [self.tableViewShell configSectionFooterClass:nil loadType:-1 height:0.01];
+        
+        XXOC_WS;
         self.tableViewShell.onSectionRowClicked = ^(XXtableViewShell * _Nonnull shell,
                                                     NSIndexPath * _Nonnull indexPath,
                                                     id  _Nonnull data) {
@@ -525,6 +545,13 @@ static XXpropertyEditView *_editViewInstance = nil;
             }
             
             [[XXpropertyEditView sharedInstance] popupWithProperty:property finishHandler:nil];
+            [XXpropertyEditView sharedInstance].onFinishHandler = ^(XXproperty * _Nullable property, BOOL changed) {
+                if(!changed){
+                    return;
+                }
+                XXOC_SS;
+                [ss updateProperty:property forName:data[@"Name"]];
+            };
         };
         
         // model
@@ -576,7 +603,6 @@ static XXpropertyEditView *_editViewInstance = nil;
 }
 -(void)onTouchUpInside:(UIButton*)button{
     if(button == self.okButton){
-        
     }
     else if(button == self.retButton){
         [self popdown];
@@ -593,7 +619,8 @@ static XXpropertyEditView *_editViewInstance = nil;
             @{
                 @"Title":name,
                 @"Detail":[NSString stringWithFormat:@"%@",property.val],
-                @"Property":property
+                @"Property":property,
+                @"Name":name
             }]
                                     atIndex:0];
     }
@@ -601,6 +628,10 @@ static XXpropertyEditView *_editViewInstance = nil;
 }
 -(nullable id)getPropertyValueWithName:(NSString*)name{
     return [self.settingModel getPropertyValueWithName:name];
+}
+-(void)updateProperty:(XXproperty*)property forName:(NSString*)name{
+    property = [self.settingModel updatePropertyValue:property.val forName:name];
+    [self.tableViewShell updateSectionRow:@{@"Detail":[NSString stringWithFormat:@"%@",property.val],@"Property":property} key:@"Name" equelTo:name];
 }
 @end
 

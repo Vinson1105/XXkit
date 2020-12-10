@@ -148,7 +148,7 @@ extern NSString * const kXXtableViewShellKeyHeight;
  @param loadType 自定义SectionHeader的加载方式
  @param height 全局SectionHeader的高度，-1：单次自适应，否则指定该高度
  */
-- (void)configSectionHeaderClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
+- (void)configSectionHeaderClass:(nullable NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
 
 #pragma mark - SectionFooter的配置
 /**
@@ -157,7 +157,7 @@ extern NSString * const kXXtableViewShellKeyHeight;
  @param loadType 自定义SectionFooter的加载方式
  @param height 全局SectionFooter的高度，-1：单次自适应，否则指定该高度
  */
-- (void)configSectionFooterClass:(NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
+- (void)configSectionFooterClass:(nullable NSString*)cls loadType:(XXtableViewShellLoadType)loadType height:(CGFloat)height;
 
 #pragma mark - 空内容时显示的配置
 /**

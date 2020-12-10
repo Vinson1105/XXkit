@@ -339,10 +339,10 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     
     NSMutableArray *localRow = sectionData[kXXtableViewShellKeySectionRow];
     if(nil == localRow){
-        sectionData[kXXtableViewShellKeySectionRow] = [[NSMutableArray alloc] initWithArray:row];
+        sectionData[kXXtableViewShellKeySectionRow] = [[NSMutableArray alloc] initWithArray:[self toMutableIfDictionaryItem:row]];
     }
     else{
-        [localRow addObjectsFromArray:row];
+        [localRow addObjectsFromArray:[self toMutableIfDictionaryItem:row]];
     }
     [self.tableView reloadData];
 }
@@ -375,7 +375,12 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     if(nil == rows){
         return;
     }
-    [rows replaceObjectAtIndex:indexPath.row withObject:data];
+    if([data isMemberOfClass:NSDictionary.class]){
+        [rows replaceObjectAtIndex:indexPath.row withObject:[[NSMutableDictionary alloc] initWithDictionary:data]];
+    }
+    else{
+        [rows replaceObjectAtIndex:indexPath.row withObject:data];
+    }
     [_tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
 }
 - (void)updateSectionRow:(NSDictionary*)row atIndexPath:(NSIndexPath*)indexPath{
@@ -466,7 +471,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
         }
     }
     else{
-        [sectionData setObject:row forKey:kXXtableViewShellKeySectionRow];
+        [sectionData setObject:[self toMutableIfDictionaryItem:row] forKey:kXXtableViewShellKeySectionRow];
     }
     [self.tableView reloadData];
 }
@@ -585,6 +590,20 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     [titleLabel.leadingAnchor constraintLessThanOrEqualToAnchor:view.leadingAnchor].active = YES;
     [titleLabel.trailingAnchor constraintLessThanOrEqualToAnchor:view.trailingAnchor].active = YES;
     return view;
+}
+
+#pragma mark - 一些私有函数
+-(NSMutableArray*)toMutableIfDictionaryItem:(NSArray*)items{
+    NSMutableArray *array = [NSMutableArray new];
+    for (id item in items) {
+        if([item isMemberOfClass:NSDictionary.class]){
+            [array addObject:[[NSMutableDictionary alloc] initWithDictionary:item]];
+        }
+        else{
+            [array addObject:item];
+        }
+    }
+    return array;
 }
 
 #pragma mark - UITableViewDataSource
