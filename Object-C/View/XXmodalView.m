@@ -82,16 +82,21 @@
     
     self.contentView.popup_upLayoutConstraints = [popup copy];
     self.contentView.popup_downLayoutConstraints = [popdown copy];
-    self.contentView.popup_active = YES;
     
-    [NSLayoutConstraint activateConstraints:self.self.contentView.popup_downLayoutConstraints];
-    if(self.popup){
-        [NSLayoutConstraint deactivateConstraints:self.contentView.popup_downLayoutConstraints];
-        [NSLayoutConstraint activateConstraints:self.contentView.popup_downLayoutConstraints];
-        
-        [UIView animateWithDuration:0.3 animations:^{
+    if(self.contentView.popup_active){
+        if(self.popup){
+            [NSLayoutConstraint activateConstraints:self.contentView.popup_upLayoutConstraints];
+            [UIView animateWithDuration:0.1 animations:^{
+                [self layoutIfNeeded];
+            }];
+        }
+        else{
+            [NSLayoutConstraint activateConstraints:self.contentView.popup_downLayoutConstraints];
             [self layoutIfNeeded];
-        }];
+        }
+    }
+    else{
+        self.contentView.popup_active = YES;
     }
     
     XXOC_WS;
