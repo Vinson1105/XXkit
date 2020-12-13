@@ -6,6 +6,10 @@
 //  Copyright © 2020 郭文轩. All rights reserved.
 //
 
+/**
+ FIXME: 使用UIView+KeyboardAdapter之后，编辑之后点击确认无法更改数据
+ */
+
 #import "XXdebugHelper.h"
 #import "../XXocUtils.h"
 #import "../Shell/XXtableViewShell.h"
@@ -15,6 +19,7 @@
 #import "../Shell/XXviewBase.h"
 #import "../Category/UIView+Popup.h"
 #import "../Category/UIView+ModalPopup.h"
+#import "../Category/UIView+KeyboradAdapter.h"
 
 static XXdebugHelper *_instance = nil;
 static NSString * const kSplitOfProperty = @"=";
@@ -202,11 +207,63 @@ typedef enum : NSUInteger {
 @property (nonatomic,copy) XXproperty *property;
 -(instancetype)initWithProperty:(XXproperty*)property;
 -(UIEdgeInsets)estimatedMargin;
--(CGFloat)estimatedHeight;
+-(CGSize)estimatedSize;
 -(void)addAction:(SEL)action forPropertyChangedAtTarget:(id)target;
 @end
 
-// string类型属性编辑Item
+// MARK: bool类型属性编辑器Item
+@interface BoolPropertyEditItem : UISwitch<XXpropertyEditItemDelegate>
+@property (nonatomic,copy) XXproperty *property;
+@property (nonatomic,weak) id target;
+@property (nonatomic,assign) SEL action;
+@end
+@implementation BoolPropertyEditItem
+- (instancetype)initWithProperty:(XXproperty *)property{
+    self = [super init];
+    if(self){
+        self.property = property;
+        [self addTarget:self action:@selector(onValueChanged) forControlEvents:UIControlEventValueChanged];
+    }
+    return self;
+}
+-(void)onValueChanged{
+    self.property.val = @(self.on);
+    if(self.target && self.action){
+        void(*method)(id,SEL,XXproperty*) = (void*)[self.target methodForSelector:self.action];
+        method(self.target, self.action, self.property);
+    }
+}
+- (void)setProperty:(XXproperty *)property{
+    if(nil==property){
+        
+    }
+    else{
+        _property = [property copy];
+    }
+    
+    if(_property.val){
+        self.on = [_property.val boolValue];
+    }
+    else if(_property.def){
+        self.on = [_property.def boolValue];
+    }
+    else{
+        self.on = NO;
+    }
+}
+- (UIEdgeInsets)estimatedMargin{
+    return UIEdgeInsetsMake(10, 10, -10, -10);
+}
+- (CGSize)estimatedSize{
+    return CGSizeMake(-1, 0);
+}
+- (void)addAction:(SEL)action forPropertyChangedAtTarget:(id)target{
+    self.action = action;
+    self.target = target;
+}
+@end
+
+// MARK: String类型属性编辑Item
 @interface StringPropertyEditItem : UITextField<XXpropertyEditItemDelegate,UITextFieldDelegate>
 @property (nonatomic,copy) XXproperty *property;
 @property (nonatomic,weak) id target;
@@ -242,10 +299,10 @@ typedef enum : NSUInteger {
     }
 }
 -(UIEdgeInsets)estimatedMargin{
-    return UIEdgeInsetsMake(10, 20, -10, -20);
+    return UIEdgeInsetsMake(10, 10, -10, -10);
 }
--(CGFloat)estimatedHeight{
-    return 45;
+-(CGSize)estimatedSize{
+    return CGSizeMake(0, 40);
 }
 -(void)addAction:(SEL)action forPropertyChangedAtTarget:(id)target{
     self.target = target;
@@ -300,6 +357,7 @@ static XXpropertyEditView *_editViewInstance = nil;
     if (self) {
         self.okButton = [UIButton buttonWithType:UIButtonTypeCustom];
         self.okButton.translatesAutoresizingMaskIntoConstraints = NO;
+        self.okButton.titleLabel.font = [UIFont systemFontOfSize:15];
         [self.okButton setTitle:@"好的" forState:UIControlStateNormal];
         [self.okButton setTitleColor:UIColor.systemBlueColor forState:UIControlStateNormal];
         [self.okButton addTarget:self action:@selector(onTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
@@ -307,6 +365,7 @@ static XXpropertyEditView *_editViewInstance = nil;
         
         self.cancelButton = [UIButton buttonWithType:UIButtonTypeCustom];
         self.cancelButton.translatesAutoresizingMaskIntoConstraints = NO;
+        self.cancelButton.titleLabel.font = [UIFont systemFontOfSize:15];
         [self.cancelButton setTitle:@"取消" forState:UIControlStateNormal];
         [self.cancelButton setTitleColor:UIColor.systemRedColor forState:UIControlStateNormal];
         [self.cancelButton addTarget:self action:@selector(onTouchUpInside:) forControlEvents:UIControlEventTouchUpInside];
@@ -322,12 +381,12 @@ static XXpropertyEditView *_editViewInstance = nil;
         self.vSplitView.backgroundColor = [XXocUtils colorFromLightHex:@"#cfcfcf" darkHex:@"#1f1f1f"];
         [self addSubview:self.vSplitView];
         
-        [self.hSplitView.heightAnchor constraintEqualToConstant:0.8].active = YES;
+        [self.hSplitView.heightAnchor constraintEqualToConstant:0.7].active = YES;
         [self.hSplitView.leadingAnchor constraintEqualToAnchor:self.leadingAnchor].active = YES;
         [self.hSplitView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor].active = YES;
-        [self.hSplitView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-50].active = YES;
+        [self.hSplitView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-45].active = YES;
         
-        [self.vSplitView.widthAnchor constraintEqualToConstant:0.8].active = YES;
+        [self.vSplitView.widthAnchor constraintEqualToConstant:0.7].active = YES;
         [self.vSplitView.centerXAnchor constraintEqualToAnchor:self.centerXAnchor].active = YES;
         [self.vSplitView.topAnchor constraintEqualToAnchor:self.hSplitView.bottomAnchor].active = YES;
         [self.vSplitView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor].active = YES;
@@ -344,8 +403,22 @@ static XXpropertyEditView *_editViewInstance = nil;
         
         self.modalPopup_backgroundColorTransparent = NO;
         self.modalPopup_touchBackgroundToPopdown = YES;
-        [self modalPopup_configAtCenterSize:CGSizeMake(0, 200) margin:20];
+//        [self modalPopup_configAtBottomSize:CGSizeMake(0, 0) margin:20];
         
+        NSMutableArray *upLayouts = [NSMutableArray new];
+        [upLayouts addObject:[self.leadingAnchor constraintEqualToAnchor:self.modalPopup_backgroundView.leadingAnchor constant:20]];
+        [upLayouts addObject:[self.trailingAnchor constraintEqualToAnchor:self.modalPopup_backgroundView.trailingAnchor constant:-20]];
+        [upLayouts addObject:[self.bottomAnchor constraintEqualToAnchor:self.modalPopup_backgroundView.bottomAnchor constant:-20]];
+        
+        NSMutableArray *downLayouts = [NSMutableArray new];
+        [downLayouts addObject:[self.leadingAnchor constraintEqualToAnchor:self.modalPopup_backgroundView.leadingAnchor constant:20]];
+        [downLayouts addObject:[self.trailingAnchor constraintEqualToAnchor:self.modalPopup_backgroundView.trailingAnchor constant:-20]];
+        [downLayouts addObject:[self.topAnchor constraintEqualToAnchor:self.modalPopup_backgroundView.bottomAnchor constant:20]];
+        
+        [self modalPopup_configPopupConstraint:upLayouts popdownConstraint:downLayouts];
+        [self keyboradAdapter_install:YES];
+        self.keyboradAdapter_vlayout = upLayouts[2];
+
         self.backgroundColor = [XXocUtils colorFromLightHex:@"ffffff" darkHex:@"#1f1f1f"];
         self.layer.cornerRadius = 20;
     }
@@ -361,29 +434,34 @@ static XXpropertyEditView *_editViewInstance = nil;
         if(editItem){
             editItem.translatesAutoresizingMaskIntoConstraints = NO;
             self.typeToItem[@(property.type)] = editItem;
-            CGFloat height = [editItem estimatedHeight];
-            if(height>0){
-                [editItem.heightAnchor constraintEqualToConstant:height].active = YES;;
-            }
             [editItem addAction:@selector(onPropertyChanged:) forPropertyChangedAtTarget:self];
         }
     }
     if(nil == editItem){
         return;
     }
-    
-    UIEdgeInsets margin = [editItem estimatedMargin];
     [self addSubview:editItem];
     
-    [editItem.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:margin.left].active = YES;
-    [editItem.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:margin.right].active = YES;
-    if([editItem estimatedHeight]>0){
-        [editItem.centerYAnchor constraintEqualToAnchor:self.centerYAnchor constant:-20].active = YES;
+    
+    CGSize size = [editItem estimatedSize];
+    if(size.width>0){
+        [editItem.widthAnchor constraintEqualToConstant:size.width].active = YES;;
+    }
+    if(size.height>0){
+        [editItem.heightAnchor constraintEqualToConstant:size.height].active = YES;;
+    }
+    
+    UIEdgeInsets margin = [editItem estimatedMargin];
+    if(size.width>0||-1==size.width){
+        [editItem.centerXAnchor constraintEqualToAnchor:self.centerXAnchor].active = YES;
     }
     else{
-        [editItem.topAnchor constraintEqualToAnchor:self.topAnchor constant:margin.top].active = YES;
-        [editItem.bottomAnchor constraintEqualToAnchor:self.hSplitView.topAnchor constant:margin.bottom].active = YES;
+        [editItem.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:margin.left].active = YES;
+        [editItem.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:margin.right].active = YES;
     }
+    [editItem.topAnchor constraintEqualToAnchor:self.topAnchor constant:margin.top].active = YES;
+    [editItem.bottomAnchor constraintEqualToAnchor:self.hSplitView.topAnchor constant:margin.bottom].active = YES;
+
     self.currentPropertyEditing = editItem.property;
     self.propertyBeforeEdit = property;
     
@@ -422,6 +500,8 @@ static XXpropertyEditView *_editViewInstance = nil;
     switch (property.type) {
         case XXpropertyTypeString:
             return [[StringPropertyEditItem alloc] initWithProperty:property];
+        case XXpropertyTypeBool:
+            return [[BoolPropertyEditItem alloc] initWithProperty:property];
         default:
             return nil;
     }
