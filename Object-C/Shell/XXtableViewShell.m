@@ -596,7 +596,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
 -(NSMutableArray*)toMutableIfDictionaryItem:(NSArray*)items{
     NSMutableArray *array = [NSMutableArray new];
     for (id item in items) {
-        if([item isMemberOfClass:NSDictionary.class]){
+        if([item isKindOfClass:NSDictionary.class] && ![item isMemberOfClass:NSMutableDictionary.class]){
             [array addObject:[[NSMutableDictionary alloc] initWithDictionary:item]];
         }
         else{
