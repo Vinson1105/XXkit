@@ -208,6 +208,7 @@ typedef enum : NSUInteger {
 -(instancetype)initWithProperty:(XXproperty*)property;
 -(UIEdgeInsets)estimatedMargin;
 -(CGSize)estimatedSize;
+-(void)finish;
 -(void)addAction:(SEL)action forPropertyChangedAtTarget:(id)target;
 @end
 
@@ -257,6 +258,9 @@ typedef enum : NSUInteger {
 - (CGSize)estimatedSize{
     return CGSizeMake(-1, 0);
 }
+- (void)finish{
+    
+}
 - (void)addAction:(SEL)action forPropertyChangedAtTarget:(id)target{
     self.action = action;
     self.target = target;
@@ -304,13 +308,23 @@ typedef enum : NSUInteger {
 -(CGSize)estimatedSize{
     return CGSizeMake(0, 40);
 }
+- (void)finish{
+    [self finishWithString:self.text];
+}
 -(void)addAction:(SEL)action forPropertyChangedAtTarget:(id)target{
     self.target = target;
     self.action = action;
 }
 - (void)textFieldDidEndEditing:(UITextField *)textField{
-    if((self.property.val && ![textField.text isEqualToString:self.property.val]) || ![textField.text isEqualToString:self.property.def]){
-        self.property.val = textField.text;
+    [self finishWithString:textField.text];
+}
+- (BOOL)textFieldShouldReturn:(UITextField *)textField{
+    [textField resignFirstResponder];
+    return YES;
+}
+-(void)finishWithString:(NSString*)string{
+    if((self.property.val && ![string isEqualToString:self.property.val]) || ![string isEqualToString:self.property.def]){
+        self.property.val = string;
         if(!self.target || !self.action){
             return;
         }
@@ -319,10 +333,6 @@ typedef enum : NSUInteger {
         void (*methodPtr)(id, SEL, XXproperty*) = (void*)method;
         methodPtr(self.target,self.action,self.property);
     }
-}
-- (BOOL)textFieldShouldReturn:(UITextField *)textField{
-    [textField resignFirstResponder];
-    return YES;
 }
 @end
 
@@ -335,6 +345,7 @@ typedef enum : NSUInteger {
 @property (nonatomic,strong) NSMutableDictionary *typeToItem;
 @property (nonatomic,strong) XXproperty *propertyBeforeEdit;
 @property (nonatomic,strong) XXproperty *currentPropertyEditing;
+@property (nonatomic,strong) UIView<XXpropertyEditItemDelegate> *currentPropertyItem;
 @property (nonatomic,copy) void(^onFinishHandler)(XXproperty *_Nullable property, BOOL changed);
 @end
 static XXpropertyEditView *_editViewInstance = nil;
@@ -464,6 +475,7 @@ static XXpropertyEditView *_editViewInstance = nil;
 
     self.currentPropertyEditing = editItem.property;
     self.propertyBeforeEdit = property;
+    self.currentPropertyItem = editItem;
     
     XXOC_WS;
     self.modalPopup_blockWhenDidDownFinished = ^{
@@ -478,6 +490,7 @@ static XXpropertyEditView *_editViewInstance = nil;
     self.modalPopup_popup = NO;
 }
 -(void)onTouchUpInside:(UIButton*)button{
+    [self.currentPropertyItem finish];
     if(button == self.okButton){
         NSLog(@"[###] [onTouchUpInside] [ok] %@", self.currentPropertyEditing);
         if(self.onFinishHandler){
