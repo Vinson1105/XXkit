@@ -51,10 +51,12 @@
         NSLog(@"[###] [*] %@ %@ %d",NSStringFromCGRect(keyBoardRect),NSStringFromCGRect(frame),CGRectContainsRect(keyBoardRect, frame));
         if(!CGRectContainsRect(keyBoardRect, frame) || !self.keyboradAdapter_vlayout)
             return;
-        CGFloat offset = frame.origin.y - keyBoardRect.size.height;
+        CGFloat offset = frame.origin.y - keyBoardRect.size.height+25;
         self.contentOffsetBeforeShow = CGPointMake(0, self.keyboradAdapter_vlayout.constant);
         self.keyboradAdapter_vlayout.constant -= offset;
-        [self updateConstraints];
+        [UIView animateWithDuration:0.2 animations:^{
+            [self layoutIfNeeded];
+        }];
     }
 }
 -(void)keyboardWillHide:(NSNotification *)notification{
@@ -69,7 +71,9 @@
             return;
         }
         self.keyboradAdapter_vlayout.constant = self.contentOffsetBeforeShow.y;
-        [self updateConstraints];
+        [UIView animateWithDuration:0.2 animations:^{
+            [self layoutIfNeeded];
+        }];
     }
 }
 @end
