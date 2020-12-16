@@ -224,8 +224,9 @@ extern NSString * const kXXtableViewShellKeyHeight;
  @param header section的header数据
  @param row section的row数据，为nil时，该section的row数量为0
  @param footer section的footer数据
+ @return 返回新增seciotn 的index
  */
-- (void)addSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer;
+- (NSUInteger)addSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer;
 
 /**
  在指定位置插入一个section

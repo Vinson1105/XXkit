@@ -265,13 +265,14 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
 }
 
 #pragma mark - Section的增删改查
-- (void)addSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
+- (NSUInteger)addSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
     NSMutableDictionary *section = [NSMutableDictionary new];
     if(nil != header) [section setObject:header forKey:kXXtableViewShellKeySectionHeader];
     if(nil != footer) [section setObject:footer forKey:kXXtableViewShellKeySectionFooter];
     if(nil != row) [section setObject:row forKey:kXXtableViewShellKeySectionRow];
     [_sectionDatas addObject:section];
     [_tableView reloadData];
+    return _sectionDatas.count-1;
 }
 - (void)insertSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(id)footer atIndex:(int)index{
     NSMutableDictionary *section = [NSMutableDictionary new];

@@ -6,9 +6,6 @@
 //  Copyright © 2020 郭文轩. All rights reserved.
 //
 
-/**
- FIXME: 使用UIView+KeyboardAdapter之后，编辑之后点击确认无法更改数据
- */
 
 #import "XXdebugHelper.h"
 #import "../XXocUtils.h"
@@ -293,10 +290,10 @@ typedef enum : NSUInteger {
     }
     
     if(_property.val){
-        self.text = property.val;
+        self.text = [NSString stringWithFormat:@"%@",property.val];
     }
     else if(_property.def){
-        self.text = property.def;
+        self.text = [NSString stringWithFormat:@"%@",property.def];
     }
     else {
         self.text = @"";
@@ -323,16 +320,42 @@ typedef enum : NSUInteger {
     return YES;
 }
 -(void)finishWithString:(NSString*)string{
-    if((self.property.val && ![string isEqualToString:self.property.val]) || ![string isEqualToString:self.property.def]){
-        self.property.val = string;
-        if(!self.target || !self.action){
+    if(XXpropertyTypeString == self.property.type){
+        if((self.property.val && ![string isEqualToString:self.property.val]) || ![string isEqualToString:self.property.def]){
+            self.property.val = string;
+        }
+        else{
             return;
         }
-        
-        IMP method = [self.target methodForSelector:self.action];
-        void (*methodPtr)(id, SEL, XXproperty*) = (void*)method;
-        methodPtr(self.target,self.action,self.property);
     }
+    else if(XXpropertyTypeInt == self.property.type){
+        NSNumber *intNumber = @([string intValue]);
+        if((self.property.val && ![intNumber isEqual:self.property.val]) || ![intNumber isEqual:self.property.def]){
+            self.property.val = intNumber;
+        }
+        else{
+            return;
+        }
+    }
+    else if(XXpropertyTypeFloat == self.property.type){
+        NSNumber *floatNumber = @([string floatValue]);
+        if((self.property.val && ![floatNumber isEqual:self.property.val]) || ![floatNumber isEqual:self.property.def]){
+            self.property.val = floatNumber;
+        }
+        else{
+            return;
+        }
+    }
+    else {
+        return;
+    }
+
+    if(!self.target || !self.action){
+        return;
+    }
+    IMP method = [self.target methodForSelector:self.action];
+    void (*methodPtr)(id, SEL, XXproperty*) = (void*)method;
+    methodPtr(self.target,self.action,self.property);
 }
 @end
 
@@ -512,6 +535,8 @@ static XXpropertyEditView *_editViewInstance = nil;
 -(nullable UIView<XXpropertyEditItemDelegate>*)createEditItemForProperty:(XXproperty*)property{
     switch (property.type) {
         case XXpropertyTypeString:
+        case XXpropertyTypeInt:
+        case XXpropertyTypeFloat:
             return [[StringPropertyEditItem alloc] initWithProperty:property];
         case XXpropertyTypeBool:
             return [[BoolPropertyEditItem alloc] initWithProperty:property];
@@ -526,34 +551,56 @@ static XXpropertyEditView *_editViewInstance = nil;
 
 // MARK: 调试器数据模型
 @interface DebugSettingModel : NSObject
-@property (nonatomic,strong) NSMutableDictionary *nameToProperty;
+@property (nonatomic,strong) NSMutableDictionary *branchToPropertys;
 @end
 @implementation DebugSettingModel
 - (instancetype)init{
     self = [super init];
     if (self) {
-        self.nameToProperty = [NSMutableDictionary new];
+        self.branchToPropertys = [NSMutableDictionary new];
     }
     return self;
 }
--(BOOL)addPropertyName:(NSString*)name type:(NSString*)type{
+-(BOOL)addPropertyName:(NSString*)name type:(NSString*)type atBranch:(NSString*)branch{
     XXproperty *property = [XXproperty propertyFromString:type];
     if(nil == property){
         return NO;
     }
-    self.nameToProperty[name] = property;
+    
+    NSMutableDictionary *propertys = self.branchToPropertys[branch];
+    if(nil==propertys){
+        propertys = [NSMutableDictionary new];
+        self.branchToPropertys[branch] = propertys;
+    }
+    
+    propertys[name] = property;
     return YES;
 }
--(nullable id)getPropertyValueWithName:(NSString*)name{
-    XXproperty *property = self.nameToProperty[name];
-    if(property){
-        return property.val;
+-(nullable XXproperty*)getPropertyWithName:(NSString*)name atBranch:(NSString*)branch{
+    NSMutableDictionary *propertys = self.branchToPropertys[branch];
+    if(nil==propertys){
+        return nil;
     }
-    return nil;
+    return propertys[name];
 }
--(nullable XXproperty*)updatePropertyValue:(id)value forName:(NSString*)name{
-    XXproperty *property = self.nameToProperty[name];
-    if(!property){
+-(nullable id)getPropertyValueWithName:(NSString*)name atBranch:(NSString*)branch{
+    NSMutableDictionary *propertys = self.branchToPropertys[branch];
+    if(nil==propertys){
+        return nil;
+    }
+    XXproperty *property = propertys[name];
+    if(nil==property){
+        return nil;
+    }
+    return property.val;
+}
+-(nullable XXproperty*)updatePropertyValue:(id)value forName:(NSString*)name branch:(NSString*)branch{
+    NSMutableDictionary *propertys = self.branchToPropertys[branch];
+    if(nil==propertys){
+        return nil;
+    }
+    XXproperty *property = propertys[name];
+    if(nil==property){
         return nil;
     }
     property.val = value;
@@ -643,7 +690,14 @@ static XXpropertyEditView *_editViewInstance = nil;
                     return;
                 }
                 XXOC_SS;
-                [ss updateProperty:property forName:data[@"Name"]];
+                NSString *path = data[@"Path"];
+                NSRange range = [path rangeOfString:@"/"];
+                if(range.location == NSNotFound){
+                    return;
+                }
+                NSString *branch = [path substringWithRange:NSMakeRange(0, range.location)];
+                NSString *name = [path substringWithRange:NSMakeRange(range.location+1, path.length-range.location-1)];
+                [ss updateProperty:property forName:name branch:branch];
             };
         };
         
@@ -704,27 +758,39 @@ static XXpropertyEditView *_editViewInstance = nil;
         
     }
 }
--(BOOL)addPropertyName:(NSString*)name type:(NSString*)type{
-    BOOL succeed = [self.settingModel addPropertyName:name type:type];
+-(BOOL)addPropertyName:(NSString*)name type:(NSString*)type title:(NSString*)title atBranch:(NSString*)branch{
+    BOOL succeed = [self.settingModel addPropertyName:name type:type atBranch:branch];
     if(succeed){
-        XXproperty *property = self.settingModel.nameToProperty[name];
-        [self.tableViewShell addSectionRows:@[
-            @{
-                @"Title":name,
-                @"Detail":[NSString stringWithFormat:@"%@",property.val],
-                @"Property":property,
-                @"Name":name
-            }]
-                                    atIndex:0];
+        NSDictionary *branchToPropertys = self.settingModel.branchToPropertys;
+        [branchToPropertys enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+            NSString *branch = key;
+            
+            NSDictionary *propertys = obj;
+            NSMutableArray *rows = [NSMutableArray new];
+            [propertys enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+                NSString *name = key;
+                XXproperty *property = obj;
+                [rows addObject:@{
+                    @"Title":title,
+                    @"Detail":[NSString stringWithFormat:@"%@",property.val],
+                    @"Property":property,
+                    @"Path":[NSString stringWithFormat:@"%@/%@",branch,name]
+                }];
+            }];
+            
+            [self.tableViewShell addSectionHeader:branch row:rows footer:nil];
+        }];
     }
     return succeed;
 }
--(nullable id)getPropertyValueWithName:(NSString*)name{
-    return [self.settingModel getPropertyValueWithName:name];
+-(nullable id)getPropertyValueWithName:(NSString*)name atBranch:(NSString *)branch{
+    return [self.settingModel getPropertyValueWithName:name atBranch:branch];
 }
--(void)updateProperty:(XXproperty*)property forName:(NSString*)name{
-    property = [self.settingModel updatePropertyValue:property.val forName:name];
-    [self.tableViewShell updateSectionRow:@{@"Detail":[NSString stringWithFormat:@"%@",property.val],@"Property":property} key:@"Name" equelTo:name];
+-(void)updateProperty:(XXproperty*)property forName:(NSString*)name branch:(NSString*)branch{
+    property = [self.settingModel updatePropertyValue:property.val forName:name branch:branch];
+    [self.tableViewShell updateSectionRow:@{@"Detail":[NSString stringWithFormat:@"%@",property.val],@"Property":property}
+                                      key:@"Path"
+                                  equelTo:[NSString stringWithFormat:@"%@/%@",branch,name]];
 }
 @end
 
@@ -746,10 +812,10 @@ static XXpropertyEditView *_editViewInstance = nil;
     [XXdebugHelper sharedInstance].window = window;
 }
 +(void)addPropertyName:(NSString*)name type:(NSString*)type title:(nullable NSString*)title atBranch:(nullable NSString*)branch{
-    [[XXdebugHelper sharedInstance] addPropertyName:name type:type];
+    [[XXdebugHelper sharedInstance] addPropertyName:name type:type title:title atBranch:branch];
 }
 +(nullable id)getPropertyWithName:(NSString*)name atBranch:(nullable NSString *)branch{
-    return [[XXdebugHelper sharedInstance] getPropertyWithName:name];
+    return [[XXdebugHelper sharedInstance] getPropertyWithName:name atBranch:branch];
 }
 
 - (instancetype)init{
@@ -772,8 +838,10 @@ static XXpropertyEditView *_editViewInstance = nil;
         self.settingView = [DebugSettingView new];
         
         // name to type
-        [self addPropertyName:@"LogServer" type:@"string=192.168.0.1:32323"];
-        [self addPropertyName:@"LogServerEnabled" type:@"bool=0"];
+        [self addPropertyName:@"LogServer" type:@"string=192.168.0.1:32323" title:@"显示终端IP" atBranch:@"Network"];
+        [self addPropertyName:@"LogServerEnabled" type:@"bool=0" title:@"显示终端开关" atBranch:@"Network"];
+        [self addPropertyName:@"int" type:@"int=111" title:@"整型" atBranch:@"branch1"];
+        [self addPropertyName:@"float" type:@"float=222.222" title:@"浮点型" atBranch:@"branch2"];
     }
     return self;
 }
@@ -788,14 +856,14 @@ static XXpropertyEditView *_editViewInstance = nil;
     }
     self.settingView.window = window;
 }
--(void)addPropertyName:(NSString*)name type:(NSString*)type{
-    if(![self.settingView addPropertyName:name type:type]){
+-(void)addPropertyName:(NSString*)name type:(NSString*)type title:(NSString*)title atBranch:(NSString *)branch{
+    if(![self.settingView addPropertyName:name type:type title:title atBranch:branch]){
         NSLog(@"[%@] 配置属性失败。（name:%@ type:%@）", NSStringFromClass(self.class), name, type);
         return;
     }
 }
--(nullable id)getPropertyWithName:(NSString*)name{
-    return [self.settingView getPropertyValueWithName:name];
+-(nullable id)getPropertyWithName:(NSString*)name atBranch:(NSString *)branch{
+    return [self.settingView getPropertyValueWithName:name atBranch:branch];
 }
 - (void)onIndicaterViewTouched{
     [self.settingView popupFromRect:self.indicaterView.frame];
