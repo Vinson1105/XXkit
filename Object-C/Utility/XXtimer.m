@@ -1,4 +1,5 @@
 #import "XXtimer.h"
+#import "../XXocUtils.h"
 
 @interface XXtimer()
 @property (nonatomic,strong) dispatch_source_t timer;
@@ -45,20 +46,41 @@
     _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue);
     dispatch_source_set_timer(_timer, dispatch_time(DISPATCH_TIME_NOW, _delay*NSEC_PER_SEC), _interval*NSEC_PER_SEC, 0);
 
-    __weak typeof(self) weakSelf = self;
+    XXOC_WS;
     dispatch_source_set_event_handler(_timer, ^{
-        __strong typeof(self) strongSelf = weakSelf;
-        ++strongSelf.index;
-        if(strongSelf.index < 0){
+        XXOC_SS;
+        ++ss.index;
+        if(ss.index < 0){
             /// 由于delay和interval都会触发这个回调，当delay为1时，interval为2时，start后1s，delay结束会触发一次回调，然后在循环2s触发interval，所以这里第一次触发直接返回
+            if(!ss.onDelayout){
+                return;
+            }
+            
+            if(ss.isMainThreadBlock){
+                [XXocUtils mainThreadProcess:^{
+                    XXOC_SS;
+                    ss.onDelayout(ss);
+                }];
+            }
+            else{
+                ss.onDelayout(ss);
+            }
             return;
         }
         
-        if(strongSelf.singleShot){
-            [strongSelf stop];
+        if(ss.singleShot){
+            [ss stop];
         }
-        if(strongSelf.onTimeout){
-            strongSelf.onTimeout(strongSelf,strongSelf.index);
+        if(ss.onTimeout){
+            if(ss.isMainThreadBlock){
+                [XXocUtils mainThreadProcess:^{
+                    XXOC_SS;
+                    ss.onTimeout(ss,ss.index);
+                }];
+            }
+            else{
+                ss.onTimeout(ss,ss.index);
+            }
         }
     });
     dispatch_resume(_timer);

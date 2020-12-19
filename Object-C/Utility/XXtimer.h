@@ -12,7 +12,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface XXtimer : NSObject
 /** 定时器触发回调，其中index为本次的触发的编号，从0开始 */
 @property (nonatomic,copy) void(^onTimeout)(XXtimer *timer, int index);
+@property (nonatomic,copy) void(^onDelayout)(XXtimer *timer);
 @property (nonatomic,assign,readonly) BOOL isRunning;
+@property (nonatomic,assign) BOOL isMainThreadBlock;  // 是否为主线程回调
 
 /**
  创建timer实例
