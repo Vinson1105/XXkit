@@ -263,9 +263,21 @@ extern NSString * const kXXtableViewShellKeyHeight;
  */
 - (void)getSectionSyncAtIndex:(NSInteger)index ret:(void(^)(id header, NSArray *row, id footer))ret;
 
-#pragma mark - Section中某一个或者多个Row的增删改查
 /**
- 在指定index中的增Section加若干个Row
+ 获取包含key:value的Section对应的index，其中key可以为nil，为nil时将Section的数据视为一个非Dict类型值，将直接与value比较
+ */
+- (NSInteger)getSectionIndexWithHeaderKey:(nullable NSString*)key equelTo:(id)value;
+- (NSInteger)getSectionIndexWithFooterKey:(nullable NSString*)key equelTo:(id)value;
+
+#pragma mark - SectionHeader的增删改查
+- (NSInteger)addSectionHeader:(id)header;
+- (void)removeSectionHeaderAtIndex:(NSInteger)index;
+- (void)updateSectionHeader:(id)header atIndex:(NSInteger)index;
+- (nullable id)getSectionHeaderAtIndex:(NSInteger)index;
+
+#pragma mark - SectionRow的增删改查
+/**
+ 在指定index中的Section增加若干个Row
  @param rows 追加的row的数据
  @param index 目标section的位置
  */

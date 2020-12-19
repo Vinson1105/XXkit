@@ -1,5 +1,6 @@
 #import "XXtableViewShell.h"
 #import "XXviewBase.h"
+#import "../XXocUtils.h"
 
 #define kReuseRowDefault    @"ReuseRowDefault"
 #define kReuseHeaderDefault @"ReuseHeaderDefault"
@@ -267,18 +268,50 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
 #pragma mark - Section的增删改查
 - (NSUInteger)addSectionHeader:(nullable id)header row:(nullable NSArray*)row footer:(nullable id)footer{
     NSMutableDictionary *section = [NSMutableDictionary new];
-    if(nil != header) [section setObject:header forKey:kXXtableViewShellKeySectionHeader];
-    if(nil != footer) [section setObject:footer forKey:kXXtableViewShellKeySectionFooter];
-    if(nil != row) [section setObject:row forKey:kXXtableViewShellKeySectionRow];
+    if(nil != header){
+        if([header isKindOfClass:NSDictionary.class]){
+            [section setObject:[header mutableCopy] forKey:kXXtableViewShellKeySectionHeader];
+        }
+        else{
+            [section setObject:header forKey:kXXtableViewShellKeySectionHeader];
+        }
+    }
+    if(nil != footer){
+        if([header isKindOfClass:NSDictionary.class]){
+            [section setObject:[footer mutableCopy] forKey:kXXtableViewShellKeySectionFooter];
+        }
+        else{
+            [section setObject:footer forKey:kXXtableViewShellKeySectionFooter];
+        }
+    }
+    if(nil != row){
+        [section setObject:[self toMutableIfDictionaryItem:row] forKey:kXXtableViewShellKeySectionRow];
+    }
     [_sectionDatas addObject:section];
     [_tableView reloadData];
     return _sectionDatas.count-1;
 }
 - (void)insertSectionWithHeader:(nullable id)header row:(nullable NSArray*)row footer:(id)footer atIndex:(int)index{
     NSMutableDictionary *section = [NSMutableDictionary new];
-    if(nil != header) [section setObject:header forKey:kXXtableViewShellKeySectionHeader];
-    if(nil != footer) [section setObject:footer forKey:kXXtableViewShellKeySectionFooter];
-    if(nil != row) [section setObject:row forKey:kXXtableViewShellKeySectionRow];
+    if(nil != header){
+        if([header isKindOfClass:NSDictionary.class]){
+            [section setObject:[header mutableCopy] forKey:kXXtableViewShellKeySectionHeader];
+        }
+        else{
+            [section setObject:header forKey:kXXtableViewShellKeySectionHeader];
+        }
+    }
+    if(nil != footer){
+        if([header isKindOfClass:NSDictionary.class]){
+            [section setObject:[footer mutableCopy] forKey:kXXtableViewShellKeySectionFooter];
+        }
+        else{
+            [section setObject:footer forKey:kXXtableViewShellKeySectionFooter];
+        }
+    }
+    if(nil != row){
+        [section setObject:[self toMutableIfDictionaryItem:row] forKey:kXXtableViewShellKeySectionRow];
+    }
     [_sectionDatas insertObject:section atIndex:index];
     [_tableView reloadData];
 }
@@ -317,6 +350,98 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     if(ret){
         ret(header, row, footer);
     }
+}
+- (NSInteger)getSectionIndexWithHeaderKey:(nullable NSString*)key equelTo:(id)value{
+    __block NSInteger index = -1;
+    [self.sectionDatas enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSDictionary *sectionData = obj;
+        id sectionHeaderData = sectionData[kXXtableViewShellKeySectionHeader];
+        if(nil == sectionHeaderData){
+            return;
+        }
+        
+        if([sectionHeaderData isKindOfClass:NSDictionary.class]){
+            if(nil == key){
+                return;
+            }
+            if([XXocUtils dictionary:sectionHeaderData contains:@{key:value}]){
+                index = idx;
+                *stop = YES;
+            }
+        }
+        else{
+            if(key){
+                return;
+            }
+            if([sectionHeaderData isEqual:value]){
+                index = idx;
+                *stop = YES;
+            }
+        }
+    }];
+    return index;
+}
+- (NSInteger)getSectionIndexWithFooterKey:(nullable NSString*)key equelTo:(id)value{
+    __block NSInteger index = -1;
+    [self.sectionDatas enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSDictionary *sectionData = obj;
+        id sectionFooterData = sectionData[kXXtableViewShellKeySectionFooter];
+        if(nil == sectionFooterData){
+            return;
+        }
+        
+        if([sectionFooterData isKindOfClass:NSDictionary.class]){
+            if(nil == key){
+                return;
+            }
+            if([XXocUtils dictionary:sectionFooterData contains:@{key:value}]){
+                index = idx;
+                *stop = YES;
+            }
+        }
+        else{
+            if(key){
+                return;
+            }
+            if([sectionFooterData isEqual:value]){
+                index = idx;
+                *stop = YES;
+            }
+        }
+    }];
+    return index;
+}
+
+#pragma mark - SectionHeader的增删改查
+- (NSInteger)addSectionHeader:(id)header{
+    [self addSectionHeader:header row:nil footer:nil];
+    return self.sectionDatas.count-1;
+}
+- (void)removeSectionHeaderAtIndex:(NSInteger)index{
+    NSMutableDictionary *sectionData = self.sectionDatas[index];
+    if(nil == sectionData){
+        return;
+    }
+    [sectionData removeObjectForKey:kXXtableViewShellKeySectionHeader];
+}
+- (void)updateSectionHeader:(id)header atIndex:(NSInteger)index{
+    id sectionHeaderData = [self getHeaderWithSection:index];
+    if(![sectionHeaderData isKindOfClass:header]){
+        return;
+    }
+    
+    if([sectionHeaderData isKindOfClass:NSDictionary.class]){
+        [sectionHeaderData addEntriesFromDictionary:header];
+    }
+    else{
+        self.sectionDatas[index][kXXtableViewShellKeySectionHeader] = header;
+    }
+}
+- (nullable id)getSectionHeaderAtIndex:(NSInteger)index{
+    if(index>=self.sectionDatas.count){
+        return nil;
+    }
+    return self.sectionDatas[index][kXXtableViewShellKeySectionHeader];
 }
 
 #pragma mark - Section中某一个或者多个Row的增删改查
@@ -428,6 +553,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
         
         NSMutableArray *rowDatas = sectionData[kXXtableViewShellKeySectionRow];
         for (id rowData in rowDatas) {
+            NSLog(@"%@",NSStringFromClass([rowData class]));
             if(![rowData isKindOfClass:NSMutableDictionary.class]){
                 continue;
             }
