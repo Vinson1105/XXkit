@@ -338,7 +338,7 @@ typedef enum : NSUInteger {
         }
     }
     else if(XXpropertyTypeFloat == self.property.type){
-        NSNumber *floatNumber = @([string floatValue]);
+        NSNumber *floatNumber = [NSDecimalNumber decimalNumberWithString:string];//@([string floatValue]);
         if((self.property.val && ![floatNumber isEqual:self.property.val]) || ![floatNumber isEqual:self.property.def]){
             self.property.val = floatNumber;
         }
@@ -760,28 +760,25 @@ static XXpropertyEditView *_editViewInstance = nil;
 }
 -(BOOL)addPropertyName:(NSString*)name type:(NSString*)type title:(NSString*)title atBranch:(NSString*)branch{
     BOOL succeed = [self.settingModel addPropertyName:name type:type atBranch:branch];
-    if(succeed){
-        NSDictionary *branchToPropertys = self.settingModel.branchToPropertys;
-        [branchToPropertys enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-            NSString *branch = key;
-            
-            NSDictionary *propertys = obj;
-            NSMutableArray *rows = [NSMutableArray new];
-            [propertys enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-                NSString *name = key;
-                XXproperty *property = obj;
-                [rows addObject:@{
-                    @"Title":title,
-                    @"Detail":[NSString stringWithFormat:@"%@",property.val],
-                    @"Property":property,
-                    @"Path":[NSString stringWithFormat:@"%@/%@",branch,name]
-                }];
-            }];
-            
-            [self.tableViewShell addSectionHeader:branch row:rows footer:nil];
-        }];
+    if(!succeed){
+        return NO;
     }
-    return succeed;
+    XXproperty *property = [self.settingModel getPropertyWithName:name atBranch:branch];
+    NSDictionary *row = @{
+        @"Title":title,
+        @"Detail":[NSString stringWithFormat:@"%@",property.val],
+        @"Property":property,
+        @"Path":[NSString stringWithFormat:@"%@/%@",branch,name]
+    };
+    
+    NSInteger sectionIndex = [self.tableViewShell getSectionIndexWithHeaderKey:nil equelTo:branch];
+    if(sectionIndex<0){
+        [self.tableViewShell addSectionHeader:branch row:@[row] footer:nil];
+    }
+    else{
+        [self.tableViewShell addSectionRows:@[row] atIndex:sectionIndex];
+    }
+    return YES;
 }
 -(nullable id)getPropertyValueWithName:(NSString*)name atBranch:(NSString *)branch{
     return [self.settingModel getPropertyValueWithName:name atBranch:branch];
