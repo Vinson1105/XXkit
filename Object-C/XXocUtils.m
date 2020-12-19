@@ -229,19 +229,16 @@ static NSDateFormatter *_dateFormatter;
     }
     return alert;
 }
-+ (void)alert:(UIAlertController*)alert
-      okTitle:(nullable NSString*)okTitle
-         onOK:(nullable void (^)(UIAlertAction *action))onOK
-  cancelTitle:(nullable NSString*)cancelTitle
-     onCancel:(nullable void (^)(UIAlertAction *action))onCancel{
-    if(okTitle && onOK){
-        UIAlertAction* okAction     = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleDefault handler:onOK];
-        [alert addAction:okAction];
-    }
-    if(cancelTitle && onCancel){
-        UIAlertAction* cancelAction = [UIAlertAction actionWithTitle:cancelTitle style:UIAlertActionStyleCancel handler:onCancel];
-        [alert addAction:cancelAction];
-    }
+
+#pragma mark - <NSDictionary>
++ (BOOL)dictionary:(NSDictionary*)dictionary contains:(NSDictionary*)contains{
+    __block NSInteger containsCount = 0;
+    [contains enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+        if(dictionary[key] && [dictionary[key] isEqual:obj]){
+            ++containsCount;
+        }
+    }];
+    return contains.count==containsCount;
 }
 
 #pragma mark - <JSON>

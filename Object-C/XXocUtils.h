@@ -104,11 +104,8 @@ NS_ASSUME_NONNULL_BEGIN
                          cancelTitle:(nullable NSString*)cancelTitle
                             onCancel:(nullable void (^)(UIAlertAction *action))onCancel;
 
-+ (void)alert:(UIAlertController*)alert
-      okTitle:(nullable NSString*)okTitle
-         onOK:(nullable void (^)(UIAlertAction *action))onOK
-  cancelTitle:(nullable NSString*)cancelTitle
-     onCancel:(nullable void (^)(UIAlertAction *action))onCancel;
+#pragma mark - <NSDictionary>
++ (BOOL)dictionary:(NSDictionary*)dictionary contains:(NSDictionary*)contains;
 
 #pragma mark - <JSON>
 + (nullable NSString*)jsonStringWithJson:(id)json pretty:(BOOL)pretty;
