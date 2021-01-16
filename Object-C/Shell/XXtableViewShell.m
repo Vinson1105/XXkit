@@ -187,13 +187,14 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
 - (void)configSectionHeaders:(nullable NSArray*)headers rows:(NSArray*)rows footers:(nullable NSArray*)footers{
     int sectionCount = (int)rows.count;
     for (int index = 0; index < sectionCount; index++) {
-        NSMutableDictionary *section = [NSMutableDictionary new];
-        if(nil != headers) [section setObject:headers[index] forKey:kXXtableViewShellKeySectionHeader];
-        if(nil != footers) [section setObject:footers[index] forKey:kXXtableViewShellKeySectionFooter];
-        
-        NSMutableArray *rowsDataOfOneSection = [[NSMutableArray alloc] initWithArray:rows[index]];
-        [section setObject:rowsDataOfOneSection forKey:kXXtableViewShellKeySectionRow];
-        [_sectionDatas addObject:section];
+//        NSMutableDictionary *section = [NSMutableDictionary new];
+//        if(nil != headers) [section setObject:headers[index] forKey:kXXtableViewShellKeySectionHeader];
+//        if(nil != footers) [section setObject:footers[index] forKey:kXXtableViewShellKeySectionFooter];
+//
+//        NSMutableArray *rowsDataOfOneSection = [[NSMutableArray alloc] initWithArray:rows[index]];
+//        [section setObject:rowsDataOfOneSection forKey:kXXtableViewShellKeySectionRow];
+//        [_sectionDatas addObject:section];
+        [self configSectionHeader:headers?headers[index]:nil row:rows?rows[index]:nil footer:footers?footers[index]:nil];
     }
         
     [_tableView reloadData];
@@ -203,7 +204,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
     if(nil != header) [section setObject:header forKey:kXXtableViewShellKeySectionHeader];
     if(nil != footer) [section setObject:footer forKey:kXXtableViewShellKeySectionFooter];
     if(nil != row) {
-        NSMutableArray *rowsDataOfOneSection = [[NSMutableArray alloc] initWithArray:row];
+        NSMutableArray *rowsDataOfOneSection = [[NSMutableArray alloc] initWithArray:[self toMutableIfDictionaryItem:row]];
         [section setObject:rowsDataOfOneSection forKey:kXXtableViewShellKeySectionRow];
     }
     [_sectionDatas addObject:section];
@@ -242,7 +243,7 @@ NSString * const kXXtableViewShellKeyHeight             = @"Height";
             if([NSNull null] == data){
                 break;
             }
-            [rows addObject:data];
+            [rows addObject:[self toMutableIfDictionaryItem:data]];
             row++;
         }
         if(isNil){
