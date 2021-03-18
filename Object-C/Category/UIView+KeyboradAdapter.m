@@ -48,10 +48,13 @@
     }
     else{
         CGRect frame = [self convertRect:self.bounds toView:nil];
-        NSLog(@"[###] [*] %@ %@ %d",NSStringFromCGRect(keyBoardRect),NSStringFromCGRect(frame),CGRectContainsRect(keyBoardRect, frame));
-        if(!CGRectContainsRect(keyBoardRect, frame) || !self.keyboradAdapter_vlayout)
+        NSLog(@"[###] [*] %@ %@ %d %f",NSStringFromCGRect(keyBoardRect),NSStringFromCGRect(frame),CGRectIntersectsRect(keyBoardRect, frame),frame.origin.y+frame.size.height - keyBoardRect.size.height);
+        if(!CGRectIntersectsRect(keyBoardRect, frame) || !self.keyboradAdapter_vlayout){
+            self.contentOffsetBeforeShow = CGPointMake(-1, -1);
             return;
-        CGFloat offset = frame.origin.y - keyBoardRect.size.height+25;
+        }
+        
+        CGFloat offset = CGRectGetMaxY(frame)-keyBoardRect.origin.y;        
         self.contentOffsetBeforeShow = CGPointMake(0, self.keyboradAdapter_vlayout.constant);
         self.keyboradAdapter_vlayout.constant -= offset;
         [UIView animateWithDuration:0.2 animations:^{
@@ -67,7 +70,7 @@
     }
     else{
         NSLog(@"[###] [#] %@",NSStringFromCGRect(keyBoardRect));
-        if(!self.keyboradAdapter_vlayout){
+        if(!self.keyboradAdapter_vlayout || self.contentOffsetBeforeShow.x<0){
             return;
         }
         self.keyboradAdapter_vlayout.constant = self.contentOffsetBeforeShow.y;
