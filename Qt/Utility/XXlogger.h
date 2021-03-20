@@ -5,12 +5,12 @@
 #include <QVariant>
 #include <QSharedPointer>
 
-class XXfifoBase{
+class XXfifoBase : public QObject{
+    Q_OBJECT
 public:
-    XXfifoBase() {}
+    XXfifoBase(QObject *parent = nullptr) : QObject(parent){}
     virtual ~XXfifoBase() {}
 
-    virtual XXfifoBase* create(const QVariantMap &param) const = 0;
     virtual void push(const QByteArray &data) = 0;
     virtual bool isEnabled() const { return _enable; }
     virtual void setEnable(bool enable){ _enable = enable; }
@@ -25,8 +25,9 @@ public:
     XXlogger() {}
     virtual ~XXlogger() {}
 
-    void message(const char *format,...);
-    void configFifo(const QString &name, const XXfifoBase &fifo, const QVariantMap &param);
+    void message(const char *format, ...);
+    void message(XXfifoBase *without, const char *format, ...);
+    void configFifo(const QString &name, XXfifoBase *fifo);
     void setFifoEnable(const QString &name, bool enable);
 
     static XXlogger* instance();
