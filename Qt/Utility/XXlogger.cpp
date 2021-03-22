@@ -2,58 +2,81 @@
 #include <QString>
 #include <QDateTime>
 #include <QSharedPointer>
+#include <QDebug>
+
+#include "FileLogFifo.h"
+#include <QCoreApplication>
+#include <QDir>
+#include <QCoreApplication>
 
 #define ASPRINTF(format,...) (QString::asprintf(format,##__VA_ARGS__))
 
 XXlogger* XXlogger::_instance = nullptr;
+const char* const XXlogger::kDefaultQDebugFifoName = "qDebugFifo";
+const char* const XXlogger::kDefaultFileFifoName = "fileFifo";
 
-void XXlogger::message(const char *format,...){
-    if(nullptr == format){
-        return;
-    }
-    va_list args;
-    va_start(args, format);
-    QString msg = QString::asprintf("[%s] [%s] [%d] ", QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.sss").toUtf8().data(), __FUNCTION__, __LINE__)+QString::asprintf(format,args);
-    va_end(args);
-
-    QByteArray bytes = msg.toUtf8();
-    for (auto iter=_nameToFifo.cbegin(); iter!=_nameToFifo.cend(); iter++) {
-        if(!(*iter)->isEnabled()){
-            continue;
-        }
-        (*iter)->push(bytes);
-    }
+XXlogger::XXlogger()
+    : _qDebugFifoEnable(true){
+    initDefaultFifo();
 }
-void XXlogger::message(XXfifoBase *without, const char *format, ...){
-    if(nullptr == format){
+
+void XXlogger::message(const QString &msg){
+    this->output(msg.toUtf8());
+}
+void XXlogger::message(XXfifoBase *without, const QString &msg){
+    this->output(msg.toUtf8(),without);
+}
+void XXlogger::configFifo(const QString &name, XXfifoBase *fifo){
+    _nameToFifo[name] = QSharedPointer<XXfifoBase>(fifo);
+    fifo->setEnable(true);
+}
+void XXlogger::setFifoEnable(const QString &name, bool enable){
+    if(name == kDefaultQDebugFifoName){
+        _qDebugFifoEnable = enable;
         return;
     }
-    va_list args;
-    va_start(args, format);
-    QString msg = QString::asprintf("[%s] [%s] [%d] ", QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.sss").toUtf8().data(), __FUNCTION__, __LINE__)+QString::asprintf(format,args);
-    va_end(args);
+    if(!_nameToFifo.contains(name)){
+        return;
+    }
+    _nameToFifo[name]->setEnable(enable);
+}
+void XXlogger::resetFifo(const QString &name, const QVariantMap &param){
+    if(name == kDefaultQDebugFifoName){
+        return;
+    }
+    if(!_nameToFifo.contains(name)){
+        return;
+    }
+    _nameToFifo[name]->reset(param);
+}
 
-    QByteArray bytes = msg.toUtf8();
+XXlogger& XXlogger::instance(){
+    if(nullptr == _instance){
+        _instance = new XXlogger;
+    }
+    return *_instance;
+}
+
+void XXlogger::initDefaultFifo(){
+    // 默认的文件fifo配置
+    QString path = QDir::homePath()+"/"+QCoreApplication::applicationName()+"/xxlogger";
+    FileLogFifo *fifo = new FileLogFifo({
+                                            {FileLogFifo::kLogDir,path}
+                                        });
+
+    configFifo(kDefaultFileFifoName,fifo);
+}
+void XXlogger::output(const QString &msg, XXfifoBase *without){
+    QString msgWithDateTime = QString("[%1] ").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz")) + msg;
+    QByteArray bytes = msgWithDateTime.toUtf8();
     for (auto iter=_nameToFifo.cbegin(); iter!=_nameToFifo.cend(); iter++) {
         if(!(*iter)->isEnabled() || without == *iter){
             continue;
         }
         (*iter)->push(bytes);
     }
-}
-void XXlogger::configFifo(const QString &name, XXfifoBase *fifo){
-    _nameToFifo[name] = QSharedPointer<XXfifoBase>(fifo);
-}
-void XXlogger::setFifoEnable(const QString &name, bool enable){
-    if(!_nameToFifo.contains(name)){
-        return;
+    if(_qDebugFifoEnable){
+        qDebug() << msg;
     }
-    _nameToFifo[name]->setEnable(enable);
 }
 
-XXlogger* XXlogger::instance(){
-    if(nullptr == _instance){
-        _instance = new XXlogger;
-    }
-    return _instance;
-}
