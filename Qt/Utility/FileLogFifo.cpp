@@ -5,44 +5,41 @@
 #include <QDir>
 
 #include <QFile>
+#include "Tools.h"
 
 const char * const FileLogFifo::kLogDir = "LogDir";
 
 FileLogFifo::FileLogFifo(const QVariantMap &param, QObject *parent)
     : XXfifoBase (parent)
     , _file(nullptr){
-    if(param.contains(kLogDir)){
-        _file = openFile(param[kLogDir].toString(),QDateTime::currentDateTime().toString("yyyy-MM-hh"));
-    }
-    else{
-        XXlogger::instance()->message("param not contains \"%s\".", kLogDir);
-    }
-    this->moveToThread(&_writeThread);
-    _writeThread.start();
+    qRegisterMetaType<QSharedPointer<QByteArray>>("QSharedPointer<QByteArray>");
+
+    this->moveToThread(&_logThread);
+    _logThread.start();
     connect(this, SIGNAL(sigPush(QSharedPointer<QByteArray>)), this, SLOT(onPush(QSharedPointer<QByteArray>)), Qt::QueuedConnection);
+    connect(this, SIGNAL(sigReset(QVariantMap)), this, SLOT(onReset(QVariantMap)), Qt::QueuedConnection);
+
+    emit sigReset(param);
 }
 FileLogFifo::~FileLogFifo(){
-    _writeThread.quit();
-    if(_file){
+    _logThread.quit();
+    if(nullptr != _file){
         _file->close();
         _file->deleteLater();
         _file = nullptr;
     }
 }
 
+void FileLogFifo::reset(const QVariantMap &param){
+    emit sigReset(param);
+}
 void FileLogFifo::push(const QByteArray &data){
     emit sigPush(QSharedPointer<QByteArray>(new QByteArray(data)));
 }
 
 QFile* FileLogFifo::openFile(const QString &dirPath, const QString &fileName){
-    QFileInfo dirInfo(dirPath);
-    if(!dirInfo.exists() || dirInfo.isFile()){
-        XXlogger::instance()->message("log dir path is a file. path:%s",dirPath.toLocal8Bit().data());
-        return nullptr;
-    }
-
     if(!QDir().mkpath(dirPath)){
-        XXlogger::instance()->message("failure to create log dir. path:%s", dirPath.toLocal8Bit().data());
+        XXlogWithout(this,"failure to create log dir. path:%s", dirPath.toUtf8().data());
         return nullptr;
     }
 
@@ -54,8 +51,8 @@ QFile* FileLogFifo::openFile(const QString &dirPath, const QString &fileName){
         filePath = dirPath + '/' + fileName;
     }
     QFile *file = new QFile(filePath);
-    if (!file->open(QFile::ReadWrite|QFile::Text|QFile::Append)) {
-        XXlogger::instance()->message("failure to open file. path:%s", filePath.toLocal8Bit().data());
+    if (!file->open(QFile::WriteOnly|QFile::Text|QFile::Append)) {
+        XXlogWithout(this,"failure to open file. path:%s", filePath.toLocal8Bit().data());
         delete file;
         return nullptr;
     }
@@ -67,9 +64,24 @@ void FileLogFifo::onPush(QSharedPointer<QByteArray> bytes){
         return;
     }
 
-    if(_file->write(*bytes) < 0){
+    if(_file->write(*bytes) <= 0){
         // 注意：这里写入时需要排除自身，否则存在死循环的情况！
-        XXlogger::instance()->message(this, "failure to write.");
+        XXlogWithout(this,"failure to write");
+    }
+    _file->flush();
+}
+void FileLogFifo::onReset(QVariantMap param){
+    if(nullptr != _file){
+        _file->close();
+        _file->deleteLater();
+        _file = nullptr;
+    }
+
+    if(param.contains(kLogDir)){
+        _file = openFile(param[kLogDir].toString(),QDateTime::currentDateTime().toString("yyyy-MM-dd"));
+    }
+    else{
+        XXlogWithout(this,"param not contains \"%s\"", kLogDir);
     }
 }
 
