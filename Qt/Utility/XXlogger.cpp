@@ -29,6 +29,7 @@ void XXlogger::message(XXfifoBase *without, const QString &msg){
 void XXlogger::configFifo(const QString &name, XXfifoBase *fifo){
     _nameToFifo[name] = QSharedPointer<XXfifoBase>(fifo);
     fifo->setEnable(true);
+    fifo->setName(name);
 }
 void XXlogger::setFifoEnable(const QString &name, bool enable){
     if(name == kDefaultQDebugFifoName){

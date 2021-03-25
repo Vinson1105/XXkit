@@ -5,14 +5,24 @@
 #include <QVariant>
 #include <QSharedPointer>
 
-#define XXlog(format,args...) \
+#define xxLog(format,args...) \
     {\
         QString msg = QString("[%1] [%2] %3\n").arg(__FUNCTION__).arg(__LINE__).arg(QString::asprintf(format,##args)); \
         XXlogger::instance().message(msg); \
     }
-#define XXlogWithout(fifo,format,args...) \
+#define xxLogStr(string)  \
+    {\
+        QString msg = QString("[%1] [%2] %3\n").arg(__FUNCTION__).arg(__LINE__).arg(string); \
+        XXlogger::instance().message(msg); \
+    }
+#define xxLogWithout(fifo,format,args...) \
     {\
         QString msg = QString("[%1] [%2] %3\n").arg(__FUNCTION__).arg(__LINE__).arg(QString::asprintf(format,##args)); \
+        XXlogger::instance().message(fifo,msg); \
+    }
+#define xxLogStrWithout(fifo,string)  \
+    {\
+        QString msg = QString("[%1] [%2] %3\n").arg(__FUNCTION__).arg(__LINE__).arg(string); \
         XXlogger::instance().message(fifo,msg); \
     }
 
@@ -26,9 +36,12 @@ public:
     virtual void push(const QByteArray &data) = 0;
     virtual bool isEnabled() const { return _enable; }
     virtual void setEnable(bool enable){ _enable = enable; }
+    virtual QString name() const { return _name; }
+    virtual void setName(const QString &name) { _name = name; }
 
 protected:
     bool _enable;
+    QString _name;
 };
 
 /**
