@@ -5,9 +5,8 @@
 #include <QDir>
 
 #include <QFile>
-#include "Tools.h"
 
-const char * const FileLogFifo::kLogDir = "LogDir";
+const char * const FileLogFifo::kLogDir = "logDir";
 
 FileLogFifo::FileLogFifo(const QVariantMap &param, QObject *parent)
     : XXfifoBase (parent)
@@ -39,7 +38,7 @@ void FileLogFifo::push(const QByteArray &data){
 
 QFile* FileLogFifo::openFile(const QString &dirPath, const QString &fileName){
     if(!QDir().mkpath(dirPath)){
-        XXlogWithout(this,"failure to create log dir. path:%s", dirPath.toUtf8().data());
+        xxLogWithout(this,"failure to create log dir. path:%s", dirPath.toUtf8().data());
         return nullptr;
     }
 
@@ -52,7 +51,7 @@ QFile* FileLogFifo::openFile(const QString &dirPath, const QString &fileName){
     }
     QFile *file = new QFile(filePath);
     if (!file->open(QFile::WriteOnly|QFile::Text|QFile::Append)) {
-        XXlogWithout(this,"failure to open file. path:%s", filePath.toLocal8Bit().data());
+        xxLogWithout(this,"failure to open file. path:%s", filePath.toLocal8Bit().data());
         delete file;
         return nullptr;
     }
@@ -66,7 +65,7 @@ void FileLogFifo::onPush(QSharedPointer<QByteArray> bytes){
 
     if(_file->write(*bytes) <= 0){
         // 注意：这里写入时需要排除自身，否则存在死循环的情况！
-        XXlogWithout(this,"failure to write");
+        xxLogWithout(this,"failure to write");
     }
     _file->flush();
 }
@@ -81,7 +80,7 @@ void FileLogFifo::onReset(QVariantMap param){
         _file = openFile(param[kLogDir].toString(),QDateTime::currentDateTime().toString("yyyy-MM-dd"));
     }
     else{
-        XXlogWithout(this,"param not contains \"%s\"", kLogDir);
+        xxLogWithout(this,"param not contains \"%s\"", kLogDir);
     }
 }
 
