@@ -3,6 +3,7 @@
 
 #include "XXlogger.h"
 #include <QTcpSocket>
+#include <QThread>
 
 class TcpClientLogFifo : public XXfifoBase{
     Q_OBJECT
@@ -16,11 +17,11 @@ public:
 public: // 一些公开常量
     static const char * const kLogServerIP;
     static const char * const kLogServerPort;
-    static const char * const kLogClientName;
 
 private:
     QTcpSocket *connectToServer(const QString &ip, int port);
     void disconnectFromServer(QTcpSocket *socket);
+    bool isSocketReady(QTcpSocket *socket);
 
     /**
      * 由于push等函数可能存在多线程调用的情况，那么在多线程下操作socket可能会导致一些异常情况；
@@ -39,7 +40,6 @@ private:
     Q_SLOT void socket_onDisconnected();
 
 private:
-    bool _ready;
     QTcpSocket *_socket;   // socket客户端
     QThread _logThread;   // socket操作的线程
 };

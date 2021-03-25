@@ -1,9 +1,12 @@
 #include "TcpClientLogFifo.h"
+#include "XXlogger.h"
+
+const char * const TcpClientLogFifo::kLogServerIP = "ip";
+const char * const TcpClientLogFifo::kLogServerPort = "port";
 
 TcpClientLogFifo::TcpClientLogFifo(const QVariantMap &param, QObject *parent)
     : XXfifoBase(parent)
-    , _socket(nullptr)
-    , _ready(false){
+    , _socket(nullptr){
     qRegisterMetaType<QSharedPointer<QByteArray>>("QSharedPointer<QByteArray>");
 
     this->moveToThread(&_logThread);
@@ -17,8 +20,7 @@ TcpClientLogFifo::~TcpClientLogFifo(){
     _logThread.requestInterruption();
     _logThread.quit();
     if(nullptr != _socket){
-        _socket->disconnectFromHost();
-        _socket->deleteLater();
+        disconnectFromServer(_socket);
         _socket = nullptr;
     }
 }
@@ -40,24 +42,43 @@ QTcpSocket* TcpClientLogFifo::connectToServer(const QString &ip, int port){
 }
 void TcpClientLogFifo::disconnectFromServer(QTcpSocket *socket){
     // 这里直接ready手动设置为false，而不是通过socket的disconnect
-    /**
-     * ready变量是由槽函数的
-     * 这里直接ready手动设置为false，而不是通过socket的disconnect，
-     *
-     */
-    _ready = false;
-
     disconnect(socket,SIGNAL(connected()),this,SLOT(socket_onConnected()));
     disconnect(socket,SIGNAL(disconnected()),this,SLOT(socket_onDisconnected()));
     socket->disconnectFromHost();
     socket->deleteLater();
 }
+bool TcpClientLogFifo::isSocketReady(QTcpSocket *socket){
+    return nullptr != socket && socket->state() != QAbstractSocket::SocketState::ConnectedState;
+}
 
-void onPush(QSharedPointer<QByteArray> bytes);
-void onReset(QVariantMap param);
+void TcpClientLogFifo::onPush(QSharedPointer<QByteArray> bytes){
+    if(!isSocketReady(_socket)){
+        return;
+    }
+    _socket->write(*bytes);
+}
+void TcpClientLogFifo::onReset(QVariantMap param){
+    if(nullptr != _socket){
+        disconnectFromServer(_socket);
+        _socket = nullptr;
+    }
+
+    QString ip = param.contains(kLogServerIP) ? param[kLogServerIP].toString() : "";
+    int port = param.contains(kLogServerPort) ? param[kLogServerPort].toInt() : 0;
+    if(ip.isEmpty() || port <= 0){
+        xxLogStrWithout(this,QString("invalid param. ip:%1 port:%2").arg(ip).arg(port));
+        return;
+    }
+
+    _socket = connectToServer(ip, port);
+}
 
 /**
  * Tcp的一些信号-槽
  */
-void socket_onConnected();
-void socket_onDisconnected();
+void TcpClientLogFifo::socket_onConnected(){
+
+}
+void TcpClientLogFifo::socket_onDisconnected(){
+
+}
