@@ -4,7 +4,7 @@
 #import <CoreFoundation/CoreFoundation.h>
 #import <CoreVideo/CoreVideo.h>
 
-#define kTimeScale 90000;
+#define kTimeScale 90000
 
 static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, OSStatus status, VTEncodeInfoFlags infoFlags, CMSampleBufferRef sampleBuffer);
 
@@ -84,7 +84,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
 #pragma mark - <编码>
 - (BOOL)encode:(CVImageBufferRef)buffer timestamp:(NSTimeInterval)timestamp{
     // pts
-    CMTime pts = CMTimeMake(timstamp * kTimeScale, kTimeScale);
+    CMTime pts = CMTimeMake((timestamp*kTimeScale), kTimeScale);
     // 设置是否为I帧
     //NSDictionary *frameProperties = @{(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame: @(forceKeyFrame)};
     // 自定义指针
@@ -309,7 +309,7 @@ static void compressionOutputCallback(void *outputCallbackRefCon, void *sourceFr
     /// 取出时间信息
     CMSampleTimingInfo timingInfo[10];
     CMItemCount timingCount = 0;
-    OSStatus status = CMSampleBufferGetSampleTimingInfoArray(sampleBuffer, 10, timingInfo, &timingCount);
+    OSStatus status = CMSampleBufferGetSampleTimingInfoArray(sampleBufferRef, 10, timingInfo, &timingCount);
     if (status != noErr) {
         return NO;
     }

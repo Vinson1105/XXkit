@@ -9,7 +9,7 @@
 #import "NetworkFifo.h"
 #import "../../C/XXtcpSocket.h"
 #import "../../C/XXudpSocket.h"
-#import "../../Object-C/XXocUtils.h"
+#import "../../Objective-C/XXocUtils.h"
 
 static NSString * const kHost = @"host";
 static NSString * const kPort = @"port";

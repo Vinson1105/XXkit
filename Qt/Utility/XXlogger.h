@@ -5,21 +5,40 @@
 #include <QVariant>
 #include <QSharedPointer>
 
+#ifdef Q_OS_WIN
+    #define xxLog(format,...) \
+    {\
+        QString msg = QString("[%1] [%2] %3\n").arg(__FUNCTION__).arg(__LINE__).arg(QString::asprintf(format,##__VA_ARGS__)); \
+        XXlogger::instance().message(msg); \
+    }
+#else
 #define xxLog(format,args...) \
     {\
         QString msg = QString("[%1] [%2] %3\n").arg(__FUNCTION__).arg(__LINE__).arg(QString::asprintf(format,##args)); \
         XXlogger::instance().message(msg); \
     }
+#endif
+
 #define xxLogStr(string)  \
     {\
         QString msg = QString("[%1] [%2] %3\n").arg(__FUNCTION__).arg(__LINE__).arg(string); \
         XXlogger::instance().message(msg); \
     }
+
+#ifdef Q_OS_WIN
+    #define xxLogWithout(fifo,format,...) \
+    {\
+        QString msg = QString("[%1] [%2] %3\n").arg(__FUNCTION__).arg(__LINE__).arg(QString::asprintf(format,##__VA_ARGS__)); \
+        XXlogger::instance().message(fifo,msg); \
+    }
+#else
 #define xxLogWithout(fifo,format,args...) \
     {\
         QString msg = QString("[%1] [%2] %3\n").arg(__FUNCTION__).arg(__LINE__).arg(QString::asprintf(format,##args)); \
         XXlogger::instance().message(fifo,msg); \
     }
+#endif
+
 #define xxLogStrWithout(fifo,string)  \
     {\
         QString msg = QString("[%1] [%2] %3\n").arg(__FUNCTION__).arg(__LINE__).arg(string); \

@@ -1,6 +1,6 @@
 #import "UITableViewCell+XXstyle.h"
 #import "UILabel+XXstyle.h"
-#import "../Utility/NSString+JSON.h"
+#import "../Category/NSString+JSON.h"
 
 #define kTitle @"Title"
 #define kDetail @"Detail"
@@ -12,7 +12,7 @@
     if(nil != jdict[kDetail]) [self.detailTextLabel styleWithJDictionary:jdict[kDetail]];
 }
 - (void)styleWithJString:(nonnull NSString *)jstring {
-    NSDictionary *jdict = [jstring jsonObject];
+    NSDictionary *jdict = [jstring toJsonObject:nil];
     [self styleWithJDictionary:jdict];
 }
 @end

@@ -1,6 +1,6 @@
 #import "CALayer+XXstyle.h"
-#import "../Utility/NSString+JSON.h"
-#import "../Utility/UIColor+Hex.h"
+#import "../Category/NSString+JSON.h"
+#import "../XXocUtils.h"
  
 #define kBorderWidth    @"BoarderWidth"
 #define kBorderColor    @"BorderColor"
@@ -19,7 +19,7 @@
     return layer;
 }
 -(void)styleWithJString:(NSString*)jstring{
-    NSDictionary *jdict = [jstring jsonObject];
+    NSDictionary *jdict = [jstring toJsonObject:nil];
     [self onStyle:jdict];
 }
 -(void)styleWithJDictionary:(NSDictionary*)jdict{
@@ -29,7 +29,7 @@
 -(void)onStyle:(NSDictionary*)jdict{
     if(nil == jdict) return;
     if(nil != jdict[kBorderWidth]) self.borderWidth = [jdict[kBorderWidth] floatValue];
-    if(nil != jdict[kBorderColor]) self.borderColor = [UIColor colorWithHexString:jdict[kBorderColor]].CGColor;
+    if(nil != jdict[kBorderColor]) self.borderColor = [XXocUtils colorFromHexString:jdict[kBorderColor]].CGColor;
     if(nil != jdict[kRadius]) self.cornerRadius = [jdict[kRadius] floatValue];
 }
 @end

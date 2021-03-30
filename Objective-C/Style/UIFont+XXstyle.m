@@ -1,13 +1,12 @@
 #import "UIFont+XXstyle.h"
-#import "../Utility/NSString+JSON.h"
-#import "../Utility/UIColor+Hex.h"
+#import "../Category/NSString+JSON.h"
 
 #define kSize   @"Size"
 #define kFamily @"Family"
 
 @implementation UIFont (XXstyle)
 +(instancetype)styleWithJString:(NSString*)jstring{
-    NSDictionary *jdict = [jstring jsonObject];
+    NSDictionary *jdict = [jstring toJsonObject:nil];
     return [UIFont onStyle:jdict];
 }
 +(instancetype)styleWithJDictionary:(NSDictionary*)jdict{

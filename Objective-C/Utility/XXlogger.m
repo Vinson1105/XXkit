@@ -7,7 +7,7 @@
 //
 
 #import "XXlogger.h"
-#import "../../Object-C/XXocUtils.h"
+#import "../../Objective-C/XXocUtils.h"
 #import "DailyLogFileFifo.h"
 
 @implementation XXfifoBase
