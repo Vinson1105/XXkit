@@ -4,7 +4,7 @@
 #include <QDir>
 #include <QList>
 
-#include "DebugDef.h"
+#include "XXlogger.h"
 #include <QSqlQuery>
 #include <QDebug>
 #include <QSqlError>
@@ -23,20 +23,18 @@ SqlDatabaseManager::~SqlDatabaseManager(){
 
 bool SqlDatabaseManager::open(const QString &path){
     if(_isOpen){
-        XXDebug("can not open database again.");
+        xxLog("can not open database again.");
         return false;
     }
     _isOpen = true;
 
     // 设置数据库的name和路径，当没有数据库文件时自动创建一个
-    QStringList pathNode = path.split("/");
-    if(pathNode.isEmpty()){
-        XXDebug("invalid path. path:%s",path.toLocal8Bit().data());
-        _isOpen = false;
-        return false;
-    }
+	QFileInfo fileInfo(path);
+	if (!fileInfo.dir().exists()) {
+		QDir().mkpath(fileInfo.absolutePath());
+	}
 
-    QString fileName = pathNode.last();
+    QString fileName = fileInfo.fileName();
     _name = fileName.replace(".","_");
     if(QSqlDatabase::contains(_name)){
         _database = QSqlDatabase::database(_name);
@@ -49,7 +47,7 @@ bool SqlDatabaseManager::open(const QString &path){
 
     // 打开数据库
     if(!_database.open()){
-        XXDebug("failure to open database. path:%s error:%s", path.toLocal8Bit().data(), _database.lastError().text().toLocal8Bit().data());
+		xxLog("failure to open database. path:%s error:%s", path.toLocal8Bit().data(), _database.lastError().text().toLocal8Bit().data());
         _isOpen = false;
         return false;
     }
@@ -59,12 +57,12 @@ bool SqlDatabaseManager::open(const QString &path){
 }
 bool SqlDatabaseManager::createTable(const QMap<QString,QString> &keyAndType, const QString &tableName){
     if(!_isOpen || 0 == keyAndType.count() || tableName.isEmpty()){
-        XXDebug("database not open or invalid arg.");
+		xxLog("database not open or invalid arg.");
         return false;
     }
 
     if(tableExisted(tableName)){
-        XXDebug("table is existed. tableName:%s", tableName.toLocal8Bit().data());
+		xxLog("table is existed. tableName:%s", tableName.toLocal8Bit().data());
         return false;
     }
 
@@ -80,7 +78,7 @@ bool SqlDatabaseManager::createTable(const QMap<QString,QString> &keyAndType, co
     QString sqlString = QString("create table %1 (%2);").arg(tableName).arg(ktString);
     QSqlQuery sqlQuery(_database);
     if(!sqlQuery.exec(sqlString)){
-        XXDebug("create table failure. tableName:%s sql:%s error:%s",
+		xxLog("create table failure. tableName:%s sql:%s error:%s",
                 tableName.toLocal8Bit().data(),
                 sqlString.toLocal8Bit().data(),
                 sqlQuery.lastError().text().toLocal8Bit().data());
@@ -92,7 +90,7 @@ bool SqlDatabaseManager::createTable(const QMap<QString,QString> &keyAndType, co
 }
 bool SqlDatabaseManager::tableExisted(const QString &tableName){
     if(!_isOpen || tableName.isEmpty()){
-        XXDebug("database not open or invalid arg.");
+		xxLog("database not open or invalid arg.");
         return false;
     }
 
@@ -106,14 +104,14 @@ bool SqlDatabaseManager::tableExisted(const QString &tableName){
 
 bool SqlDatabaseManager::keyExisted(const QString &key, const QString &tableName){
     if(!_isOpen || key.isEmpty() || tableName.isEmpty()){
-        XXDebug("database not open or invalid arg.");
+		xxLog("database not open or invalid arg.");
         return false;
     }
 
     QString sqlString = QString("select * from %1;").arg(tableName);
     QSqlQuery sqlQuery(_database);
     if (!sqlQuery.exec(sqlString)){
-        XXDebugStr("table not exist. tableName:"+tableName);
+		xxLogStr("table not exist. tableName:"+tableName);
         return false;
     }
 
@@ -127,12 +125,12 @@ bool SqlDatabaseManager::keyExisted(const QString &key, const QString &tableName
 }
 bool SqlDatabaseManager::addKey2Table(const QString &key, const QString &type, const QString &tableName){
     if(!_isOpen || key.isEmpty() || type.isEmpty() || tableName.isEmpty()){
-        XXDebug("database not open or invalid arg.");
+		xxLog("database not open or invalid arg.");
         return false;
     }
 
     if(keyExisted(key, tableName)){
-        XXDebug("key is existed. key:%s tableName:%s",
+		xxLog("key is existed. key:%s tableName:%s",
                 key.toLocal8Bit().data(),
                 tableName.toLocal8Bit().data());
         return false;
@@ -141,7 +139,7 @@ bool SqlDatabaseManager::addKey2Table(const QString &key, const QString &type, c
     QString sqlString = QString("alter table %1 add %2 %3;").arg(tableName).arg(key).arg(type);
     QSqlQuery sqlQuery(_database);
     if(!sqlQuery.exec(sqlString)){
-        XXDebug("add key failure. key:%s type:%s tableName:%s sql:%s error:%s",
+		xxLog("add key failure. key:%s type:%s tableName:%s sql:%s error:%s",
                 key.toLocal8Bit().data(),
                 type.toLocal8Bit().data(),
                 tableName.toLocal8Bit().data(),
@@ -159,14 +157,14 @@ bool SqlDatabaseManager::addKey2Table(const QString &key, const QString &type, c
 bool SqlDatabaseManager::removeKeyAtTable(const QString &key, const QString &tableName){
     return false;
     if(!_isOpen || key.isEmpty() || tableName.isEmpty()){
-        XXDebug("database not open or invalid arg.");
+		xxLog("database not open or invalid arg.");
         return false;
     }
 
     QString sqlString = QString("alter table %1 DROP column %2;").arg(tableName).arg(key);
     QSqlQuery sqlQuery(_database);
     if(!sqlQuery.exec(sqlString)){
-        XXDebug("remove key failure. key:%s tableName:%s sql:%s error:%s",
+		xxLog("remove key failure. key:%s tableName:%s sql:%s error:%s",
                 key.toLocal8Bit().data(),
                 tableName.toLocal8Bit().data(),
                 sqlString.toLocal8Bit().data(),
@@ -179,9 +177,41 @@ bool SqlDatabaseManager::removeKeyAtTable(const QString &key, const QString &tab
     //        tableName.toLocal8Bit().data());
     return 0;
 }
+bool SqlDatabaseManager::removeMapAtTable(const QMap<QString, QVariant> &equalTo, const QString &tableName) {
+	QString eqString;
+	for (auto iter = equalTo.constBegin(); iter != equalTo.constEnd(); iter++) {
+		eqString += iter.key();
+		eqString += "=?";
+		if (iter + 1 != equalTo.constEnd()) {
+			eqString += " AND ";
+		}
+	}
+
+	QString sqlString = QString("DELETE FROM %1 WHERE %2;").arg(tableName).arg(eqString);
+	QSqlQuery sqlQuery(_database);
+	sqlQuery.prepare(sqlString);
+	for (auto iter = equalTo.constBegin(); iter != equalTo.constEnd(); iter++) {
+		sqlQuery.addBindValue(iter.value());
+	}
+
+	if (!sqlQuery.exec()) {
+		xxLog("delete map failure. tableName:%s sql:%s error:%s",
+			tableName.toLocal8Bit().data(),
+			sqlString.toLocal8Bit().data(),
+			sqlQuery.lastError().text().data());
+		return false;
+	}
+	else if (sqlQuery.numRowsAffected() <= 0) {
+		xxLog("can not find anything, failure to delete values. tableName:%s", tableName.toLocal8Bit().data());
+	}
+	else {
+		//xxLog("delete values succeed. tableName:%s", tableName.toLocal8Bit().data());
+	}
+	return true;
+}
 bool SqlDatabaseManager::setValues2Table(const QMap<QString,QVariant> &values, const QMap<QString,QVariant> &equalTo, const QString &tableName){
     if(!_isOpen || values.isEmpty() || equalTo.isEmpty() || tableName.isEmpty()){
-        XXDebug("database not open or invalid arg.");
+		xxLog("database not open or invalid arg.");
         return false;
     }
 
@@ -214,23 +244,23 @@ bool SqlDatabaseManager::setValues2Table(const QMap<QString,QVariant> &values, c
     }
 
     if(!sqlQuery.exec()){
-        XXDebug("set values failure. tableName:%s sql:%s error:%s",
+		xxLog("set values failure. tableName:%s sql:%s error:%s",
                 tableName.toLocal8Bit().data(),
                 sqlString.toLocal8Bit().data(),
                 sqlQuery.lastError().text().data());
         return false;
     }
     else if(sqlQuery.numRowsAffected()<=0){
-        XXDebug("can not find anything, failure to set values. tableName:%s", tableName.toLocal8Bit().data());
+		xxLog("can not find anything, failure to set values. tableName:%s", tableName.toLocal8Bit().data());
     }
     else{
-        XXDebug("set values succeed. tableName:%s", tableName.toLocal8Bit().data());
+		//xxLog("set values succeed. tableName:%s", tableName.toLocal8Bit().data());
     }
     return true;
 }
 bool SqlDatabaseManager::addMap2Table(const QMap<QString,QVariant> &values, const QString &tableName){
     if(!_isOpen || values.isEmpty() || tableName.isEmpty()){
-        XXDebug("database not open or invalid arg.");
+		xxLog("database not open or invalid arg.");
         return false;
     }
 
@@ -252,7 +282,7 @@ bool SqlDatabaseManager::addMap2Table(const QMap<QString,QVariant> &values, cons
     }
 
     if(!sqlQuery.exec()){
-        XXDebug("add map failure. tableName:%s sql:%s error:%s",
+		xxLog("add map failure. tableName:%s sql:%s error:%s",
                 tableName.toLocal8Bit().data(),
                 sqlString.toLocal8Bit().data(),
                 sqlQuery.lastError().text().data());
@@ -265,7 +295,7 @@ bool SqlDatabaseManager::addMap2Table(const QMap<QString,QVariant> &values, cons
 QList<QVariantMap> SqlDatabaseManager::getMapFromTable(const QString &tableName, const QVariantMap &equelTo){
     QList<QVariantMap> list;
     if(!_isOpen || tableName.isEmpty()){
-        XXDebug("database not open or invalid arg.");
+		xxLog("database not open or invalid arg.");
         return list;
     }
 
@@ -287,7 +317,7 @@ QList<QVariantMap> SqlDatabaseManager::getMapFromTable(const QString &tableName,
     }
 
     if(!sqlQuery.exec()){
-        XXDebug("failure to get map. tableName:%s sql:%s error:%s",
+		xxLog("failure to get map. tableName:%s sql:%s error:%s",
                 tableName.toLocal8Bit().data(),
                 sqlString.toLocal8Bit().data(),
                 sqlQuery.lastError().text().data());
@@ -306,9 +336,30 @@ QList<QVariantMap> SqlDatabaseManager::getMapFromTable(const QString &tableName,
 
     return list;
 }
+
+int SqlDatabaseManager::getKeyMaxFromTable(const QString &tableName, const QString &key) {
+	if (!_isOpen || tableName.isEmpty()) {
+		xxLog("database not open or invalid arg.");
+		return -1;
+	}
+
+	QString sqlString = QString("SELECT MAX(%1) FROM %2;").arg(key).arg(tableName);
+	QSqlQuery sqlQuery(_database);
+	if (!sqlQuery.exec(sqlString)) {
+		xxLog("failure to get key max. tableName:%s sql:%s error:%s",
+			tableName.toLocal8Bit().data(),
+			sqlString.toLocal8Bit().data(),
+			sqlQuery.lastError().text().data());
+		return -1;
+	}
+
+	sqlQuery.next();
+	return sqlQuery.value(0).toInt();
+}
+
 bool SqlDatabaseManager::close(){
     if(!_isOpen){
-        XXDebug("none database is opening.");
+		xxLog("none database is opening.");
         return false;
     }
 

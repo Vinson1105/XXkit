@@ -54,6 +54,11 @@ public:
      */
     bool removeKeyAtTable(const QString &key, const QString &tableName);
 
+	/**
+	 * 移除表数据
+	 */
+	bool removeMapAtTable(const QMap<QString, QVariant> &equalTo, const QString &tableName);
+
     /**
      * @brief 找出能够匹配的数据表，并对其进行值修改
      * @param values 需要修改的键值对
@@ -72,6 +77,8 @@ public:
     bool addMap2Table(const QMap<QString,QVariant> &values, const QString &tableName);
 
     QList<QVariantMap> getMapFromTable(const QString &tableName, const QVariantMap &equelTo = QVariantMap());
+
+	int getKeyMaxFromTable(const QString &tableName, const QString &key);
 
     /**
      * @brief 关闭数据库
