@@ -13,6 +13,7 @@ public:
 
 	virtual void shell(QObject *target);
 	virtual void config(const QVariant &param) {}
+        virtual QVariant action(const QString &action, const QVariant &param=QVariant()){return QVariant();}
 
 	Q_SIGNAL void sigEvent(QString event, QVariant info);
 

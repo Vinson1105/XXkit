@@ -2,6 +2,7 @@
 #define LineEditShell_h
 
 #include "../ShellBase.h"
+#include "../../XXqtDefine.h"
 #include <QLineEdit>
 #include <QRegExp>
 #include <QSharedPointer>
@@ -18,17 +19,24 @@ public:
 	 strongMatchMode:是否为强制匹配模式，默认是false关闭
 	 */
 	virtual void config(const QVariant &param);
+    bool isMatching() const { return _isMatching;}
 
-	const static char * const kExpression;
-	const static char * const kMaxLength;
-	const static char * const kStrongMatchMode;
+    /** param */
+	XX_KEY(kExpression);	
+	XX_KEY(kMaxLength);
+	XX_KEY(kStrongMatchMode);
+
+    /** event */
+	XX_KEY(kSigTextChanged);
+	XX_KEY(kPreviousText);
+	XX_KEY(kCurrentText);
 
 protected:
 	virtual void resetTarget(QObject *target);
 
 private:
-	void config(const QString &expression);
-	void config(const QVariantMap &map);
+    void configExperssion(const QString &expression);
+    void configAll(const QVariantMap &map);
 
 	Q_SLOT void onTextEdited(QString text);
 	Q_SLOT void onTextChanged(QString text);
@@ -38,7 +46,7 @@ private:
 	int _maxLength;
 	bool _strongMatchMode;
 	bool _isMatching;
-	QString _lastText;
+    QString _previousText;
 };
 
 

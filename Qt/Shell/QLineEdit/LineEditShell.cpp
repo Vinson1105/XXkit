@@ -1,8 +1,14 @@
 #include "LineEditShell.h"
+#include <QDebug>
 
-const char * const LineEditShell::kExpression = "expression";
-const char * const LineEditShell::kMaxLength = "maxLength";
-const char * const LineEditShell::kStrongMatchMode = "strongMatchMode";
+XX_KEY_C(LineEditShell, kExpression, "expression");
+XX_KEY_C(LineEditShell, kMaxLength, "maxLength");
+XX_KEY_C(LineEditShell, kStrongMatchMode, "strongMatchMode");
+
+XX_KEY_C(LineEditShell, kSigTextChanged, "sigTextChanged");
+XX_KEY_C(LineEditShell, kPreviousText, "previousText");
+XX_KEY_C(LineEditShell, kCurrentText, "currentText");
+
 
 LineEditShell::LineEditShell(QLineEdit *target, QObject *parent) 
 	:ShellBase(target,parent){
@@ -14,10 +20,10 @@ LineEditShell::LineEditShell(QLineEdit *target, QObject *parent)
 
 void LineEditShell::config(const QVariant &param) {
 	if (param.type() == QVariant::String) {
-		config(param.toString());
+        configExperssion(param.toString());
 	}
 	else if (param.type() == QVariant::Map) {
-		config(param.toMap());
+        configAll(param.toMap());
 	}
 	else {
 
@@ -33,7 +39,7 @@ void LineEditShell::resetTarget(QObject *target) {
 			return;
 		}
 
-		disconnect(lineEdit, &QLineEdit::textEdited, this, &LineEditShell::onTextChanged);
+        disconnect(lineEdit, &QLineEdit::textEdited, this, &LineEditShell::onTextEdited);
 		disconnect(lineEdit, &QLineEdit::textChanged, this, &LineEditShell::onTextChanged);
 	}
 	else {
@@ -42,17 +48,17 @@ void LineEditShell::resetTarget(QObject *target) {
 			return;
 		}
 
-		connect(lineEdit, &QLineEdit::textEdited, this, &LineEditShell::onTextChanged);
+        connect(lineEdit, &QLineEdit::textEdited, this, &LineEditShell::onTextEdited);
 		connect(lineEdit, &QLineEdit::textChanged, this, &LineEditShell::onTextChanged);
 	}
 }
 
-void LineEditShell::config(const QString &expression) {
+void LineEditShell::configExperssion(const QString &expression) {
 	_expression.reset(new QRegExp(expression));
 }
-void LineEditShell::config(const QVariantMap &map) {
+void LineEditShell::configAll(const QVariantMap &map) {
 	if (map.contains(kExpression) && QVariant::String==map[kExpression].type()) {
-		_expression.reset(new QRegExp(map[kExpression].toString()));
+        configExperssion(map[kExpression].toString());
 	}
 	else if (map.contains(kMaxLength) && QVariant::Int==map[kMaxLength].type()) {
 		_maxLength = map[kMaxLength].toInt();
@@ -66,21 +72,25 @@ void LineEditShell::config(const QVariantMap &map) {
 }
 
 void LineEditShell::onTextEdited(QString text) {
-	QLineEdit *target = qobject_cast<QLineEdit*>(sender());
+    QLineEdit *target = qobject_cast<QLineEdit*>(sender());
 
 	if (nullptr != _expression && !_expression->exactMatch(text)) {
-		_isMatching = false;
+        _isMatching = false;
 	}
 	if (_maxLength > 0 && text.length() > _maxLength) {
-		_isMatching = false;
+        _isMatching = false;
 	}
 
 	if (_strongMatchMode && !_isMatching) {
-		target->setText(_lastText);
-		_isMatching = true;
+        target->setText(_previousText);
+        _isMatching = true;
 	}
 
-	_lastText = target->text();
+
+    QString previous = _previousText;
+    _previousText = target->text();
+    QVariantMap info = {{kPreviousText,previous},{kCurrentText,_previousText}};
+    emit sigEvent(kSigTextChanged,info);
 }
 void LineEditShell::onTextChanged(QString text) {
 

@@ -1,10 +1,5 @@
 #include "FileLogFifo.h"
 #include "XXlogger.h"
-#include <QDateTime>
-#include <QFileInfo>
-#include <QDir>
-
-#include <QFile>
 
 const char * const FileLogFifo::kLogDir = "logDir";
 

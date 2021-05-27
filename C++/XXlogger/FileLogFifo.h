@@ -3,6 +3,11 @@
 
 #include "XXlogger.h"
 #include "../third/json/json.h"
+#include <iostream>
+#include <fstream>
+#include <thread>
+
+#include <queue>
 
 class FileLogFifo : public XXfifoBase{
 public:
@@ -34,8 +39,9 @@ private:
     Q_SLOT void onPush(QSharedPointer<QByteArray> bytes);
     Q_SLOT void onReset(QVariantMap param);
 private:
-    QFile *_file;   // 输出文件的
-    QThread _logThread;   // 写文件线程
+	std::ofstream  *_file;   // 输出文件的
+    std::thread *_thread;   // 写文件线程
+	std::queue 
 };
 
 #endif // FILELOGFIFO_H
