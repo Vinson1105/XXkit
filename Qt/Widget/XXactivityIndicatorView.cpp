@@ -1,6 +1,20 @@
 #include "XXactivityIndicatorView.h"
 #include <QPainter>
 
+const char * const XXactivityIndicatorView::kItemPadding = "itemPadding";
+const char * const XXactivityIndicatorView::kItemMargin = "itemMargin";
+const char * const XXactivityIndicatorView::kItemSize = "itemSize";
+const char * const XXactivityIndicatorView::kItemCount = "itemCount";
+const char * const XXactivityIndicatorView::kActiveItemCount = "activeItemCount";
+
+const char * const XXactivityIndicatorView::kNormalColor = "normalColor";
+const char * const XXactivityIndicatorView::kActiveColor = "activeColor";
+const char * const XXactivityIndicatorView::kBgColor = "bgColor";
+const char * const XXactivityIndicatorView::kBgRadius = "bgRadius";
+
+#define IsNumber(x) (x.type()==QVariant::Int||x.type()==QVariant::Double)
+#define IsSize(x) (x.type()==QVariant::Size||x.type()==QVariant::SizeF)
+
 XXactivityIndicatorView::XXactivityIndicatorView(QWidget *parent)
     : QWidget(parent)
     , _itemPadding(10)
@@ -10,14 +24,67 @@ XXactivityIndicatorView::XXactivityIndicatorView(QWidget *parent)
     , _activeItemCount(4)
     , _normalColor(153, 153, 153)
     , _activeColor(Qt::white)
+    , _bgColor(0,0,0,127)
+    , _bgRadius(20.0)
     , _timerID(0)
-    , _activeIndex(0){
-    start();
+    , _activeIndex(0)
+    , _isFullAtParent(false){
+    this->setAttribute(Qt::WA_StyledBackground);
+    this->setFixedSize(100,100);
+    QWidget::hide();
 }
 XXactivityIndicatorView::~XXactivityIndicatorView(){
     stop();
 }
 
+void XXactivityIndicatorView::config(const QVariantMap &param){
+    if(param.contains(kItemPadding) && param[kItemPadding].canConvert<qreal>()){
+        _itemPadding = param[kItemPadding].toDouble();
+    }
+    if(param.contains(kItemMargin) && param[kItemMargin].canConvert<qreal>()){
+        _itemMargin = param[kItemMargin].toDouble();
+    }
+    if(param.contains(kItemSize) && param[kItemSize].canConvert<QSizeF>()){
+        _itemSize = param[kItemSize].toSizeF();
+    }
+    if(param.contains(kItemCount) && param[kItemCount].canConvert<int>()){
+        _itemCount = param[kItemCount].toInt();
+    }
+    if(param.contains(kActiveItemCount) && param[kActiveItemCount].canConvert<int>()){
+        _activeItemCount = param[kActiveItemCount].toInt();
+    }
+
+    if(param.contains(kNormalColor) && param[kNormalColor].canConvert<QColor>()){
+        _normalColor = param[kNormalColor].value<QColor>();
+    }
+    if(param.contains(kActiveColor) && param[kActiveColor].canConvert<QColor>()){
+        _activeColor = param[kActiveColor].value<QColor>();
+    }
+    if(param.contains(kBgColor) && param[kBgColor].canConvert<QColor>()){
+        _bgColor = param[kBgColor].value<QColor>();
+    }
+}
+
+void XXactivityIndicatorView::show(){
+    auto *widget = parentWidget();
+    if(nullptr != widget){
+        if(_isFullAtParent){
+            this->setGeometry(widget->geometry());
+        }
+        else{
+            QPoint center = widget->rect().center();
+            QPoint leftTop(center.x()-this->size().width()/2,center.y()-this->size().height()/2);
+            move(leftTop);
+        }
+    }
+
+    start();
+    QWidget::show();
+}
+void XXactivityIndicatorView::hide(){
+    QWidget::hide();
+    stop();
+}
 
 void XXactivityIndicatorView::paintEvent(QPaintEvent *event){
     QWidget::paintEvent(event);
@@ -27,8 +94,8 @@ void XXactivityIndicatorView::paintEvent(QPaintEvent *event){
 
     // 绘制一下背景
     painter.setPen(Qt::NoPen);
-    painter.setBrush(Qt::black);
-    painter.drawRect(event->rect());
+    painter.setBrush(_bgColor);
+    painter.drawRoundedRect(event->rect(),_bgRadius,_bgRadius);
 
     // 移动到中心区域
     qreal bgWidth = event->rect().size().width();
