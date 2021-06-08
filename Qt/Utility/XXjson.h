@@ -33,16 +33,19 @@ private:
 class XXjson
 {
 public:
+    XXjson();
+    XXjson(const QJsonObject &jobj);
     XXjson(const QString &path);
     virtual ~XXjson();
 
     XXjsonItem operator[](const QString &key);
+    QJsonObject operator()(void);
 
-    void save();
+    bool loadFromFile(const QString &path);
+    bool saveToFile(const QString &path = "");
 
 private:
     bool loadFromFile(const QString &path, QJsonObject &jobj);
-    bool saveToFile(const QString &path);
 
 private:
     QString _path;

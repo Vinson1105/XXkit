@@ -3,7 +3,7 @@
 #include <QJsonParseError>
 #include <QFileInfo>
 #include <QDir>
-#include "../DebugDef.h"
+#include "../XXqtDefine.h"
 
 #define logger
 #ifdef logger
@@ -13,6 +13,13 @@
 #include <QDebug>
 #endif
 
+XXjson::XXjson(){
+    _path="";
+}
+XXjson::XXjson(const QJsonObject &jobj){
+    _path="";
+    _root = XXjsonItem("",jobj,nullptr);
+}
 XXjson::XXjson(const QString &path){
     _path = path;
     QJsonObject jobj;
@@ -30,10 +37,16 @@ XXjson::~XXjson(){
 XXjsonItem XXjson::operator[](const QString &key){
     return _root[key];
 }
-void XXjson::save(){
-    saveToFile(_path);
+QJsonObject XXjson::operator()(void){
+    return _root._jvalue.toObject();
 }
 
+bool XXjson::loadFromFile(const QString &path){
+    QJsonObject jobj;
+    bool ret = loadFromFile(path,jobj);
+    _root = XXjsonItem("",jobj,nullptr);
+    return ret;
+}
 bool XXjson::loadFromFile(const QString &path, QJsonObject &jobj){
     QFile file(path);
     if(!file.exists()){
@@ -69,25 +82,27 @@ bool XXjson::loadFromFile(const QString &path, QJsonObject &jobj){
     return true;
 }
 bool XXjson::saveToFile(const QString &path){
+    QString realPath = path.isEmpty()?_path:path;
+
     QJsonDocument jDoc = QJsonDocument(_root._jvalue.toObject());
     QByteArray bytes = jDoc.toJson();
 
-    QFileInfo fileInfo(path);
+    QFileInfo fileInfo(realPath);
     QDir dir = fileInfo.dir();
     if (!dir.exists()) {
         QDir().mkpath(dir.absolutePath());
     }
 
-    QFile file(path);
+    QFile file(realPath);
     if (file.exists()) {
         file.remove();
     }
 
     if (!file.open(QIODevice::ReadWrite)) {
 #ifdef logger
-        xxLogStr(QString("failure to open file. path:%1").arg(path));
+        xxLogStr(QString("failure to open file. path:%1").arg(realPath));
 #else
-        qDebug() << (QString("failure to open file. path:%1").arg(path));
+        qDebug() << (QString("failure to open file. path:%1").arg(realPath));
 #endif
         return false;
     }
