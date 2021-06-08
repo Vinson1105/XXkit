@@ -31,7 +31,7 @@ static const char *fstring =
                        1.13983, -0.58060,  0) * yuv;\
            gl_FragColor = vec4(rgb, 1);\
         }";
-#define kYUVBufferSizeMax 2048*2048
+#define kYUVBufferSizeMax 4096*4096
 
 XXvideoWidget::XXvideoWidget(QWidget *parent)
     : QOpenGLWidget (parent)
