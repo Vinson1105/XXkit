@@ -10,6 +10,8 @@
 #include <QSqlError>
 #include <QSqlRecord>
 
+#include <QSqlDriver>
+
 SqlDatabaseManager::SqlDatabaseManager(QObject *parent)
     : QObject(parent)
     , _isOpen(false){
@@ -291,6 +293,56 @@ bool SqlDatabaseManager::addMap2Table(const QMap<QString,QVariant> &values, cons
 
     //XXDebug("add map succeed. tableName:%s", tableName.toLocal8Bit().data());
     return true;
+}
+bool SqlDatabaseManager::addMaps2Table(const QList<QVariantMap> &maps, const QString &tableName){
+    _database.driver()->beginTransaction();
+    bool ret = false;
+    foreach(auto map,maps){
+        ret = addMap2Table(map,tableName);
+        if(!ret){
+            break;
+        }
+    }
+    if(ret){
+        _database.driver()->commitTransaction();
+    }
+    else{
+        _database.driver()->rollbackTransaction();
+    }
+    return ret;
+    /*
+    if(!_isOpen || maps.isEmpty() || tableName.isEmpty()){
+        xxLog("database not open or invalid arg.");
+        return false;
+    }    
+    QSqlQuery sqlQuery(_database);
+    for (int index=0; index<maps.count(); index++) {
+        QVariantMap values = maps[index];
+        QString kString, vString;
+        for (auto iter=values.constBegin(); iter!=values.constEnd(); iter++) {
+            kString += iter.key();
+            vString += "?";
+            if(iter+1!=values.constEnd()){
+                kString += ",";
+                vString += ",";
+            }
+        }
+
+        QString sqlString = QString("insert into %1 (%2) values (%3);").arg(tableName).arg(kString).arg(vString);
+        sqlQuery.prepare(sqlString);
+        for (auto iter=values.constBegin(); iter!=values.constEnd(); iter++) {
+            sqlQuery.addBindValue(iter.value());
+        }
+    }
+
+    if(!sqlQuery.exec()){
+        xxLog("add maps failure. tableName:%s error:%s",
+                tableName.toLocal8Bit().data(),
+                sqlQuery.lastError().text().data());
+        return false;
+    }
+    return true;
+    */
 }
 QList<QVariantMap> SqlDatabaseManager::getMapFromTable(const QString &tableName, const QVariantMap &equelTo){
     QList<QVariantMap> list;

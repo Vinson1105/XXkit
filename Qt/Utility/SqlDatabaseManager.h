@@ -75,6 +75,7 @@ public:
      * @return
      */
     bool addMap2Table(const QMap<QString,QVariant> &values, const QString &tableName);
+    bool addMaps2Table(const QList<QVariantMap> &maps, const QString &tableName);
 
     QList<QVariantMap> getMapFromTable(const QString &tableName, const QVariantMap &equelTo = QVariantMap());
 
